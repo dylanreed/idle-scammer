@@ -22,3 +22,6 @@ export type { ResourceIconProps } from './ResourceIcon';
 
 export { ResourceHUD } from './ResourceHUD';
 export type { ResourceHUDProps } from './ResourceHUD';
+
+export { ScamCard } from './ScamCard';
+export type { ScamCardProps, ScamCardStatus } from './ScamCard';

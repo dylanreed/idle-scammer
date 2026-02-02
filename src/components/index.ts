@@ -16,3 +16,9 @@ export type { ProgressBarProps } from './ProgressBar';
 
 export { TerminalText } from './TerminalText';
 export type { TerminalTextProps, TerminalTextSize } from './TerminalText';
+
+export { ResourceIcon } from './ResourceIcon';
+export type { ResourceIconProps } from './ResourceIcon';
+
+export { ResourceHUD } from './ResourceHUD';
+export type { ResourceHUDProps } from './ResourceHUD';

@@ -3,7 +3,7 @@
 
 import { create } from 'zustand';
 import type { ScamState } from './types';
-import { BOT_FARMS } from './definitions';
+import { BOT_FARMS, TIER_1_SCAMS } from './definitions';
 
 /**
  * Map of scam IDs to their runtime state
@@ -55,15 +55,21 @@ export function createScamState(scamId: string, isUnlocked = false): ScamState {
 }
 
 /**
- * Returns the initial scam state with Bot Farms unlocked.
- * Bot Farms is the first scam and starts unlocked for all players.
+ * Returns the initial scam state with all Tier 1 scams initialized.
+ * Bot Farms is unlocked by default; all other scams start locked.
  *
  * @returns Initial scam state map
  */
 export function getInitialScamState(): ScamStateMap {
-  return {
-    [BOT_FARMS.id]: createScamState(BOT_FARMS.id, true),
-  };
+  const initialState: ScamStateMap = {};
+
+  TIER_1_SCAMS.forEach((scam) => {
+    // Bot Farms is the only scam that starts unlocked
+    const isUnlocked = scam.id === BOT_FARMS.id;
+    initialState[scam.id] = createScamState(scam.id, isUnlocked);
+  });
+
+  return initialState;
 }
 
 /**

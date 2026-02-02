@@ -6,7 +6,7 @@ import {
   getInitialScamState,
   createScamState,
 } from '../../../src/game/scams/scamStore';
-import { BOT_FARMS } from '../../../src/game/scams/definitions';
+import { BOT_FARMS, TIER_1_SCAMS } from '../../../src/game/scams/definitions';
 import type { ScamState } from '../../../src/game/scams/types';
 
 describe('ScamStore', () => {
@@ -48,6 +48,29 @@ describe('ScamStore', () => {
       expect(state[BOT_FARMS.id].isUnlocked).toBe(true);
       expect(state[BOT_FARMS.id].level).toBe(1);
       expect(state[BOT_FARMS.id].timesCompleted).toBe(0);
+    });
+
+    it('should initialize all Tier 1 scams', () => {
+      const state = getInitialScamState();
+
+      TIER_1_SCAMS.forEach((scam) => {
+        expect(state[scam.id]).toBeDefined();
+        expect(state[scam.id].scamId).toBe(scam.id);
+        expect(state[scam.id].level).toBe(1);
+        expect(state[scam.id].timesCompleted).toBe(0);
+      });
+    });
+
+    it('should have Bot Farms unlocked and all other Tier 1 scams locked', () => {
+      const state = getInitialScamState();
+
+      TIER_1_SCAMS.forEach((scam) => {
+        if (scam.id === BOT_FARMS.id) {
+          expect(state[scam.id].isUnlocked).toBe(true);
+        } else {
+          expect(state[scam.id].isUnlocked).toBe(false);
+        }
+      });
     });
   });
 

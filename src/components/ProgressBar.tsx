@@ -78,7 +78,7 @@ export function ProgressBar({
 
   // For testing purposes, we need to render a non-animated view with the width set
   // The Animated.View handles the smooth transitions in the actual app
-  const widthPercentage = `${percentageValue}%`;
+  const widthPercentage = `${percentageValue}%` as const;
 
   return (
     <View testID={testID} style={[styles.track, style]}>

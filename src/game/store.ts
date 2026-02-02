@@ -3,6 +3,7 @@
 
 import { create } from 'zustand';
 import type { GameResources, GameState, ResourceKey } from './types';
+import { calculateBotPurchasePrice } from './scams/calculations';
 
 /**
  * Starting money for new games - enough to unlock the first money-generating scam.
@@ -122,4 +123,31 @@ export const useGameStore = create<GameState>()((set, get) => ({
       };
     });
   },
+
+  buyBot: () => {
+    const state = get();
+    const price = calculateBotPurchasePrice(state.resources.bots);
+
+    if (state.resources.money < price) {
+      return false;
+    }
+
+    set((current) => ({
+      resources: {
+        ...current.resources,
+        money: current.resources.money - price,
+        bots: current.resources.bots + 1,
+      },
+    }));
+
+    return true;
+  },
 }));
+
+/**
+ * Helper to get the current bot purchase price.
+ * Uses the store's current bot count.
+ */
+export function getBotPurchasePrice(): number {
+  return calculateBotPurchasePrice(useGameStore.getState().resources.bots);
+}

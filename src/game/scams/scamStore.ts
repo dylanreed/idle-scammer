@@ -11,6 +11,11 @@ import { BOT_FARMS, TIER_1_SCAMS } from './definitions';
 export type ScamStateMap = Record<string, ScamState>;
 
 /**
+ * Levels required for each milestone bot (Tier 1 only)
+ */
+const MILESTONE_BOT_LEVELS = 100;
+
+/**
  * Actions available on the scam store
  */
 export interface ScamStoreActions {
@@ -28,6 +33,12 @@ export interface ScamStoreActions {
 
   /** Reset all scam state (for prestige) */
   resetScams: () => void;
+
+  /** Get total combined levels of all Tier 1 scams */
+  getTotalTier1Levels: () => number;
+
+  /** Get number of free milestone bots earned from Tier 1 levels */
+  getMilestoneBots: () => number;
 }
 
 /**
@@ -159,5 +170,25 @@ export const useScamStore = create<ScamStoreState>()((set, get) => ({
 
   resetScams: () => {
     set({ scams: getInitialScamState() });
+  },
+
+  getTotalTier1Levels: () => {
+    const { scams } = get();
+    let totalLevels = 0;
+
+    // Sum levels from all Tier 1 scams
+    for (const scamDef of TIER_1_SCAMS) {
+      const scamState = scams[scamDef.id];
+      if (scamState) {
+        totalLevels += scamState.level;
+      }
+    }
+
+    return totalLevels;
+  },
+
+  getMilestoneBots: () => {
+    const totalLevels = get().getTotalTier1Levels();
+    return Math.floor(totalLevels / MILESTONE_BOT_LEVELS);
   },
 }));

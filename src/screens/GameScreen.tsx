@@ -8,8 +8,12 @@ import { ResourceHUD } from '../components/ResourceHUD';
 import { ScamCard } from '../components/ScamCard';
 import { TerminalText } from '../components/TerminalText';
 import { COLORS, SPACING } from '../components/theme';
-import { useGameStore } from '../game/store';
+import { useGameStore, getBotPurchasePrice } from '../game/store';
 import { useScamStore } from '../game/scams/scamStore';
+import { PixelButton } from '../components/PixelButton';
+import { CRTFrame } from '../components/CRTFrame';
+import { formatNumber } from '../utils/formatters';
+import { calculateBotMultiplier } from '../game/scams/calculations';
 import { TIER_1_SCAMS } from '../game/scams/definitions';
 import {
   calculateScamDuration,
@@ -38,12 +42,15 @@ export function GameScreen(): React.ReactElement {
   const addMoney = useGameStore((state) => state.addMoney);
   const addBots = useGameStore((state) => state.addBots);
   const addHeat = useGameStore((state) => state.addHeat);
+  const buyBot = useGameStore((state) => state.buyBot);
 
   // Get scam states and actions from scam store
   const scams = useScamStore((state) => state.scams);
   const unlockScam = useScamStore((state) => state.unlockScam);
   const upgradeScam = useScamStore((state) => state.upgradeScam);
   const incrementCompletion = useScamStore((state) => state.incrementCompletion);
+  const getMilestoneBots = useScamStore((state) => state.getMilestoneBots);
+  const getTotalTier1Levels = useScamStore((state) => state.getTotalTier1Levels);
 
   // Ref to hold removeTimer function (needed for auto-collect in handleTimerComplete)
   const removeTimerRef = useRef<((scamId: string) => void) | null>(null);
@@ -59,11 +66,12 @@ export function GameScreen(): React.ReactElement {
       const scamState = scams[timer.scamId];
       if (!scamState) return;
 
-      // Calculate reward based on level and trust
+      // Calculate reward based on level, trust, and bot compound bonus
       const reward = calculateScamReward(
         definition,
         scamState.level,
-        resources.trust
+        resources.trust,
+        resources.bots
       );
 
       // Award the appropriate resource
@@ -85,7 +93,7 @@ export function GameScreen(): React.ReactElement {
         removeTimerRef.current(timer.scamId);
       }
     },
-    [scams, resources.trust, addMoney, addBots, addHeat, incrementCompletion]
+    [scams, resources.trust, resources.bots, addMoney, addBots, addHeat, incrementCompletion]
   );
 
   // Initialize the game loop
@@ -197,6 +205,34 @@ export function GameScreen(): React.ReactElement {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
+        {/* Bot Shop Section */}
+        <CRTFrame style={styles.botShop}>
+          <TerminalText size="md" color={COLORS.terminalGreen}>
+            {'BOT SHOP'}
+          </TerminalText>
+          <View style={styles.botShopRow}>
+            <View style={styles.botShopInfo}>
+              <TerminalText size="sm" color={COLORS.terminalGreenDim}>
+                {`Bots give +1% bot rewards each`}
+              </TerminalText>
+              <TerminalText size="sm" color={COLORS.gold}>
+                {`Current bonus: ${Math.round((calculateBotMultiplier(resources.bots) - 1) * 100)}%`}
+              </TerminalText>
+              <TerminalText size="sm" color={COLORS.trustBlue}>
+                {`Milestone bots: ${getMilestoneBots()} (${getTotalTier1Levels()}/100 levels)`}
+              </TerminalText>
+            </View>
+            <PixelButton
+              onPress={buyBot}
+              disabled={resources.money < getBotPurchasePrice()}
+              variant="gold"
+              testID="buy-bot-button"
+            >
+              {`BUY BOT ($${formatNumber(getBotPurchasePrice())})`}
+            </PixelButton>
+          </View>
+        </CRTFrame>
+
         <TerminalText
           size="md"
           color={COLORS.terminalGreenDim}
@@ -248,5 +284,18 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     marginBottom: SPACING.md,
+  },
+  botShop: {
+    marginBottom: SPACING.md,
+  },
+  botShopRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: SPACING.sm,
+  },
+  botShopInfo: {
+    flex: 1,
+    marginRight: SPACING.md,
   },
 });

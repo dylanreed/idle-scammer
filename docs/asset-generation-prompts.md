@@ -247,7 +247,7 @@ portrait of used car salesman energy, bad combover, pixel art character --ar 1:1
 
 ### Pixellab (Direct portraits)
 ```
-hacker in hoodie, green glow on face, pixel art portrait 64x64
+Xhacker in hoodie, green glow on face, pixel art portrait 64x64
 
 con artist in flashy suit, gold chain, smirk, pixel art portrait
 

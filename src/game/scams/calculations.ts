@@ -24,6 +24,19 @@ const MIN_DURATION_PERCENTAGE = 0.1;
 const REWARD_INCREASE_PER_LEVEL = 0.1;
 
 /**
+ * Bot compound bonus rate.
+ * Each bot owned gives this percentage bonus to bot rewards.
+ * 1% per bot means 100 bots = 100% bonus = 2x bot rewards.
+ */
+const BOT_COMPOUND_RATE = 0.01;
+
+/**
+ * Base price for purchasing bots directly.
+ * Actual price scales quadratically: BASE × (bots + 1)²
+ */
+const BOT_PURCHASE_BASE_PRICE = 100;
+
+/**
  * Base cost for upgrading (multiplied by tier).
  */
 const BASE_UPGRADE_COST = 10;
@@ -64,26 +77,34 @@ export function calculateScamDuration(
  * Calculates the reward for completing a scam at a given level and trust.
  * Higher levels = higher rewards (linear scaling).
  * Trust directly multiplies all rewards.
+ * For bot-type rewards, bots owned provide a compound bonus (+1% per bot).
  *
- * Formula: floor(baseReward * (1 + (level-1) * rewardRate) * trust)
+ * Formula: floor(baseReward * levelMult * trust * botMult)
+ * Where botMult = 1 + (currentBots * 0.01) for bot rewards, 1 for money rewards
  *
  * @param definition - The scam definition
  * @param level - Current scam level (1-based)
  * @param trust - Player's trust value (prestige multiplier, starts at 1)
+ * @param currentBots - Number of bots owned (for compound bonus on bot rewards)
  * @returns Reward amount (floored to integer)
  */
 export function calculateScamReward(
   definition: ScamDefinition,
   level: number,
-  trust: number
+  trust: number,
+  currentBots: number = 0
 ): number {
-  const { baseReward } = definition;
+  const { baseReward, resourceType } = definition;
 
   // Linear level bonus: base * (1 + (level-1) * rate)
   const levelMultiplier = 1 + (level - 1) * REWARD_INCREASE_PER_LEVEL;
 
+  // Bot compound bonus only applies to bot-type rewards
+  const botMultiplier =
+    resourceType === 'bots' ? calculateBotMultiplier(currentBots) : 1;
+
   // Trust is a direct multiplier
-  const totalReward = baseReward * levelMultiplier * trust;
+  const totalReward = baseReward * levelMultiplier * trust * botMultiplier;
 
   // Floor to integer (no fractional resources)
   return Math.floor(totalReward);
@@ -114,4 +135,30 @@ export function calculateUpgradeCost(
 
   // Floor to integer
   return Math.floor(cost);
+}
+
+/**
+ * Calculates the bot compound multiplier based on current bots owned.
+ * Each bot gives +1% bonus to bot-type rewards.
+ *
+ * Formula: 1 + (bots * 0.01)
+ *
+ * @param currentBots - Number of bots currently owned
+ * @returns Multiplier for bot rewards (1.0 = no bonus, 2.0 = 100% bonus)
+ */
+export function calculateBotMultiplier(currentBots: number): number {
+  return 1 + currentBots * BOT_COMPOUND_RATE;
+}
+
+/**
+ * Calculates the price to purchase one bot directly.
+ * Uses quadratic scaling to make bots expensive (they compound!).
+ *
+ * Formula: BASE × (currentBots + 1)²
+ *
+ * @param currentBots - Number of bots currently owned
+ * @returns Price in money to buy one more bot
+ */
+export function calculateBotPurchasePrice(currentBots: number): number {
+  return BOT_PURCHASE_BASE_PRICE * Math.pow(currentBots + 1, 2);
 }

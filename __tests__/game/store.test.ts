@@ -1,7 +1,7 @@
 // ABOUTME: Tests for the main game Zustand store
 // ABOUTME: Covers initial state, resource actions, and prestige reset logic
 
-import { useGameStore, getInitialResources, STARTING_MONEY } from '../../src/game/store';
+import { useGameStore, getInitialResources, STARTING_MONEY, getBotPurchasePrice } from '../../src/game/store';
 import type { GameResources } from '../../src/game/types';
 
 describe('GameStore', () => {
@@ -318,6 +318,93 @@ describe('GameStore', () => {
       expect(typeof resources.skillPoints).toBe('number');
       expect(typeof resources.crypto).toBe('number');
       expect(typeof resources.trust).toBe('number');
+    });
+  });
+
+  describe('buyBot', () => {
+    it('should purchase a bot when player has enough money', () => {
+      // First bot costs $100
+      useGameStore.setState({
+        resources: { ...getInitialResources(), money: 200 },
+      });
+
+      const { buyBot } = useGameStore.getState();
+      const result = buyBot();
+
+      expect(result).toBe(true);
+      expect(useGameStore.getState().resources.bots).toBe(1);
+      expect(useGameStore.getState().resources.money).toBe(100); // 200 - 100
+    });
+
+    it('should fail to purchase bot when not enough money', () => {
+      useGameStore.setState({
+        resources: { ...getInitialResources(), money: 50 },
+      });
+
+      const { buyBot } = useGameStore.getState();
+      const result = buyBot();
+
+      expect(result).toBe(false);
+      expect(useGameStore.getState().resources.bots).toBe(0);
+      expect(useGameStore.getState().resources.money).toBe(50); // Unchanged
+    });
+
+    it('should scale price quadratically with bots owned', () => {
+      // Start with enough money and some bots
+      useGameStore.setState({
+        resources: { ...getInitialResources(), money: 50000, bots: 5 },
+      });
+
+      // Price with 5 bots: $100 × (5+1)² = $100 × 36 = $3,600
+      const { buyBot } = useGameStore.getState();
+      buyBot();
+
+      expect(useGameStore.getState().resources.bots).toBe(6);
+      expect(useGameStore.getState().resources.money).toBe(50000 - 3600);
+    });
+
+    it('should allow multiple bot purchases in sequence', () => {
+      useGameStore.setState({
+        resources: { ...getInitialResources(), money: 2000 },
+      });
+
+      const { buyBot } = useGameStore.getState();
+
+      // First bot: $100 × 1² = $100, remaining: $1900
+      expect(buyBot()).toBe(true);
+      expect(useGameStore.getState().resources.money).toBe(1900);
+
+      // Second bot: $100 × 2² = $400, remaining: $1500
+      expect(useGameStore.getState().buyBot()).toBe(true);
+      expect(useGameStore.getState().resources.money).toBe(1500);
+
+      // Third bot: $100 × 3² = $900, remaining: $600
+      expect(useGameStore.getState().buyBot()).toBe(true);
+      expect(useGameStore.getState().resources.money).toBe(600);
+
+      // Fourth bot: $100 × 4² = $1600, not enough!
+      expect(useGameStore.getState().buyBot()).toBe(false);
+      expect(useGameStore.getState().resources.money).toBe(600);
+      expect(useGameStore.getState().resources.bots).toBe(3);
+    });
+  });
+
+  describe('getBotPurchasePrice', () => {
+    it('should return current bot purchase price', () => {
+      useGameStore.setState({
+        resources: { ...getInitialResources(), bots: 0 },
+      });
+
+      expect(getBotPurchasePrice()).toBe(100);
+    });
+
+    it('should reflect current bot count', () => {
+      useGameStore.setState({
+        resources: { ...getInitialResources(), bots: 10 },
+      });
+
+      // $100 × (10+1)² = $100 × 121 = $12,100
+      expect(getBotPurchasePrice()).toBe(12100);
     });
   });
 });

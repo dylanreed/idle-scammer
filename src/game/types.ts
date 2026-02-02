@@ -68,6 +68,13 @@ export interface GameActions {
    * Optionally modify trust during the reset (positive for clean escape, negative for snitching).
    */
   prestigeReset: (trustModifier?: number) => void;
+
+  /**
+   * Purchase a bot directly with money.
+   * Price scales quadratically: $100 × (currentBots + 1)²
+   * @returns true if purchase succeeded, false if not enough money
+   */
+  buyBot: () => boolean;
 }
 
 /**

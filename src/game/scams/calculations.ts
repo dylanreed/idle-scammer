@@ -1,27 +1,17 @@
 // ABOUTME: Calculation functions for scam duration, rewards, and upgrade costs
-// ABOUTME: Implements level scaling with trust multiplier for idle game progression
+// ABOUTME: Implements bracket-based level scaling with trust multiplier for idle game progression
 
 import type { ScamDefinition } from './types';
-
-/**
- * Duration reduction per level.
- * Each level reduces duration by this percentage (compounding).
- * 5% per level means level 10 is about 63% of original duration.
- */
-const DURATION_REDUCTION_PER_LEVEL = 0.05;
+import {
+  calculateCumulativeBonus,
+  getTierBase,
+} from '../economy/constants';
 
 /**
  * Minimum duration as a percentage of base.
  * Prevents durations from becoming too short at high levels.
  */
 const MIN_DURATION_PERCENTAGE = 0.1;
-
-/**
- * Reward increase per level.
- * Each level adds this percentage to the base reward (linear).
- * 10% per level means level 10 gives 190% of base reward.
- */
-const REWARD_INCREASE_PER_LEVEL = 0.1;
 
 /**
  * Bot compound bonus rate.
@@ -37,21 +27,61 @@ const BOT_COMPOUND_RATE = 0.01;
 const BOT_PURCHASE_BASE_PRICE = 100;
 
 /**
- * Base cost for upgrading (multiplied by tier).
+ * Base speed percentage per tier.
+ * Higher tiers scale slower (longer time to reach max speed).
+ * This is multiplied by bracket speedMult to get actual rate.
  */
-const BASE_UPGRADE_COST = 10;
+const SPEED_BASE_RATES: Record<number, number> = {
+  1: 1.0,
+  2: 0.9,
+  3: 0.8,
+  4: 0.7,
+  5: 0.6,
+  6: 0.5,
+  7: 0.45,
+  8: 0.4,
+  9: 0.35,
+  10: 0.3,
+};
 
 /**
- * Exponential growth rate for upgrade costs.
- * 1.15 means each level costs ~15% more than the previous.
+ * Base profit percentage per tier for bracket calculations.
+ * All tiers use 1.0 for consistent scaling (bracket multipliers do the work).
  */
-const UPGRADE_COST_GROWTH_RATE = 1.15;
+const PROFIT_BASE_RATES: Record<number, number> = {
+  1: 1.0,
+  2: 1.0,
+  3: 1.0,
+  4: 1.0,
+  5: 1.0,
+  6: 1.0,
+  7: 1.0,
+  8: 1.0,
+  9: 1.0,
+  10: 1.0,
+};
+
+/**
+ * Base cost percentage per tier for bracket calculations.
+ * All tiers use 1.0 for consistent scaling (bracket multipliers do the work).
+ */
+const COST_BASE_RATES: Record<number, number> = {
+  1: 1.0,
+  2: 1.0,
+  3: 1.0,
+  4: 1.0,
+  5: 1.0,
+  6: 1.0,
+  7: 1.0,
+  8: 1.0,
+  9: 1.0,
+  10: 1.0,
+};
 
 /**
  * Calculates the duration of a scam at a given level.
- * Higher levels = shorter duration (diminishing returns curve).
- *
- * Formula: baseDuration * (1 - reduction)^(level-1), floored at 10% of base
+ * Higher levels = shorter duration using bracket-based speed bonuses.
+ * Speed bonus reduces duration: duration = base / speedMultiplier
  *
  * @param definition - The scam definition
  * @param level - Current scam level (1-based)
@@ -61,13 +91,14 @@ export function calculateScamDuration(
   definition: ScamDefinition,
   level: number
 ): number {
-  const { baseDuration } = definition;
+  const { baseDuration, tier } = definition;
+  const speedBaseRate = SPEED_BASE_RATES[tier] ?? SPEED_BASE_RATES[1];
 
-  // Apply diminishing returns reduction: (1 - rate)^(level-1)
-  const reductionFactor = Math.pow(1 - DURATION_REDUCTION_PER_LEVEL, level - 1);
+  // Calculate speed multiplier from bracket bonuses
+  const speedMultiplier = calculateCumulativeBonus(level, speedBaseRate, 'speedMult');
 
-  // Calculate duration with minimum threshold
-  const calculatedDuration = baseDuration * reductionFactor;
+  // Duration decreases as speed increases
+  const calculatedDuration = baseDuration / speedMultiplier;
   const minimumDuration = baseDuration * MIN_DURATION_PERCENTAGE;
 
   return Math.max(Math.round(calculatedDuration), Math.round(minimumDuration));
@@ -75,12 +106,9 @@ export function calculateScamDuration(
 
 /**
  * Calculates the reward for completing a scam at a given level and trust.
- * Higher levels = higher rewards (linear scaling).
+ * Uses bracket-based profit scaling.
  * Trust directly multiplies all rewards.
  * For bot-type rewards, bots owned provide a compound bonus (+1% per bot).
- *
- * Formula: floor(baseReward * levelMult * trust * botMult)
- * Where botMult = 1 + (currentBots * 0.01) for bot rewards, 1 for money rewards
  *
  * @param definition - The scam definition
  * @param level - Current scam level (1-based)
@@ -94,10 +122,11 @@ export function calculateScamReward(
   trust: number,
   currentBots: number = 0
 ): number {
-  const { baseReward, resourceType } = definition;
+  const { baseReward, resourceType, tier } = definition;
+  const profitBaseRate = PROFIT_BASE_RATES[tier] ?? PROFIT_BASE_RATES[1];
 
-  // Linear level bonus: base * (1 + (level-1) * rate)
-  const levelMultiplier = 1 + (level - 1) * REWARD_INCREASE_PER_LEVEL;
+  // Calculate profit multiplier from bracket bonuses
+  const levelMultiplier = calculateCumulativeBonus(level, profitBaseRate, 'profitMult');
 
   // Bot compound bonus only applies to bot-type rewards
   const botMultiplier =
@@ -111,11 +140,15 @@ export function calculateScamReward(
 }
 
 /**
+ * Base upgrade cost multiplied by tier.
+ * Tier 1 costs start at $10, tier 10 costs start at $100.
+ */
+const BASE_UPGRADE_COST = 10;
+
+/**
  * Calculates the cost to upgrade a scam to the next level.
- * Uses exponential scaling (idle game convention).
+ * Uses bracket-based cost scaling.
  * Higher tiers have higher base costs.
- *
- * Formula: floor(baseCost * tier * growthRate^(level-1))
  *
  * @param definition - The scam definition
  * @param level - Current level (cost to upgrade FROM this level)
@@ -126,12 +159,16 @@ export function calculateUpgradeCost(
   level: number
 ): number {
   const { tier } = definition;
+  const costBaseRate = COST_BASE_RATES[tier] ?? COST_BASE_RATES[1];
 
-  // Base cost scales with tier
-  const tierMultiplier = BASE_UPGRADE_COST * tier;
+  // Base cost scales with tier: $10 for tier 1, $100 for tier 10
+  const baseCost = BASE_UPGRADE_COST * tier;
 
-  // Exponential growth: baseCost * growthRate^(level-1)
-  const cost = tierMultiplier * Math.pow(UPGRADE_COST_GROWTH_RATE, level - 1);
+  // Calculate cost multiplier from bracket bonuses
+  const costMultiplier = calculateCumulativeBonus(level, costBaseRate, 'costMult');
+
+  // Apply the multiplier to base cost
+  const cost = baseCost * costMultiplier;
 
   // Floor to integer
   return Math.floor(cost);

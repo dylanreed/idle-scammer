@@ -12,13 +12,14 @@ import { BOT_FARMS } from '../../../src/game/scams/definitions';
 import type { ScamDefinition } from '../../../src/game/scams/types';
 
 describe('Scam Calculations', () => {
-  // Create a simple test definition for predictable calculations
+  // Create a test definition with larger values for bracket-based calculations
+  // Using baseReward: 100 so percentage bonuses are visible after flooring
   const testScam: ScamDefinition = {
     id: 'test-scam',
     name: 'Test Scam',
     tier: 1,
     baseDuration: 1000, // 1 second
-    baseReward: 10,
+    baseReward: 100, // Large enough for % bonuses to show
     resourceType: 'money',
     description: 'Test scam for calculations',
   };
@@ -70,7 +71,7 @@ describe('Scam Calculations', () => {
     it('should return base reward at level 1 with trust 1', () => {
       const reward = calculateScamReward(testScam, 1, 1);
 
-      expect(reward).toBe(10);
+      expect(reward).toBe(100);
     });
 
     it('should increase reward at higher levels', () => {
@@ -87,8 +88,10 @@ describe('Scam Calculations', () => {
       const rewardTrust2 = calculateScamReward(testScam, 1, 2);
       const rewardTrust10 = calculateScamReward(testScam, 1, 10);
 
-      expect(rewardTrust2).toBe(rewardTrust1 * 2);
-      expect(rewardTrust10).toBe(rewardTrust1 * 10);
+      // At level 1 with baseReward 100: 100, 200, 1000
+      expect(rewardTrust1).toBe(100);
+      expect(rewardTrust2).toBe(200);
+      expect(rewardTrust10).toBe(1000);
     });
 
     it('should combine level and trust bonuses', () => {
@@ -149,8 +152,9 @@ describe('Scam Calculations', () => {
       const rate1to2 = costL2 / costL1;
       const rate2to3 = costL3 / costL2;
 
-      // Allow some tolerance for rounding
-      expect(Math.abs(rate1to2 - rate2to3)).toBeLessThan(0.1);
+      // Allow some tolerance for rounding and bracket-based scaling
+      // With bracket system, growth rates are approximately consistent within a bracket
+      expect(Math.abs(rate1to2 - rate2to3)).toBeLessThan(0.15);
     });
 
     it('should factor in tier (higher tiers cost more)', () => {
@@ -290,14 +294,14 @@ describe('Scam Calculations', () => {
     });
 
     it('should combine level, trust, and bot bonuses', () => {
-      // Level 5: 1 + 4*0.1 = 1.4x
+      // Level 5 with bracket system: 4 bonus levels × 3.0 profitMult × 1.0 tierBase = 12%
       // Trust 2: 2x
       // Bots 50: 1.5x
       // Base: 10
-      // Total: 10 * 1.4 * 2 * 1.5 = 42
+      // Total: 10 * 1.12 * 2 * 1.5 = 33.6 → 33
       const reward = calculateScamReward(botScam, 5, 2, 50);
 
-      expect(reward).toBe(42);
+      expect(reward).toBe(33);
     });
 
     it('should default to 0 bots if not provided', () => {

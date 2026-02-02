@@ -6,13 +6,6 @@ Use these prompts with Midjourney (for concept reference) and Pixellab (for fina
 
 ## 1. UI FRAMES & BACKGROUNDS
 
-### Midjourney (Concept Reference)
-```
-retro CRT monitor frame with rounded corners, green phosphor glow, visible scanlines, dark web hacker aesthetic, 1990s computer terminal, black and neon green color scheme, tech noir --ar 16:9 --s 250
-
-90s hacker basement setup, multiple CRT monitors, cables everywhere, pizza boxes, energy drink cans, green terminal glow illuminating dark room, cyberpunk lo-fi --ar 16:9 --s 200
-
-internet cafe at night, rows of old computers, fluorescent lighting, suspicious characters in hoodies, late 90s aesthetic, vaporwave meets cybercrime --ar 16:9 --s 200
 ```
 
 ### Pixellab
@@ -29,19 +22,7 @@ internet cafe interior, row of old computers, dim lighting, 16-bit game backgrou
 ## 2. RESOURCE ICONS
 
 ### Midjourney (Reference)
-```
-pixel art icon set, video game resources: golden coins, robot head, flame meter, handshake, bitcoin symbol, star badge, brain with circuits, dark background, 16-bit SNES style, clean icons --ar 1:1 --s 150
 
-glowing green dollar sign icon, matrix code dripping off it, hacker aesthetic, dark background, game UI element --ar 1:1 --s 200
-
-cartoon robot head icon, friendly bot, green LED eyes, metallic gray, game resource icon, clean vector style --ar 1:1 --s 150
-
-police siren icon, red and blue glow, danger meter, heat indicator, video game HUD element --ar 1:1 --s 150
-
-golden handshake icon, trust symbol, glowing aura, premium game currency, dark background --ar 1:1 --s 150
-
-volatile crypto coin, bitcoin parody, unstable wavy lines around it, neon colors, game icon --ar 1:1 --s 150
-```
 
 ### Pixellab
 ```
@@ -202,38 +183,6 @@ bank vault with tunnel underneath, heist pixel art icon
 
 ## 8. MANAGER PORTRAITS (50 Unique Characters)
 
-### Midjourney (Generate variety, then pixel-ify)
-```
-portrait of shady hacker in hoodie, green monitor glow on face, 90s cyberpunk, pixel art game character style --ar 1:1 --s 200
-
-portrait of slick con artist in cheap suit, gold chains, confident smirk, pixel art character --ar 1:1 --s 200
-
-portrait of grandma who's secretly a scam mastermind, sweet but sinister, pixel art style --ar 1:1 --s 200
-
-portrait of tech bro with fake startup energy, trust me face, pixel art character --ar 1:1 --s 200
-
-portrait of mysterious figure in ski mask, only eyes visible, hacker aesthetic, pixel art --ar 1:1 --s 200
-
-portrait of smooth talking telemarketer with headset, pixel art game character --ar 1:1 --s 200
-
-portrait of crypto bro with laser eyes and diamond hands, parody, pixel art style --ar 1:1 --s 200
-
-portrait of "totally legit" businessman sweating nervously, pixel art character --ar 1:1 --s 200
-
-portrait of hacker cat with sunglasses, meme aesthetic, pixel art game character --ar 1:1 --s 200
-
-portrait of AI bot pretending to be human, uncanny valley, pixel art style --ar 1:1 --s 200
-
-portrait of retired military guy running phone scams, pixel art character --ar 1:1 --s 200
-
-portrait of influencer with fake smile and ring light reflection, pixel art --ar 1:1 --s 200
-
-portrait of sketchy lawyer type, sleazy grin, pixel art game character --ar 1:1 --s 200
-
-portrait of anonymous figure with guy fawkes mask aesthetic, pixel art --ar 1:1 --s 200
-
-portrait of basement dweller energy drink addict, pixel art character --ar 1:1 --s 200
-
 portrait of fake doctor with obviously fake credentials, pixel art style --ar 1:1 --s 200
 
 portrait of smooth jazz radio voice guy, headphones, pixel art character --ar 1:1 --s 200
@@ -249,21 +198,21 @@ portrait of used car salesman energy, bad combover, pixel art character --ar 1:1
 ```
 Xhacker in hoodie, green glow on face, pixel art portrait 64x64
 
-con artist in flashy suit, gold chain, smirk, pixel art portrait
+Xcon artist in flashy suit, gold chain, smirk, pixel art portrait
 
-innocent grandma with secret evil grin, pixel art portrait 64x64
+Xinnocent grandma with secret evil grin, pixel art portrait 64x64
 
-tech bro with fake smile, startup vibes, pixel art portrait
+Xtech bro with fake smile, startup vibes, pixel art portrait
 
-ski mask figure, mysterious eyes only, pixel art portrait 64x64
+Xski mask figure, mysterious eyes only, pixel art portrait 64x64
 
-telemarketer with headset, salesman smile, pixel art portrait
+Xtelemarketer with headset, salesman smile, pixel art portrait
 
-crypto bro with laser eyes meme, diamond hands, pixel art portrait
+Xcrypto bro with laser eyes meme, diamond hands, pixel art portrait
 
-nervous sweating businessman, pixel art portrait 64x64
+Xnervous sweating businessman, pixel art portrait 64x64
 
-cool cat with sunglasses, hacker cat, pixel art portrait
+Xcool cat with sunglasses, hacker cat, pixel art portrait
 
 robot pretending to be human, uncanny, pixel art portrait 64x64
 

@@ -89,12 +89,13 @@ describe('Prestige Manager', () => {
 
       executePrestige('clean-escape');
 
-      // After prestige, scams should be reset
-      const initialScams = getInitialScamState();
+      // After prestige, scams should be reset to initial state
+      // Bot Farms and Nigerian Prince start unlocked
       expect(useScamStore.getState().getScamState('bot-farms')?.isUnlocked).toBe(true);
       expect(useScamStore.getState().getScamState('bot-farms')?.level).toBe(1);
       expect(useScamStore.getState().getScamState('bot-farms')?.timesCompleted).toBe(0);
-      expect(useScamStore.getState().getScamState('nigerian-prince-emails')?.isUnlocked).toBe(false);
+      expect(useScamStore.getState().getScamState('nigerian-prince-emails')?.isUnlocked).toBe(true);
+      expect(useScamStore.getState().getScamState('nigerian-prince-emails')?.level).toBe(1);
     });
 
     it('should reset employee state to initial (empty)', () => {
@@ -196,9 +197,10 @@ describe('Prestige Manager', () => {
 
       executePrestige('snitch');
 
-      // Scams reset
+      // Scams reset to initial (Bot Farms and Nigerian Prince start unlocked)
       expect(useScamStore.getState().getScamState('bot-farms')?.level).toBe(1);
-      expect(useScamStore.getState().getScamState('nigerian-prince-emails')?.isUnlocked).toBe(false);
+      expect(useScamStore.getState().getScamState('nigerian-prince-emails')?.isUnlocked).toBe(true);
+      expect(useScamStore.getState().getScamState('nigerian-prince-emails')?.level).toBe(1);
 
       // Employees reset
       expect(useEmployeeStore.getState().getAllEmployeeStates()).toHaveLength(0);
@@ -232,15 +234,13 @@ describe('Prestige Manager', () => {
       expect(result.newTrust).toBe(1 + CLEAN_ESCAPE_TRUST_GAIN);
     });
 
-    it('should handle snitch with only starting money (small bonus)', () => {
-      // Fresh start - only has STARTING_MONEY
+    it('should handle snitch with no starting money (no bonus)', () => {
+      // Fresh start - STARTING_MONEY is 0, so no bonus
       const result = executePrestige('snitch');
 
       expect(result.bonuses).toBeDefined();
-      // Should have one bonus from starting money (10% of 101 = 10)
-      expect(result.bonuses!.length).toBe(1);
-      const moneyBonus = result.bonuses!.find((b) => b.type === 'money');
-      expect(moneyBonus?.amount).toBe(Math.floor(STARTING_MONEY * 0.1));
+      // With $0 starting money, there's no money bonus
+      expect(result.bonuses!.length).toBe(0);
     });
 
     it('should handle multiple consecutive prestiges', () => {

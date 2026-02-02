@@ -135,18 +135,23 @@ describe('Scam Calculations', () => {
     });
 
     it('should increase cost at higher levels', () => {
-      const costL1 = calculateUpgradeCost(testScam, 1);
-      const costL5 = calculateUpgradeCost(testScam, 5);
-      const costL10 = calculateUpgradeCost(testScam, 10);
+      // Use tier 3 ($1000 base) to see meaningful level scaling
+      // Tier 1 ($1 base) costs floor to same value at low levels
+      const tier3Scam: ScamDefinition = { ...testScam, tier: 3 };
+      const costL1 = calculateUpgradeCost(tier3Scam, 1);
+      const costL5 = calculateUpgradeCost(tier3Scam, 5);
+      const costL10 = calculateUpgradeCost(tier3Scam, 10);
 
       expect(costL5).toBeGreaterThan(costL1);
       expect(costL10).toBeGreaterThan(costL5);
     });
 
     it('should scale exponentially (idle game convention)', () => {
-      const costL1 = calculateUpgradeCost(testScam, 1);
-      const costL2 = calculateUpgradeCost(testScam, 2);
-      const costL3 = calculateUpgradeCost(testScam, 3);
+      // Use tier 3 ($1000 base) to see meaningful level scaling
+      const tier3Scam: ScamDefinition = { ...testScam, tier: 3 };
+      const costL1 = calculateUpgradeCost(tier3Scam, 1);
+      const costL2 = calculateUpgradeCost(tier3Scam, 2);
+      const costL3 = calculateUpgradeCost(tier3Scam, 3);
 
       // Growth rate should be roughly consistent (exponential)
       const rate1to2 = costL2 / costL1;

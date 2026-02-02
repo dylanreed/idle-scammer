@@ -5,6 +5,7 @@ import type { ScamDefinition } from './types';
 import {
   calculateCumulativeBonus,
   getTierBase,
+  type ScamTierBase,
 } from '../economy/constants';
 
 /**
@@ -140,15 +141,8 @@ export function calculateScamReward(
 }
 
 /**
- * Base upgrade cost multiplied by tier.
- * Tier 1 costs start at $10, tier 10 costs start at $100.
- */
-const BASE_UPGRADE_COST = 10;
-
-/**
  * Calculates the cost to upgrade a scam to the next level.
- * Uses bracket-based cost scaling.
- * Higher tiers have higher base costs.
+ * Uses initialCost from SCAM_TIER_BASES as the base, then applies bracket scaling.
  *
  * @param definition - The scam definition
  * @param level - Current level (cost to upgrade FROM this level)
@@ -161,8 +155,9 @@ export function calculateUpgradeCost(
   const { tier } = definition;
   const costBaseRate = COST_BASE_RATES[tier] ?? COST_BASE_RATES[1];
 
-  // Base cost scales with tier: $10 for tier 1, $100 for tier 10
-  const baseCost = BASE_UPGRADE_COST * tier;
+  // Base cost comes from tier's initialCost in the economic spreadsheet
+  const tierBase = getTierBase(tier);
+  const baseCost = tierBase.initialCost;
 
   // Calculate cost multiplier from bracket bonuses
   const costMultiplier = calculateCumulativeBonus(level, costBaseRate, 'costMult');
@@ -170,8 +165,8 @@ export function calculateUpgradeCost(
   // Apply the multiplier to base cost
   const cost = baseCost * costMultiplier;
 
-  // Floor to integer
-  return Math.floor(cost);
+  // Floor to integer (minimum $1)
+  return Math.max(1, Math.floor(cost));
 }
 
 /**

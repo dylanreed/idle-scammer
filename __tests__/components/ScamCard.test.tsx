@@ -164,8 +164,8 @@ describe('ScamCard', () => {
 
     it('should display upgrade cost in button', () => {
       render(<ScamCard {...createDefaultProps()} />);
-      // Upgrade cost for tier 1 level 1 is $10
-      expect(screen.getByText(/UPGRADE.*\$10/)).toBeTruthy();
+      // Upgrade cost for tier 1 level 1 is $1 (initialCost from SCAM_TIER_BASES)
+      expect(screen.getByText(/UPGRADE.*\$1\)/)).toBeTruthy();
     });
 
     it('should disable upgrade button when cannot afford', () => {

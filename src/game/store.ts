@@ -6,10 +6,10 @@ import type { GameResources, GameState, ResourceKey } from './types';
 import { calculateBotPurchasePrice } from './scams/calculations';
 
 /**
- * Starting money for new games - enough to unlock the first money-generating scam.
- * Nigerian Prince costs $100, so $101 gives players a path forward.
+ * Starting money for new games.
+ * Players start with $0 but Nigerian Prince Emails is already unlocked.
  */
-export const STARTING_MONEY = 101;
+export const STARTING_MONEY = 0;
 
 /**
  * Returns the initial resources state.

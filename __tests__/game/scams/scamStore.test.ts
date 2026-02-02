@@ -6,7 +6,7 @@ import {
   getInitialScamState,
   createScamState,
 } from '../../../src/game/scams/scamStore';
-import { BOT_FARMS, TIER_1_SCAMS } from '../../../src/game/scams/definitions';
+import { BOT_FARMS, NIGERIAN_PRINCE_EMAILS, TIER_1_SCAMS } from '../../../src/game/scams/definitions';
 import type { ScamState } from '../../../src/game/scams/types';
 
 describe('ScamStore', () => {
@@ -61,11 +61,11 @@ describe('ScamStore', () => {
       });
     });
 
-    it('should have Bot Farms unlocked and all other Tier 1 scams locked', () => {
+    it('should have Bot Farms and Nigerian Prince unlocked, all other Tier 1 scams locked', () => {
       const state = getInitialScamState();
 
       TIER_1_SCAMS.forEach((scam) => {
-        if (scam.id === BOT_FARMS.id) {
+        if (scam.id === BOT_FARMS.id || scam.id === NIGERIAN_PRINCE_EMAILS.id) {
           expect(state[scam.id].isUnlocked).toBe(true);
         } else {
           expect(state[scam.id].isUnlocked).toBe(false);

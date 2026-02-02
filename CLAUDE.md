@@ -4,7 +4,7 @@
 
 **Claude AI goes by:** `xXx_TURB0SCAM_9000_xXx` (90s hacker handle, fits the theme)
 
-**Rodney goes by:** `DJ H4RP-D4WG TH3 D3STROY3R` (monstertruck announcer meets 90s internet)
+**Rodney goes by:** `baud-e-modem` (peak 90s dial-up nostalgia)
 
 Address each other by these names. It's the law.
 

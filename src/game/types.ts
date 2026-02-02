@@ -24,7 +24,9 @@ export interface GameResources {
   /** Volatile secondary currency - gambling/investment mechanic */
   crypto: number;
 
-  /** Prestige currency - ONLY resource that persists across prestiges */
+  /** Prestige currency - ONLY resource that persists across prestiges.
+   *  Starts at 1 as a base multiplier (reward * trust). Gains from clean escapes,
+   *  loses from snitching. */
   trust: number;
 }
 

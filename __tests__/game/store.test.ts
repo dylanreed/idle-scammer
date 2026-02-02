@@ -11,7 +11,7 @@ describe('GameStore', () => {
   });
 
   describe('initial state', () => {
-    it('should have all resources initialized to zero', () => {
+    it('should have all resources initialized correctly (trust starts at 1 as base multiplier)', () => {
       const state = useGameStore.getState();
       const resources = state.resources;
 
@@ -21,10 +21,10 @@ describe('GameStore', () => {
       expect(resources.bots).toBe(0);
       expect(resources.skillPoints).toBe(0);
       expect(resources.crypto).toBe(0);
-      expect(resources.trust).toBe(0);
+      expect(resources.trust).toBe(1);
     });
 
-    it('should export getInitialResources helper', () => {
+    it('should export getInitialResources helper with trust at 1', () => {
       const initial = getInitialResources();
 
       expect(initial.money).toBe(0);
@@ -33,7 +33,7 @@ describe('GameStore', () => {
       expect(initial.bots).toBe(0);
       expect(initial.skillPoints).toBe(0);
       expect(initial.crypto).toBe(0);
-      expect(initial.trust).toBe(0);
+      expect(initial.trust).toBe(1);
     });
   });
 
@@ -166,7 +166,8 @@ describe('GameStore', () => {
 
       addTrust(10);
 
-      expect(useGameStore.getState().resources.trust).toBe(10);
+      // Trust starts at 1, so 1 + 10 = 11
+      expect(useGameStore.getState().resources.trust).toBe(11);
     });
 
     it('should handle trust reduction (snitching penalty)', () => {
@@ -175,7 +176,8 @@ describe('GameStore', () => {
       addTrust(100);
       addTrust(-25);
 
-      expect(useGameStore.getState().resources.trust).toBe(75);
+      // Trust starts at 1, so 1 + 100 - 25 = 76
+      expect(useGameStore.getState().resources.trust).toBe(76);
     });
   });
 
@@ -237,12 +239,13 @@ describe('GameStore', () => {
     it('should preserve trust across multiple prestiges', () => {
       const { addTrust, addMoney, prestigeReset } = useGameStore.getState();
 
-      // First run - earn some trust
+      // First run - earn some trust (starts at 1)
       addMoney(1000);
       addTrust(10);
       prestigeReset();
 
-      expect(useGameStore.getState().resources.trust).toBe(10);
+      // Trust: 1 (base) + 10 = 11
+      expect(useGameStore.getState().resources.trust).toBe(11);
       expect(useGameStore.getState().resources.money).toBe(0);
 
       // Second run - earn more trust
@@ -250,7 +253,8 @@ describe('GameStore', () => {
       useGameStore.getState().addTrust(15);
       useGameStore.getState().prestigeReset();
 
-      expect(useGameStore.getState().resources.trust).toBe(25);
+      // Trust: 11 + 15 = 26
+      expect(useGameStore.getState().resources.trust).toBe(26);
       expect(useGameStore.getState().resources.money).toBe(0);
     });
 

@@ -5,7 +5,8 @@ import { create } from 'zustand';
 import type { GameResources, GameState, ResourceKey } from './types';
 
 /**
- * Returns the initial resources state with all values at zero.
+ * Returns the initial resources state.
+ * All resources start at zero except trust which starts at 1 (base multiplier).
  * Exported for testing and reset purposes.
  */
 export function getInitialResources(): GameResources {
@@ -16,7 +17,7 @@ export function getInitialResources(): GameResources {
     bots: 0,
     skillPoints: 0,
     crypto: 0,
-    trust: 0,
+    trust: 1,
   };
 }
 

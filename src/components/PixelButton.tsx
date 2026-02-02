@@ -15,7 +15,7 @@ import { COLORS, FONTS, FONT_SIZES, SPACING, BORDER_RADIUS } from './theme';
 /**
  * Button variant types that determine the color scheme
  */
-export type PixelButtonVariant = 'primary' | 'danger' | 'gold';
+export type PixelButtonVariant = 'primary' | 'secondary' | 'danger' | 'gold';
 
 /**
  * Props for the PixelButton component
@@ -45,6 +45,7 @@ export interface PixelButtonProps {
  */
 const VARIANT_COLORS: Record<PixelButtonVariant, string> = {
   primary: COLORS.terminalGreen,
+  secondary: COLORS.terminalGreenDim,
   danger: COLORS.warningRed,
   gold: COLORS.gold,
 };
@@ -54,6 +55,7 @@ const VARIANT_COLORS: Record<PixelButtonVariant, string> = {
  */
 const VARIANT_TEXT_COLORS: Record<PixelButtonVariant, string> = {
   primary: COLORS.terminalGreen,
+  secondary: COLORS.terminalGreenDim,
   danger: COLORS.warningRed,
   gold: COLORS.gold,
 };

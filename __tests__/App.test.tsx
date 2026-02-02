@@ -11,10 +11,8 @@ describe('App', () => {
     expect(screen.root).toBeTruthy();
   });
 
-  it('displays the initial text', () => {
+  it('displays the game screen with Bot Farms', () => {
     render(<App />);
-    expect(
-      screen.getByText(/Open up App.tsx to start working on your app!/i)
-    ).toBeTruthy();
+    expect(screen.getByText(/Bot Farms/i)).toBeTruthy();
   });
 });

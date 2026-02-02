@@ -179,21 +179,21 @@ Xrow of empty building facades, shell company pixel art icon
 ```
 Xgovernment building with shady contract, pixel art icon 32x32
 
-globe with money wires and octopus arms, international fraud pixel art
+Xglobe with money wires and octopus arms, international fraud pixel art
 
-shadowy bank building, doesn't exist officially, pixel art icon
+Xshadowy bank building, doesn't exist officially, pixel art icon
 
-ballot box with puppet strings, election manipulation pixel art
+Xballot box with puppet strings, election manipulation pixel art
 
-corporate safe being scanned, espionage pixel art icon
+Xcorporate safe being scanned, espionage pixel art icon
 
-stock chart with puppet hands controlling it, manipulation pixel art
+Xstock chart with puppet hands controlling it, manipulation pixel art
 
-real estate buildings on crumbling sand, fraud pixel art icon
+Xreal estate buildings on crumbling sand, fraud pixel art icon
 
-pill bottle with fake label printer, counterfeit pixel art
+Xpill bottle with fake label printer, counterfeit pixel art
 
-famous painting frame with tiny fake stamp, forgery pixel art icon
+Xfamous painting frame with tiny fake stamp, forgery pixel art icon
 
 bank vault with tunnel underneath, heist pixel art icon
 ```

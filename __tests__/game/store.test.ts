@@ -1,7 +1,7 @@
 // ABOUTME: Tests for the main game Zustand store
 // ABOUTME: Covers initial state, resource actions, and prestige reset logic
 
-import { useGameStore, getInitialResources } from '../../src/game/store';
+import { useGameStore, getInitialResources, STARTING_MONEY } from '../../src/game/store';
 import type { GameResources } from '../../src/game/types';
 
 describe('GameStore', () => {
@@ -11,11 +11,11 @@ describe('GameStore', () => {
   });
 
   describe('initial state', () => {
-    it('should have all resources initialized correctly (trust starts at 1 as base multiplier)', () => {
+    it('should have all resources initialized correctly (trust starts at 1, money starts with seed)', () => {
       const state = useGameStore.getState();
       const resources = state.resources;
 
-      expect(resources.money).toBe(0);
+      expect(resources.money).toBe(STARTING_MONEY);
       expect(resources.reputation).toBe(0);
       expect(resources.heat).toBe(0);
       expect(resources.bots).toBe(0);
@@ -24,10 +24,10 @@ describe('GameStore', () => {
       expect(resources.trust).toBe(1);
     });
 
-    it('should export getInitialResources helper with trust at 1', () => {
+    it('should export getInitialResources helper with trust at 1 and seed money', () => {
       const initial = getInitialResources();
 
-      expect(initial.money).toBe(0);
+      expect(initial.money).toBe(STARTING_MONEY);
       expect(initial.reputation).toBe(0);
       expect(initial.heat).toBe(0);
       expect(initial.bots).toBe(0);
@@ -43,7 +43,7 @@ describe('GameStore', () => {
 
       addMoney(100);
 
-      expect(useGameStore.getState().resources.money).toBe(100);
+      expect(useGameStore.getState().resources.money).toBe(STARTING_MONEY + 100);
     });
 
     it('should accumulate multiple additions', () => {
@@ -52,7 +52,7 @@ describe('GameStore', () => {
       addMoney(50);
       addMoney(75);
 
-      expect(useGameStore.getState().resources.money).toBe(125);
+      expect(useGameStore.getState().resources.money).toBe(STARTING_MONEY + 125);
     });
 
     it('should handle negative amounts (spending)', () => {
@@ -61,7 +61,7 @@ describe('GameStore', () => {
       addMoney(100);
       addMoney(-30);
 
-      expect(useGameStore.getState().resources.money).toBe(70);
+      expect(useGameStore.getState().resources.money).toBe(STARTING_MONEY + 70);
     });
   });
 
@@ -224,8 +224,8 @@ describe('GameStore', () => {
 
       const resources = useGameStore.getState().resources;
 
-      // These should be reset to zero
-      expect(resources.money).toBe(0);
+      // These should be reset to initial values
+      expect(resources.money).toBe(STARTING_MONEY);
       expect(resources.reputation).toBe(0);
       expect(resources.heat).toBe(0);
       expect(resources.bots).toBe(0);
@@ -246,7 +246,7 @@ describe('GameStore', () => {
 
       // Trust: 1 (base) + 10 = 11
       expect(useGameStore.getState().resources.trust).toBe(11);
-      expect(useGameStore.getState().resources.money).toBe(0);
+      expect(useGameStore.getState().resources.money).toBe(STARTING_MONEY);
 
       // Second run - earn more trust
       useGameStore.getState().addMoney(2000);
@@ -255,7 +255,7 @@ describe('GameStore', () => {
 
       // Trust: 11 + 15 = 26
       expect(useGameStore.getState().resources.trust).toBe(26);
-      expect(useGameStore.getState().resources.money).toBe(0);
+      expect(useGameStore.getState().resources.money).toBe(STARTING_MONEY);
     });
 
     it('should allow trust to be modified during prestige (snitching)', () => {
@@ -278,7 +278,7 @@ describe('GameStore', () => {
 
       const resources = useGameStore.getState().resources;
       expect(resources.trust).toBe(80);
-      expect(resources.money).toBe(0);
+      expect(resources.money).toBe(STARTING_MONEY);
     });
 
     it('should allow trust to be gained during clean escape', () => {
@@ -301,7 +301,7 @@ describe('GameStore', () => {
 
       const resources = useGameStore.getState().resources;
       expect(resources.trust).toBe(80);
-      expect(resources.money).toBe(0);
+      expect(resources.money).toBe(STARTING_MONEY);
     });
   });
 

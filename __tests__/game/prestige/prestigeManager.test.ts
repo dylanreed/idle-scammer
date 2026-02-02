@@ -2,7 +2,7 @@
 // ABOUTME: Verifies that executePrestige properly resets all stores and returns correct results
 
 import { executePrestige, resetAllStores } from '../../../src/game/prestige/prestigeManager';
-import { useGameStore, getInitialResources } from '../../../src/game/store';
+import { useGameStore, getInitialResources, STARTING_MONEY } from '../../../src/game/store';
 import { useScamStore, getInitialScamState } from '../../../src/game/scams/scamStore';
 import { useEmployeeStore, getInitialEmployeeState } from '../../../src/game/employees/employeeStore';
 import { useManagerStore, getInitialManagerState } from '../../../src/game/managers/managerStore';
@@ -70,7 +70,7 @@ describe('Prestige Manager', () => {
       executePrestige('clean-escape');
 
       const resources = useGameStore.getState().resources;
-      expect(resources.money).toBe(0);
+      expect(resources.money).toBe(STARTING_MONEY);
       expect(resources.reputation).toBe(0);
       expect(resources.heat).toBe(0);
       expect(resources.bots).toBe(0);
@@ -159,8 +159,8 @@ describe('Prestige Manager', () => {
       executePrestige('snitch');
 
       const resources = useGameStore.getState().resources;
-      // Money: 10000 * 0.1 = 1000
-      expect(resources.money).toBe(1000);
+      // Money: STARTING_MONEY + 10000 * 0.1 = STARTING_MONEY + 1000
+      expect(resources.money).toBe(STARTING_MONEY + 1000);
       // Bots: 5000 * 0.1 = 500
       expect(resources.bots).toBe(500);
       // Reputation: 500 * 0.1 = 50
@@ -216,7 +216,7 @@ describe('Prestige Manager', () => {
       resetAllStores();
 
       expect(useGameStore.getState().resources.trust).toBe(previousTrust);
-      expect(useGameStore.getState().resources.money).toBe(0);
+      expect(useGameStore.getState().resources.money).toBe(STARTING_MONEY);
       expect(useScamStore.getState().getScamState('bot-farms')?.level).toBe(1);
       expect(useEmployeeStore.getState().getAllEmployeeStates()).toHaveLength(0);
       expect(useManagerStore.getState().getAllManagerStates()).toHaveLength(0);
@@ -232,13 +232,15 @@ describe('Prestige Manager', () => {
       expect(result.newTrust).toBe(1 + CLEAN_ESCAPE_TRUST_GAIN);
     });
 
-    it('should handle snitch with no resources (no bonuses)', () => {
-      // Fresh start
+    it('should handle snitch with only starting money (small bonus)', () => {
+      // Fresh start - only has STARTING_MONEY
       const result = executePrestige('snitch');
 
       expect(result.bonuses).toBeDefined();
-      // All bonuses should be 0 or empty since no resources
-      expect(result.bonuses!.length).toBe(0);
+      // Should have one bonus from starting money (10% of 101 = 10)
+      expect(result.bonuses!.length).toBe(1);
+      const moneyBonus = result.bonuses!.find((b) => b.type === 'money');
+      expect(moneyBonus?.amount).toBe(Math.floor(STARTING_MONEY * 0.1));
     });
 
     it('should handle multiple consecutive prestiges', () => {

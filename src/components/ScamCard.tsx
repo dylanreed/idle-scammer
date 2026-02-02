@@ -15,12 +15,14 @@ import type { ScamTimer } from '../game/engine/types';
 import {
   calculateScamDuration,
   calculateScamReward,
+  calculateUpgradeCost,
 } from '../game/scams/calculations';
 
 /**
- * Possible states a scam card can be in
+ * Possible states a scam card can be in.
+ * Note: 'complete' is removed because we auto-collect rewards (no manual collect step).
  */
-export type ScamCardStatus = 'locked' | 'idle' | 'running' | 'complete';
+export type ScamCardStatus = 'locked' | 'idle' | 'running';
 
 /**
  * Props for the ScamCard component
@@ -38,24 +40,26 @@ export interface ScamCardProps {
   /** Player's current trust value for reward calculation */
   trust: number;
 
-  /** Player's current money for unlock affordability check */
+  /** Player's current money for unlock/upgrade affordability check */
   money: number;
 
   /** Called when player clicks start button */
   onStart: () => void;
 
-  /** Called when player clicks collect button */
-  onCollect: () => void;
-
   /** Called when player clicks unlock button */
   onUnlock: () => void;
+
+  /** Called when player clicks upgrade button */
+  onUpgrade: () => void;
 
   /** Test ID for testing */
   testID?: string;
 }
 
 /**
- * Determine the current status of a scam
+ * Determine the current status of a scam.
+ * Note: With auto-collect, completed timers are immediately removed,
+ * so we treat any complete timer as idle (ready to start again).
  */
 function getScamStatus(
   scamState: ScamState | undefined,
@@ -65,12 +69,9 @@ function getScamStatus(
     return 'locked';
   }
 
-  if (!timer) {
+  // No timer or timer is complete means we're idle (auto-collect removes timers on completion)
+  if (!timer || timer.isComplete) {
     return 'idle';
-  }
-
-  if (timer.isComplete) {
-    return 'complete';
   }
 
   return 'running';
@@ -105,8 +106,8 @@ export function ScamCard({
   trust,
   money,
   onStart,
-  onCollect,
   onUnlock,
+  onUpgrade,
   testID,
 }: ScamCardProps): React.ReactElement {
   const status = getScamStatus(scamState, timer);
@@ -116,8 +117,10 @@ export function ScamCard({
   const duration = calculateScamDuration(scamDefinition, level);
   const reward = calculateScamReward(scamDefinition, level, trust);
   const progress = getTimerProgress(timer);
+  const upgradeCost = calculateUpgradeCost(scamDefinition, level);
   const canAffordUnlock =
     scamDefinition.unlockCost !== undefined && money >= scamDefinition.unlockCost;
+  const canAffordUpgrade = money >= upgradeCost;
 
   // Resource type display
   const resourceLabel =
@@ -204,17 +207,21 @@ export function ScamCard({
             RUNNING...
           </PixelButton>
         )}
-
-        {status === 'complete' && (
-          <PixelButton
-            onPress={onCollect}
-            variant="gold"
-            testID={testID ? `${testID}-collect` : undefined}
-          >
-            COLLECT {rewardDisplay}
-          </PixelButton>
-        )}
       </View>
+
+      {/* Upgrade button - always visible when unlocked */}
+      {status !== 'locked' && (
+        <View style={styles.upgradeContainer}>
+          <PixelButton
+            onPress={onUpgrade}
+            disabled={!canAffordUpgrade}
+            variant="secondary"
+            testID={testID ? `${testID}-upgrade` : undefined}
+          >
+            {`UPGRADE ($${formatNumber(upgradeCost)})`}
+          </PixelButton>
+        </View>
+      )}
 
       {/* Times completed counter */}
       {status !== 'locked' && scamState && scamState.timesCompleted > 0 && (
@@ -256,6 +263,9 @@ const styles = StyleSheet.create({
   },
   buttonContainer: {
     marginTop: SPACING.xs,
+  },
+  upgradeContainer: {
+    marginTop: SPACING.sm,
   },
   completedCount: {
     marginTop: SPACING.sm,

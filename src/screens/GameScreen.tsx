@@ -1,7 +1,7 @@
 // ABOUTME: Main game screen that wires together all game systems
 // ABOUTME: Displays ResourceHUD, ScamCards, and handles game loop integration
 
-import React, { useEffect, useCallback, useMemo } from 'react';
+import React, { useEffect, useCallback, useMemo, useRef } from 'react';
 import { View, ScrollView, StyleSheet, SafeAreaView } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { ResourceHUD } from '../components/ResourceHUD';
@@ -14,6 +14,7 @@ import { TIER_1_SCAMS } from '../game/scams/definitions';
 import {
   calculateScamDuration,
   calculateScamReward,
+  calculateUpgradeCost,
 } from '../game/scams/calculations';
 import { calculateHeatFromScam } from '../game/prestige/calculations';
 import { useGameLoop } from '../game/engine/gameLoop';
@@ -41,10 +42,14 @@ export function GameScreen(): React.ReactElement {
   // Get scam states and actions from scam store
   const scams = useScamStore((state) => state.scams);
   const unlockScam = useScamStore((state) => state.unlockScam);
+  const upgradeScam = useScamStore((state) => state.upgradeScam);
   const incrementCompletion = useScamStore((state) => state.incrementCompletion);
 
+  // Ref to hold removeTimer function (needed for auto-collect in handleTimerComplete)
+  const removeTimerRef = useRef<((scamId: string) => void) | null>(null);
+
   /**
-   * Handle scam timer completion - award resources
+   * Handle scam timer completion - award resources and auto-collect (remove timer)
    */
   const handleTimerComplete = useCallback(
     (timer: ScamTimer) => {
@@ -74,6 +79,11 @@ export function GameScreen(): React.ReactElement {
 
       // Increment completion counter
       incrementCompletion(timer.scamId);
+
+      // Auto-collect: remove the completed timer immediately
+      if (removeTimerRef.current) {
+        removeTimerRef.current(timer.scamId);
+      }
     },
     [scams, resources.trust, addMoney, addBots, addHeat, incrementCompletion]
   );
@@ -82,6 +92,9 @@ export function GameScreen(): React.ReactElement {
   const { start, engineState, addTimer, removeTimer } = useGameLoop({
     onTimerComplete: handleTimerComplete,
   });
+
+  // Store removeTimer in ref for use in handleTimerComplete (auto-collect)
+  removeTimerRef.current = removeTimer;
 
   // Start the game loop on mount
   useEffect(() => {
@@ -119,20 +132,6 @@ export function GameScreen(): React.ReactElement {
   );
 
   /**
-   * Handle collecting a completed scam
-   */
-  const handleCollectScam = useCallback(
-    (scamId: string) => {
-      const timer = timerMap[scamId];
-      if (!timer || !timer.isComplete) return;
-
-      // Remove the completed timer (rewards already granted via onTimerComplete)
-      removeTimer(scamId);
-    },
-    [timerMap, removeTimer]
-  );
-
-  /**
    * Handle unlocking a scam
    */
   const handleUnlockScam = useCallback(
@@ -149,6 +148,28 @@ export function GameScreen(): React.ReactElement {
       unlockScam(scamId);
     },
     [resources.money, addMoney, unlockScam]
+  );
+
+  /**
+   * Handle upgrading a scam to the next level
+   */
+  const handleUpgradeScam = useCallback(
+    (scamId: string) => {
+      const definition = getScamDefinition(scamId);
+      if (!definition) return;
+
+      const scamState = scams[scamId];
+      if (!scamState || !scamState.isUnlocked) return;
+
+      // Check cost
+      const upgradeCost = calculateUpgradeCost(definition, scamState.level);
+      if (resources.money < upgradeCost) return;
+
+      // Deduct cost and upgrade
+      addMoney(-upgradeCost);
+      upgradeScam(scamId);
+    },
+    [scams, resources.money, addMoney, upgradeScam]
   );
 
   return (
@@ -193,8 +214,8 @@ export function GameScreen(): React.ReactElement {
             trust={resources.trust}
             money={resources.money}
             onStart={() => handleStartScam(scamDef.id)}
-            onCollect={() => handleCollectScam(scamDef.id)}
             onUnlock={() => handleUnlockScam(scamDef.id)}
+            onUpgrade={() => handleUpgradeScam(scamDef.id)}
             testID={`scam-card-${scamDef.id}`}
           />
         ))}

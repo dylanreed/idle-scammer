@@ -5,13 +5,20 @@ import { create } from 'zustand';
 import type { GameResources, GameState, ResourceKey } from './types';
 
 /**
+ * Starting money for new games - enough to unlock the first money-generating scam.
+ * Nigerian Prince costs $100, so $101 gives players a path forward.
+ */
+export const STARTING_MONEY = 101;
+
+/**
  * Returns the initial resources state.
- * All resources start at zero except trust which starts at 1 (base multiplier).
+ * Players start with seed money to unlock their first scam.
+ * Trust starts at 1 (base multiplier).
  * Exported for testing and reset purposes.
  */
 export function getInitialResources(): GameResources {
   return {
-    money: 0,
+    money: STARTING_MONEY,
     reputation: 0,
     heat: 0,
     bots: 0,

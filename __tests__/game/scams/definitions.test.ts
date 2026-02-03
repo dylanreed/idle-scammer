@@ -99,9 +99,8 @@ describe('Scam Definitions', () => {
       expect(NIGERIAN_PRINCE_EMAILS.resourceType).toBe('money');
     });
 
-    it('should have an unlock cost', () => {
-      expect(NIGERIAN_PRINCE_EMAILS.unlockCost).toBeDefined();
-      expect(typeof NIGERIAN_PRINCE_EMAILS.unlockCost).toBe('number');
+    it('should be free to unlock (first money scam)', () => {
+      expect(NIGERIAN_PRINCE_EMAILS.unlockCost).toBeUndefined();
     });
   });
 
@@ -310,11 +309,12 @@ describe('Scam Definitions', () => {
       expect(botProducers).toHaveLength(0);
     });
 
-    it('should have all scams require an unlock cost', () => {
+    it('should have Nigerian Prince free and all others require unlock cost', () => {
       const freeScams = TIER_1_SCAMS.filter(
         (scam) => scam.unlockCost === undefined
       );
-      expect(freeScams).toHaveLength(0);
+      expect(freeScams).toHaveLength(1);
+      expect(freeScams[0].id).toBe('nigerian-prince-emails');
     });
 
     it('should have all scams produce money', () => {
@@ -340,10 +340,10 @@ describe('Scam Definitions', () => {
       });
     });
 
-    it('should have scaling unlock costs ($10-$25,000 money)', () => {
+    it('should have scaling unlock costs ($100-$25,000 money, Nigerian Prince is free)', () => {
       TIER_1_SCAMS.forEach((scam) => {
         if (scam.unlockCost !== undefined) {
-          expect(scam.unlockCost).toBeGreaterThanOrEqual(10);
+          expect(scam.unlockCost).toBeGreaterThanOrEqual(100);
           expect(scam.unlockCost).toBeLessThanOrEqual(25000);
         }
       });

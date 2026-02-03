@@ -38,7 +38,7 @@ export const NIGERIAN_PRINCE_EMAILS: ScamDefinition = {
   baseReward: 5,
   resourceType: 'money',
   description: 'A modest sum to secure millions from a deposed prince',
-  unlockCost: 10,
+  unlockCost: undefined, // Free to start - this is the first money scam
 };
 
 /**

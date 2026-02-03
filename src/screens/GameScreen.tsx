@@ -8,13 +8,9 @@ import { ResourceHUD } from '../components/ResourceHUD';
 import { ScamCard } from '../components/ScamCard';
 import { TerminalText } from '../components/TerminalText';
 import { COLORS, SPACING } from '../components/theme';
-import { useGameStore, getBotPurchasePrice } from '../game/store';
+import { useGameStore } from '../game/store';
 import { useScamStore } from '../game/scams/scamStore';
-import { PixelButton } from '../components/PixelButton';
-import { CRTFrame } from '../components/CRTFrame';
-import { formatNumber } from '../utils/formatters';
-import { calculateBotMultiplier } from '../game/scams/calculations';
-import { BOT_FARMS, TIER_1_SCAMS } from '../game/scams/definitions';
+import { TIER_1_SCAMS } from '../game/scams/definitions';
 import {
   calculateScamDuration,
   calculateScamReward,
@@ -29,10 +25,6 @@ import type { ScamDefinition } from '../game/scams/types';
  * Look up a scam definition by ID
  */
 function getScamDefinition(scamId: string): ScamDefinition | undefined {
-  // Check Bot Farms first (separate from tiers)
-  if (scamId === BOT_FARMS.id) {
-    return BOT_FARMS;
-  }
   return TIER_1_SCAMS.find((scam) => scam.id === scamId);
 }
 
@@ -44,17 +36,13 @@ export function GameScreen(): React.ReactElement {
   // Get resources and actions from game store
   const resources = useGameStore((state) => state.resources);
   const addMoney = useGameStore((state) => state.addMoney);
-  const addBots = useGameStore((state) => state.addBots);
   const addHeat = useGameStore((state) => state.addHeat);
-  const buyBot = useGameStore((state) => state.buyBot);
 
   // Get scam states and actions from scam store
   const scams = useScamStore((state) => state.scams);
   const unlockScam = useScamStore((state) => state.unlockScam);
   const upgradeScam = useScamStore((state) => state.upgradeScam);
   const incrementCompletion = useScamStore((state) => state.incrementCompletion);
-  const getMilestoneBots = useScamStore((state) => state.getMilestoneBots);
-  const getTotalTier1Levels = useScamStore((state) => state.getTotalTier1Levels);
 
   // Ref to hold removeTimer function (needed for auto-collect in handleTimerComplete)
   const removeTimerRef = useRef<((scamId: string) => void) | null>(null);
@@ -70,20 +58,15 @@ export function GameScreen(): React.ReactElement {
       const scamState = scams[timer.scamId];
       if (!scamState) return;
 
-      // Calculate reward based on level, trust, and bot compound bonus
+      // Calculate reward based on level and trust
       const reward = calculateScamReward(
         definition,
         scamState.level,
-        resources.trust,
-        resources.bots
+        resources.trust
       );
 
-      // Award the appropriate resource
-      if (definition.resourceType === 'bots') {
-        addBots(reward);
-      } else {
-        addMoney(reward);
-      }
+      // Award money
+      addMoney(reward);
 
       // Add heat from the scam
       const heat = calculateHeatFromScam(definition);
@@ -97,7 +80,7 @@ export function GameScreen(): React.ReactElement {
         removeTimerRef.current(timer.scamId);
       }
     },
-    [scams, resources.trust, resources.bots, addMoney, addBots, addHeat, incrementCompletion]
+    [scams, resources.trust, addMoney, addHeat, incrementCompletion]
   );
 
   // Initialize the game loop
@@ -209,55 +192,6 @@ export function GameScreen(): React.ReactElement {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Bot Shop Section */}
-        <CRTFrame style={styles.botShop}>
-          <TerminalText size="md" color={COLORS.terminalGreen}>
-            {'BOT SHOP'}
-          </TerminalText>
-          <View style={styles.botShopRow}>
-            <View style={styles.botShopInfo}>
-              <TerminalText size="sm" color={COLORS.terminalGreenDim}>
-                {`Bots give +1% bot rewards each`}
-              </TerminalText>
-              <TerminalText size="sm" color={COLORS.gold}>
-                {`Current bonus: ${Math.round((calculateBotMultiplier(resources.bots) - 1) * 100)}%`}
-              </TerminalText>
-              <TerminalText size="sm" color={COLORS.trustBlue}>
-                {`Milestone bots: ${getMilestoneBots()} (${getTotalTier1Levels()}/100 levels)`}
-              </TerminalText>
-            </View>
-            <PixelButton
-              onPress={buyBot}
-              disabled={resources.money < getBotPurchasePrice()}
-              variant="gold"
-              testID="buy-bot-button"
-            >
-              {`BUY BOT ($${formatNumber(getBotPurchasePrice())})`}
-            </PixelButton>
-          </View>
-        </CRTFrame>
-
-        {/* Bot Farms Section - Core game loop mechanic */}
-        <TerminalText
-          size="md"
-          color={COLORS.terminalGreenDim}
-          style={styles.sectionTitle}
-        >
-          {'BOT GENERATION'}
-        </TerminalText>
-
-        <ScamCard
-          scamDefinition={BOT_FARMS}
-          scamState={scams[BOT_FARMS.id]}
-          timer={timerMap[BOT_FARMS.id]}
-          trust={resources.trust}
-          money={resources.money}
-          onStart={() => handleStartScam(BOT_FARMS.id)}
-          onUnlock={() => handleUnlockScam(BOT_FARMS.id)}
-          onUpgrade={() => handleUpgradeScam(BOT_FARMS.id)}
-          testID={`scam-card-${BOT_FARMS.id}`}
-        />
-
         {/* Tier 1 Scams Section */}
         <TerminalText
           size="md"
@@ -310,18 +244,5 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     marginBottom: SPACING.md,
-  },
-  botShop: {
-    marginBottom: SPACING.md,
-  },
-  botShopRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: SPACING.sm,
-  },
-  botShopInfo: {
-    flex: 1,
-    marginRight: SPACING.md,
   },
 });

@@ -11,8 +11,8 @@ describe('App', () => {
     expect(screen.root).toBeTruthy();
   });
 
-  it('displays the game screen with Bot Farms', () => {
+  it('displays the game screen with Nigerian Prince Emails', () => {
     render(<App />);
-    expect(screen.getByText(/Bot Farms/i)).toBeTruthy();
+    expect(screen.getByText(/Nigerian Prince Emails/i)).toBeTruthy();
   });
 });

@@ -1,5 +1,5 @@
 // ABOUTME: Calculation functions for scam duration, rewards, and upgrade costs
-// ABOUTME: Accumulating profits with exponential costs to encourage progression
+// ABOUTME: Uses tier-specific exponents and rates for triangular cost growth
 
 import type { ScamDefinition } from './types';
 import { getTierBase } from '../economy/constants';
@@ -22,12 +22,6 @@ const BOT_COMPOUND_RATE = 0.01;
  * Actual price scales quadratically: BASE × (bots + 1)²
  */
 const BOT_PURCHASE_BASE_PRICE = 100;
-
-/**
- * Profit increment rate.
- * Each level adds (level × this rate) to the accumulated profit.
- */
-const PROFIT_INCREMENT_RATE = 1.01;
 
 /**
  * Speed multipliers by level bracket.
@@ -53,20 +47,6 @@ const PROFIT_BONUS_BRACKETS: { maxLevel: number; multiplier: number }[] = [
   { maxLevel: 74, multiplier: 5.0 },
   { maxLevel: 99, multiplier: 7.5 },
   { maxLevel: Infinity, multiplier: 10.0 },
-];
-
-/**
- * Cost growth rates by level bracket.
- * Each rate is the per-level multiplier for that bracket.
- * Costs accelerate dramatically at higher levels.
- */
-const COST_BRACKETS: { maxLevel: number; rate: number }[] = [
-  { maxLevel: 9, rate: 1.05 },      // Modest growth early
-  { maxLevel: 24, rate: 1.16 },     // Picking up
-  { maxLevel: 49, rate: 1.35 },     // Aggressive
-  { maxLevel: 74, rate: 1.58 },     // Explosive
-  { maxLevel: 99, rate: 1.78 },     // Astronomical
-  { maxLevel: Infinity, rate: 2.0 }, // Cosmic
 ];
 
 /**
@@ -120,30 +100,66 @@ export function calculateScamDuration(
 }
 
 /**
- * Calculates the accumulated profit bonus for a given level.
- * Each level adds (level × PROFIT_INCREMENT_RATE) to the total.
- * This creates steadily increasing gains per level.
- *
- * Formula: sum of (i × 1.01) for i from 2 to level
- *        = 1.01 × (sum of i from 2 to level)
- *        = 1.01 × ((level × (level + 1) / 2) - 1)
- *
- * @param level - Current scam level (1-based)
- * @returns Accumulated profit bonus to add to base reward
+ * Calculates triangular number: n × (n + 1) / 2
+ * Used for triangular exponentiation in cost formula.
  */
-export function calculateProfitBonus(level: number): number {
+function triangular(n: number): number {
+  return (n * (n + 1)) / 2;
+}
+
+/**
+ * Calculates profit for Tier 1 using linear accumulation.
+ * Profit grows by ~0.81 per level after initial ramp-up.
+ * Based on spreadsheet: rate 0.45 with linear increments.
+ *
+ * @param baseProfit - Base profit at level 1
+ * @param level - Current scam level (1-based)
+ * @param rate - Profit rate from tier config
+ * @returns Raw profit before bracket bonus
+ */
+function calculateTier1Profit(baseProfit: number, level: number, rate: number): number {
   if (level <= 1) {
-    return 0;
+    return baseProfit;
   }
 
-  // Sum of integers from 2 to level = (level × (level + 1) / 2) - 1
-  const sumOfLevels = (level * (level + 1)) / 2 - 1;
-  return sumOfLevels * PROFIT_INCREMENT_RATE;
+  // Linear growth with rate as base increment, scaling up slightly per level
+  // This approximates the spreadsheet pattern where increments stabilize around 0.81
+  const baseIncrement = rate * 1.8; // ~0.81 for tier 1
+  let profit = baseProfit;
+
+  for (let i = 2; i <= level; i++) {
+    // Early levels have smaller increments that ramp up
+    const levelFactor = Math.min(1, (i - 1) / 5);
+    const increment = baseIncrement * (0.5 + 0.5 * levelFactor);
+    profit += increment;
+  }
+
+  return profit;
+}
+
+/**
+ * Calculates profit for Tier 2+ using exponential growth.
+ * Profit grows as baseProfit × rate^(level-1).
+ *
+ * @param baseProfit - Base profit at level 1
+ * @param level - Current scam level (1-based)
+ * @param rate - Profit rate from tier config (multiplier per level)
+ * @returns Raw profit before bracket bonus
+ */
+function calculateExponentialProfit(baseProfit: number, level: number, rate: number): number {
+  if (level <= 1) {
+    return baseProfit;
+  }
+
+  return baseProfit * Math.pow(rate, level - 1);
 }
 
 /**
  * Calculates the reward for completing a scam at a given level and trust.
- * Profit accumulates: each level adds (level × 1.01) to the previous profit.
+ * Uses tier-specific profit formulas:
+ * - Tier 1: Linear accumulation (~0.81 per level after ramp-up)
+ * - Tier 2+: Exponential growth (rate^(level-1))
+ *
  * Trust directly multiplies all rewards.
  * For bot-type rewards, bots owned provide a compound bonus (+1% per bot).
  *
@@ -162,11 +178,19 @@ export function calculateScamReward(
   trust: number,
   currentBots: number = 0
 ): number {
-  const { baseReward, resourceType } = definition;
+  const { baseReward, tier, resourceType } = definition;
+  const tierBase = getTierBase(tier);
 
-  // Calculate accumulated profit: base + bonus from all levels
-  const profitBonus = calculateProfitBonus(level);
-  const levelProfit = baseReward + profitBonus;
+  // Calculate raw profit using tier-specific formula
+  // Uses scam's baseReward but tier's profitRate for scaling
+  let rawProfit: number;
+  if (tier === 1) {
+    // Tier 1 uses linear accumulation
+    rawProfit = calculateTier1Profit(baseReward, level, tierBase.profitRate);
+  } else {
+    // Tier 2+ uses exponential growth
+    rawProfit = calculateExponentialProfit(baseReward, level, tierBase.profitRate);
+  }
 
   // Apply bracket-based profit bonus multiplier (1.25x at 10+, 2x at 25+, etc.)
   const bracketBonus = getProfitBonusMultiplier(level);
@@ -176,48 +200,35 @@ export function calculateScamReward(
     resourceType === 'bots' ? calculateBotMultiplier(currentBots) : 1;
 
   // Trust is a direct multiplier
-  const totalReward = levelProfit * bracketBonus * trust * botMultiplier;
+  const totalReward = rawProfit * bracketBonus * trust * botMultiplier;
 
   // Return fractional value for incremental accumulation
   return totalReward;
 }
 
 /**
- * Calculates the cost multiplier using exponential growth with bracket acceleration.
- * Cost grows faster at higher level brackets, eventually far outpacing profit.
+ * Calculates the cost multiplier using triangular exponentiation.
+ * Cost formula: exponent^(triangular(n) - 1)
+ * This creates super-exponential growth where each level's multiplier increases.
  *
  * @param level - Current scam level (1-based)
+ * @param exponent - Cost exponent from tier config
  * @returns Cost multiplier
  */
-export function calculateCostMultiplier(level: number): number {
+export function calculateCostMultiplier(level: number, exponent: number): number {
   if (level <= 1) {
     return 1;
   }
 
-  // Calculate cumulative cost through all brackets
-  let multiplier = 1;
-  let currentLevel = 1;
-
-  for (const bracket of COST_BRACKETS) {
-    if (currentLevel > level) break;
-
-    const bracketEnd = Math.min(bracket.maxLevel, level);
-    const levelsInBracket = bracketEnd - currentLevel + 1;
-
-    if (levelsInBracket > 0) {
-      // Apply this bracket's rate for each level in it
-      multiplier *= Math.pow(bracket.rate, levelsInBracket);
-    }
-
-    currentLevel = bracketEnd + 1;
-  }
-
-  return multiplier;
+  // Triangular exponentiation: exponent^(triangular(n) - 1)
+  // This means L1→L2 grows by exponent^1, L2→L3 by exponent^2, etc.
+  const triangularValue = triangular(level) - 1;
+  return Math.pow(exponent, triangularValue);
 }
 
 /**
  * Calculates the cost to upgrade a scam to the next level.
- * Uses exponential growth with bracket-based acceleration.
+ * Uses triangular exponentiation: baseCost × exponent^(triangular(n) - 1)
  *
  * @param definition - The scam definition
  * @param level - Current level (cost to upgrade FROM this level)
@@ -229,12 +240,13 @@ export function calculateUpgradeCost(
 ): number {
   const { tier } = definition;
 
-  // Base cost comes from tier's initialCost in the economic spreadsheet
+  // Get tier config
   const tierBase = getTierBase(tier);
   const baseCost = tierBase.initialCost;
+  const exponent = tierBase.costExponent;
 
-  // Exponential cost growth with bracket acceleration
-  const costMultiplier = calculateCostMultiplier(level);
+  // Triangular exponential cost growth
+  const costMultiplier = calculateCostMultiplier(level, exponent);
 
   // Apply the multiplier to base cost
   const cost = baseCost * costMultiplier;

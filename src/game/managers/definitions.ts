@@ -14,7 +14,7 @@ export const BOT_3000: ManagerDefinition = {
   id: 'bot-3000',
   name: 'B0T-3000',
   scamId: 'bot-farms',
-  cost: 500,
+  cost: 50, // Low cost since bots are currently disabled
   flavorText: 'BEEP BOOP. AUTOMATION PROTOCOL ENGAGED. RESISTANCE IS... ACTUALLY PRETTY EASY TO OVERCOME.',
 };
 
@@ -28,7 +28,7 @@ export const PRINCE_OKONKWO: ManagerDefinition = {
   id: 'prince-okonkwo',
   name: 'Prince Okonkwo III',
   scamId: 'nigerian-prince-emails',
-  cost: 1000,
+  cost: 100, // First manager - affordable early game
   flavorText: "I am the REAL prince, unlike those other 47,000 imposters. My father, the king, he is very sick and I need... wait, you've heard this before?",
 };
 
@@ -42,7 +42,7 @@ export const LUCKY_LARRY: ManagerDefinition = {
   id: 'lucky-larry',
   name: 'Lucky Larry Lotto',
   scamId: 'fake-lottery-winnings',
-  cost: 1200,
+  cost: 5000, // ~2.5x scam unlock cost of $2,000
   flavorText: "CONGRATULATIONS! You're our millionth viewer! I say that a lot. Like, CONSTANTLY.",
 };
 
@@ -56,7 +56,7 @@ export const POPUP_PETE: ManagerDefinition = {
   id: 'popup-pete',
   name: 'Popup Pete',
   scamId: 'iphone-popup',
-  cost: 1500,
+  cost: 10000,
   flavorText: "YOU WON! CLICK HERE! NO WAIT, HERE! ACTUALLY EVERYWHERE! *aggressive blinking intensifies*",
 };
 
@@ -70,7 +70,7 @@ export const PHISHMASTER_PHIL: ManagerDefinition = {
   id: 'phishmaster-phil',
   name: 'PhishMaster Phil',
   scamId: 'phishing-links',
-  cost: 2000,
+  cost: 25000,
   flavorText: "Please verify your account by clicking this totally-not-suspicious link. The extra 'l' in 'Paypall' is for 'legitimate'.",
 };
 
@@ -84,7 +84,7 @@ export const SURVEY_SUSAN: ManagerDefinition = {
   id: 'survey-susan',
   name: 'Survey Susan',
   scamId: 'survey-scams',
-  cost: 3000,
+  cost: 50000,
   flavorText: "Just 47 more questions and you'll win that $500 gift card! Also, what's your mother's maiden name? For... demographics.",
 };
 
@@ -98,7 +98,7 @@ export const DREAD_NORTON: ManagerDefinition = {
   id: 'dread-norton',
   name: 'Dread Norton',
   scamId: 'fake-antivirus-popups',
-  cost: 4000,
+  cost: 100000,
   flavorText: "WARNING! CRITICAL ALERT! Your computer has 847 VIRUSES and ONE is currently EATING YOUR RAM! Download my totally free software NOW!",
 };
 
@@ -112,7 +112,7 @@ export const GWEN_CARDSWORTH: ManagerDefinition = {
   id: 'gwen-cardsworth',
   name: 'Gwen Cardsworth',
   scamId: 'gift-card-scams',
-  cost: 6000,
+  cost: 250000,
   flavorText: "Yes, the IRS DOES accept iTunes gift cards now. It's a new policy. Very official. Read me the numbers on the back, please.",
 };
 
@@ -126,7 +126,7 @@ export const FELIX_UPFRONT: ManagerDefinition = {
   id: 'felix-upfront',
   name: 'Felix Upfront',
   scamId: 'advance-fee-fraud',
-  cost: 10000,
+  cost: 500000,
   flavorText: "Your inheritance of $4.7 million is ready! I just need a small $500 processing fee. Then another $300 for customs. Then $200 for the lawyers...",
 };
 
@@ -140,7 +140,7 @@ export const CARLA_CAREERS: ManagerDefinition = {
   id: 'carla-careers',
   name: 'Carla Careers',
   scamId: 'fake-job-postings',
-  cost: 25000,
+  cost: 1000000,
   flavorText: "Make $10,000/week from HOME stuffing envelopes! Guaranteed! Just pay the $299 starter kit fee and you're basically ALREADY rich!",
 };
 

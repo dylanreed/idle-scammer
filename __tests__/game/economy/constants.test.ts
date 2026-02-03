@@ -50,8 +50,8 @@ describe('Economy Constants', () => {
       expect(SCAM_TIER_BASES[0].initialCost).toBe(1);
     });
 
-    it('should have tier 10 cost at $5,000,000', () => {
-      expect(SCAM_TIER_BASES[9].initialCost).toBe(5000000);
+    it('should have tier 10 cost at $5 billion', () => {
+      expect(SCAM_TIER_BASES[9].initialCost).toBe(5000000000);
     });
   });
 
@@ -66,8 +66,8 @@ describe('Economy Constants', () => {
     it('should return tier 5 base for tier 5', () => {
       const base = getTierBase(5);
       expect(base.tier).toBe(5);
-      expect(base.initialCost).toBe(50000);
-      expect(base.initialProfit).toBe(500);
+      expect(base.initialCost).toBe(2500000);
+      expect(base.initialProfit).toBe(500000);
     });
 
     it('should return tier 1 for invalid tier numbers', () => {

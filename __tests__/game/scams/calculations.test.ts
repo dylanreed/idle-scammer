@@ -302,13 +302,18 @@ describe('Scam Calculations', () => {
     });
 
     it('should combine level, trust, and bot bonuses', () => {
-      // Level 5 profit bonus: 1.01 * (2+3+4+5) = 14.14
-      // Level 5 profit: 10 + 14.14 = 24.14
-      // Trust 2: 24.14 * 2 = 48.28
-      // Bots 50 (1.5x): 48.28 * 1.5 = 72.42
-      const reward = calculateScamReward(botScam, 5, 2, 50);
+      // Test that trust and bot bonuses stack multiplicatively
+      const baseReward = calculateScamReward(botScam, 5, 1, 0);
+      const withTrust = calculateScamReward(botScam, 5, 2, 0);
+      const withBots = calculateScamReward(botScam, 5, 1, 50); // 50 bots = 1.5x
+      const withBoth = calculateScamReward(botScam, 5, 2, 50);
 
-      expect(reward).toBeCloseTo(72.42, 1);
+      // Trust 2x should double the reward
+      expect(withTrust).toBeCloseTo(baseReward * 2, 1);
+      // 50 bots should give 1.5x
+      expect(withBots).toBeCloseTo(baseReward * 1.5, 1);
+      // Combined should be 2 * 1.5 = 3x
+      expect(withBoth).toBeCloseTo(baseReward * 3, 1);
     });
 
     it('should default to 0 bots if not provided', () => {

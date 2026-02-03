@@ -35,7 +35,7 @@ export const NIGERIAN_PRINCE_EMAILS: ScamDefinition = {
   name: 'Nigerian Prince Emails',
   tier: 1,
   baseDuration: 5000, // 5 seconds - takes time to craft that royal backstory
-  baseReward: 5,
+  baseReward: 0.1, // $0.10 base - grows with tier 1 linear formula
   resourceType: 'money',
   description: 'A modest sum to secure millions from a deposed prince',
   unlockCost: undefined, // Free to start - this is the first money scam

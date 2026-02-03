@@ -331,10 +331,10 @@ describe('Scam Definitions', () => {
       });
     });
 
-    it('should have reasonable reward ranges ($5-$12,500 money)', () => {
+    it('should have reasonable reward ranges ($0.10-$12,500 money)', () => {
       TIER_1_SCAMS.forEach((scam) => {
         if (scam.resourceType === 'money') {
-          expect(scam.baseReward).toBeGreaterThanOrEqual(5);
+          expect(scam.baseReward).toBeGreaterThanOrEqual(0.1);
           expect(scam.baseReward).toBeLessThanOrEqual(12500);
         }
       });

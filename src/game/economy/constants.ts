@@ -41,28 +41,34 @@ export const LEVEL_BRACKETS: LevelBracket[] = [
 export interface ScamTierBase {
   /** Tier number (1-10) */
   tier: number;
-  /** Initial unlock/purchase cost */
+  /** Initial upgrade cost at level 1 */
   initialCost: number;
   /** Base profit per completion at level 1 */
   initialProfit: number;
   /** Base duration in milliseconds */
   baseDuration: number;
+  /** Cost exponent for triangular growth */
+  costExponent: number;
+  /** Profit rate for growth calculation */
+  profitRate: number;
 }
 
 /**
  * Base values for all 10 scam tiers from the economic spreadsheet.
+ * Cost formula: baseCost × exponent^(triangular(n) - 1)
+ * Profit formula: Tier-specific based on rate
  */
 export const SCAM_TIER_BASES: ScamTierBase[] = [
-  { tier: 1, initialCost: 1, initialProfit: 0.1, baseDuration: 1000 },
-  { tier: 2, initialCost: 100, initialProfit: 10, baseDuration: 2000 },
-  { tier: 3, initialCost: 1000, initialProfit: 100, baseDuration: 5000 },
-  { tier: 4, initialCost: 15000, initialProfit: 150, baseDuration: 10000 },
-  { tier: 5, initialCost: 50000, initialProfit: 500, baseDuration: 30000 },
-  { tier: 6, initialCost: 100000, initialProfit: 1000, baseDuration: 60000 },
-  { tier: 7, initialCost: 250000, initialProfit: 2500, baseDuration: 120000 },
-  { tier: 8, initialCost: 500000, initialProfit: 5000, baseDuration: 300000 },
-  { tier: 9, initialCost: 1000000, initialProfit: 10000, baseDuration: 600000 },
-  { tier: 10, initialCost: 5000000, initialProfit: 50000, baseDuration: 1200000 },
+  { tier: 1, initialCost: 1, initialProfit: 0.1, baseDuration: 5000, costExponent: 1.0099, profitRate: 0.45 },
+  { tier: 2, initialCost: 250, initialProfit: 250, baseDuration: 2000, costExponent: 1.03, profitRate: 1.3 },
+  { tier: 3, initialCost: 100000, initialProfit: 50000, baseDuration: 5000, costExponent: 1.01, profitRate: 3 },
+  { tier: 4, initialCost: 500000, initialProfit: 100000, baseDuration: 10000, costExponent: 1.015, profitRate: 2.5 },
+  { tier: 5, initialCost: 2500000, initialProfit: 500000, baseDuration: 30000, costExponent: 1.02, profitRate: 2.5 },
+  { tier: 6, initialCost: 10000000, initialProfit: 2000000, baseDuration: 60000, costExponent: 1.02, profitRate: 2.5 },
+  { tier: 7, initialCost: 50000000, initialProfit: 10000000, baseDuration: 120000, costExponent: 1.02, profitRate: 2.5 },
+  { tier: 8, initialCost: 250000000, initialProfit: 50000000, baseDuration: 300000, costExponent: 1.02, profitRate: 2.5 },
+  { tier: 9, initialCost: 1000000000, initialProfit: 200000000, baseDuration: 600000, costExponent: 1.02, profitRate: 2.5 },
+  { tier: 10, initialCost: 5000000000, initialProfit: 1000000000, baseDuration: 1200000, costExponent: 1.02, profitRate: 2.5 },
 ];
 
 /**

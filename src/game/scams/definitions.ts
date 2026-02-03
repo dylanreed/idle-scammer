@@ -164,16 +164,17 @@ export const FAKE_JOB_POSTINGS: ScamDefinition = {
 /**
  * Collection of all Tier 1 "Small Time" scams.
  * These are the entry-level money-generating scams.
+ * Ordered by ascending unlock cost for natural progression.
  * Bot Farms is separate - it's a core mechanic, not a tier scam.
  */
 export const TIER_1_SCAMS: ScamDefinition[] = [
-  NIGERIAN_PRINCE_EMAILS,
-  FAKE_LOTTERY_WINNINGS,
-  IPHONE_POPUP,
-  PHISHING_LINKS,
-  SURVEY_SCAMS,
-  FAKE_ANTIVIRUS_POPUPS,
-  GIFT_CARD_SCAMS,
-  ADVANCE_FEE_FRAUD,
-  FAKE_JOB_POSTINGS,
+  NIGERIAN_PRINCE_EMAILS,  // Free
+  IPHONE_POPUP,            // $250
+  PHISHING_LINKS,          // $500
+  SURVEY_SCAMS,            // $1,000
+  FAKE_LOTTERY_WINNINGS,   // $2,000
+  FAKE_ANTIVIRUS_POPUPS,   // $2,500
+  GIFT_CARD_SCAMS,         // $5,000
+  ADVANCE_FEE_FRAUD,       // $10,000
+  FAKE_JOB_POSTINGS,       // $25,000
 ];

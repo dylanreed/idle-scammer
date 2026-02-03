@@ -1,5 +1,5 @@
 // ABOUTME: Main game screen that wires together all game systems
-// ABOUTME: Displays ResourceHUD, ScamCards, and handles game loop integration
+// ABOUTME: Displays ResourceHUD, ScamCards, managers, and handles game loop integration
 
 import React, { useEffect, useCallback, useMemo, useRef } from 'react';
 import { View, ScrollView, StyleSheet, SafeAreaView } from 'react-native';
@@ -7,10 +7,14 @@ import { StatusBar } from 'expo-status-bar';
 import { ResourceHUD } from '../components/ResourceHUD';
 import { ScamCard } from '../components/ScamCard';
 import { TerminalText } from '../components/TerminalText';
+import { PixelButton } from '../components/PixelButton';
+import { CRTFrame } from '../components/CRTFrame';
 import { COLORS, SPACING } from '../components/theme';
 import { useGameStore } from '../game/store';
 import { useScamStore } from '../game/scams/scamStore';
+import { useManagerStore } from '../game/managers/managerStore';
 import { TIER_1_SCAMS } from '../game/scams/definitions';
+import { getManagerByScamId, TIER_1_MANAGERS } from '../game/managers/definitions';
 import {
   calculateScamDuration,
   calculateScamReward,
@@ -18,6 +22,7 @@ import {
 } from '../game/scams/calculations';
 import { calculateHeatFromScam } from '../game/prestige/calculations';
 import { useGameLoop } from '../game/engine/gameLoop';
+import { formatNumber } from '../utils/formatters';
 import type { ScamTimer } from '../game/engine/types';
 import type { ScamDefinition } from '../game/scams/types';
 
@@ -43,6 +48,10 @@ export function GameScreen(): React.ReactElement {
   const unlockScam = useScamStore((state) => state.unlockScam);
   const upgradeScam = useScamStore((state) => state.upgradeScam);
   const incrementCompletion = useScamStore((state) => state.incrementCompletion);
+
+  // Get manager states and actions from manager store
+  const hireManager = useManagerStore((state) => state.hireManager);
+  const isManagerHired = useManagerStore((state) => state.isManagerHired);
 
   // Ref to hold removeTimer function (needed for auto-collect in handleTimerComplete)
   const removeTimerRef = useRef<((scamId: string) => void) | null>(null);
@@ -167,6 +176,24 @@ export function GameScreen(): React.ReactElement {
     [scams, resources.money, addMoney, upgradeScam]
   );
 
+  /**
+   * Handle hiring a manager
+   */
+  const handleHireManager = useCallback(
+    (managerId: string, cost: number) => {
+      // Check if already hired
+      if (isManagerHired(managerId)) return;
+
+      // Check cost
+      if (resources.money < cost) return;
+
+      // Deduct cost and hire
+      addMoney(-cost);
+      hireManager(managerId);
+    },
+    [resources.money, addMoney, hireManager, isManagerHired]
+  );
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar style="light" />
@@ -215,6 +242,57 @@ export function GameScreen(): React.ReactElement {
             testID={`scam-card-${scamDef.id}`}
           />
         ))}
+
+        {/* Managers Section */}
+        <TerminalText
+          size="md"
+          color={COLORS.terminalGreenDim}
+          style={styles.sectionTitle}
+        >
+          {'MANAGERS'}
+        </TerminalText>
+
+        <CRTFrame style={styles.managersSection}>
+          <TerminalText size="sm" color={COLORS.terminalGreenDim}>
+            {'Managers automate your scams'}
+          </TerminalText>
+          <View style={styles.managersList}>
+            {TIER_1_MANAGERS.filter((mgr) => mgr.scamId !== 'bot-farms').map((manager) => {
+              const hired = isManagerHired(manager.id);
+              const canAfford = resources.money >= manager.cost;
+              const scamState = scams[manager.scamId];
+              const scamUnlocked = scamState?.isUnlocked ?? false;
+
+              return (
+                <View key={manager.id} style={styles.managerRow}>
+                  <View style={styles.managerInfo}>
+                    <TerminalText size="sm" color={hired ? COLORS.terminalGreen : COLORS.terminalGreenDim}>
+                      {manager.name}
+                    </TerminalText>
+                    <TerminalText size="sm" color={COLORS.terminalGreenDim}>
+                      {hired ? '✓ HIRED' : `$${formatNumber(manager.cost)}`}
+                    </TerminalText>
+                  </View>
+                  {!hired && scamUnlocked && (
+                    <PixelButton
+                      onPress={() => handleHireManager(manager.id, manager.cost)}
+                      disabled={!canAfford}
+                      variant="primary"
+                      size="small"
+                    >
+                      HIRE
+                    </PixelButton>
+                  )}
+                  {!hired && !scamUnlocked && (
+                    <TerminalText size="sm" color={COLORS.terminalGreenDim}>
+                      {'LOCKED'}
+                    </TerminalText>
+                  )}
+                </View>
+              );
+            })}
+          </View>
+        </CRTFrame>
       </ScrollView>
     </SafeAreaView>
   );
@@ -244,5 +322,23 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     marginBottom: SPACING.md,
+    marginTop: SPACING.lg,
+  },
+  managersSection: {
+    marginBottom: SPACING.md,
+  },
+  managersList: {
+    marginTop: SPACING.sm,
+  },
+  managerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: SPACING.xs,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.terminalGreenDim + '40',
+  },
+  managerInfo: {
+    flex: 1,
   },
 });

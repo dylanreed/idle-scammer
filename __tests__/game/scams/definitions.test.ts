@@ -340,10 +340,10 @@ describe('Scam Definitions', () => {
       });
     });
 
-    it('should have scaling unlock costs ($100-$25,000 money, Nigerian Prince is free)', () => {
+    it('should have scaling unlock costs ($250-$25,000 money, Nigerian Prince is free)', () => {
       TIER_1_SCAMS.forEach((scam) => {
         if (scam.unlockCost !== undefined) {
-          expect(scam.unlockCost).toBeGreaterThanOrEqual(100);
+          expect(scam.unlockCost).toBeGreaterThanOrEqual(250);
           expect(scam.unlockCost).toBeLessThanOrEqual(25000);
         }
       });

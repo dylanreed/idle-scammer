@@ -53,7 +53,7 @@ export const FAKE_LOTTERY_WINNINGS: ScamDefinition = {
   baseReward: 50,
   resourceType: 'money',
   description: "Congratulations! You've won! (Just pay the processing fee)",
-  unlockCost: 100,
+  unlockCost: 2000,
 };
 
 /**

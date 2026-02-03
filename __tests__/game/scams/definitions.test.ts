@@ -47,8 +47,8 @@ describe('Scam Definitions', () => {
       expect(BOT_FARMS.baseDuration).toBe(1000);
     });
 
-    it('should reward 1 bot per completion (the foundational resource)', () => {
-      expect(BOT_FARMS.baseReward).toBe(1);
+    it('should reward 0.5 bots per completion (accumulates fractionally)', () => {
+      expect(BOT_FARMS.baseReward).toBe(0.5);
     });
 
     it('should produce bots (NOT money - this is special)', () => {
@@ -267,12 +267,13 @@ describe('Scam Definitions', () => {
   });
 
   describe('TIER_1_SCAMS array', () => {
-    it('should contain exactly 10 scams', () => {
-      expect(TIER_1_SCAMS).toHaveLength(10);
+    it('should contain exactly 9 money-generating scams (Bot Farms is separate)', () => {
+      expect(TIER_1_SCAMS).toHaveLength(9);
     });
 
-    it('should contain all Tier 1 scam definitions', () => {
-      expect(TIER_1_SCAMS).toContain(BOT_FARMS);
+    it('should contain all Tier 1 scam definitions (excluding Bot Farms)', () => {
+      // Bot Farms is NOT in TIER_1_SCAMS - it's a separate mechanic
+      expect(TIER_1_SCAMS).not.toContain(BOT_FARMS);
       expect(TIER_1_SCAMS).toContain(NIGERIAN_PRINCE_EMAILS);
       expect(TIER_1_SCAMS).toContain(FAKE_LOTTERY_WINNINGS);
       expect(TIER_1_SCAMS).toContain(IPHONE_POPUP);
@@ -302,23 +303,21 @@ describe('Scam Definitions', () => {
       expect(uniqueNames.size).toBe(TIER_1_SCAMS.length);
     });
 
-    it('should have Bot Farms as the only scam that produces bots', () => {
+    it('should not contain Bot Farms (it is a separate mechanic)', () => {
       const botProducers = TIER_1_SCAMS.filter(
         (scam) => scam.resourceType === 'bots'
       );
-      expect(botProducers).toHaveLength(1);
-      expect(botProducers[0]).toBe(BOT_FARMS);
+      expect(botProducers).toHaveLength(0);
     });
 
-    it('should have Bot Farms as the only scam without an unlock cost', () => {
+    it('should have all scams require an unlock cost', () => {
       const freeScams = TIER_1_SCAMS.filter(
         (scam) => scam.unlockCost === undefined
       );
-      expect(freeScams).toHaveLength(1);
-      expect(freeScams[0]).toBe(BOT_FARMS);
+      expect(freeScams).toHaveLength(0);
     });
 
-    it('should have all other scams produce money', () => {
+    it('should have all scams produce money', () => {
       const moneyScams = TIER_1_SCAMS.filter(
         (scam) => scam.resourceType === 'money'
       );
@@ -327,28 +326,25 @@ describe('Scam Definitions', () => {
 
     it('should have reasonable duration ranges (2-10 seconds)', () => {
       TIER_1_SCAMS.forEach((scam) => {
-        if (scam.id !== 'bot-farms') {
-          // Bot Farms is 1 second
-          expect(scam.baseDuration).toBeGreaterThanOrEqual(2000);
-          expect(scam.baseDuration).toBeLessThanOrEqual(10000);
-        }
+        expect(scam.baseDuration).toBeGreaterThanOrEqual(2000);
+        expect(scam.baseDuration).toBeLessThanOrEqual(10000);
       });
     });
 
-    it('should have reasonable reward ranges (5-50 money)', () => {
+    it('should have reasonable reward ranges ($5-$12,500 money)', () => {
       TIER_1_SCAMS.forEach((scam) => {
         if (scam.resourceType === 'money') {
           expect(scam.baseReward).toBeGreaterThanOrEqual(5);
-          expect(scam.baseReward).toBeLessThanOrEqual(50);
+          expect(scam.baseReward).toBeLessThanOrEqual(12500);
         }
       });
     });
 
-    it('should have scaling unlock costs (100-5000 money)', () => {
+    it('should have scaling unlock costs ($10-$25,000 money)', () => {
       TIER_1_SCAMS.forEach((scam) => {
         if (scam.unlockCost !== undefined) {
-          expect(scam.unlockCost).toBeGreaterThanOrEqual(100);
-          expect(scam.unlockCost).toBeLessThanOrEqual(5000);
+          expect(scam.unlockCost).toBeGreaterThanOrEqual(10);
+          expect(scam.unlockCost).toBeLessThanOrEqual(25000);
         }
       });
     });

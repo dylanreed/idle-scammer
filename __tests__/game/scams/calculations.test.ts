@@ -31,13 +31,15 @@ describe('Scam Calculations', () => {
       expect(duration).toBe(1000);
     });
 
-    it('should reduce duration at higher levels', () => {
+    it('should reduce duration at higher bracket levels', () => {
+      // Speed is bracket-based: levels 1-9 = 1.0x, 10-24 = 1.25x, 25-49 = 2.0x
       const durationL1 = calculateScamDuration(testScam, 1);
-      const durationL5 = calculateScamDuration(testScam, 5);
       const durationL10 = calculateScamDuration(testScam, 10);
+      const durationL25 = calculateScamDuration(testScam, 25);
 
-      expect(durationL5).toBeLessThan(durationL1);
-      expect(durationL10).toBeLessThan(durationL5);
+      // Higher brackets should be faster
+      expect(durationL10).toBeLessThan(durationL1);
+      expect(durationL25).toBeLessThan(durationL10);
     });
 
     it('should never go below a minimum threshold', () => {
@@ -108,22 +110,23 @@ describe('Scam Calculations', () => {
     it('should work with Bot Farms (generates bots)', () => {
       const reward = calculateScamReward(BOT_FARMS, 1, 1);
 
-      // Bot Farms rewards 1 bot at base
-      expect(reward).toBe(1);
+      // Bot Farms rewards 0.5 bots at base (accumulates fractionally)
+      expect(reward).toBe(0.5);
     });
 
-    it('should return integer values for bots', () => {
-      // Bots should be whole numbers
-      const reward = calculateScamReward(BOT_FARMS, 5, 2);
+    it('should return fractional values for incremental accumulation', () => {
+      // Rewards can be fractional to allow slow accumulation
+      const reward = calculateScamReward(BOT_FARMS, 1, 1);
 
-      expect(Number.isInteger(reward)).toBe(true);
+      expect(reward).toBe(0.5);
     });
 
-    it('should handle fractional trust by flooring the result', () => {
+    it('should handle fractional trust', () => {
       // Trust can theoretically be fractional if damaged by snitching
       const reward = calculateScamReward(testScam, 1, 1.5);
 
-      expect(Number.isInteger(reward)).toBe(true);
+      // 100 * 1 * 1.5 = 150
+      expect(reward).toBe(150);
     });
   });
 
@@ -299,14 +302,13 @@ describe('Scam Calculations', () => {
     });
 
     it('should combine level, trust, and bot bonuses', () => {
-      // Level 5 with bracket system: 4 bonus levels × 3.0 profitMult × 1.0 tierBase = 12%
-      // Trust 2: 2x
-      // Bots 50: 1.5x
-      // Base: 10
-      // Total: 10 * 1.12 * 2 * 1.5 = 33.6 → 33
+      // Level 5 profit bonus: 1.01 * (2+3+4+5) = 14.14
+      // Level 5 profit: 10 + 14.14 = 24.14
+      // Trust 2: 24.14 * 2 = 48.28
+      // Bots 50 (1.5x): 48.28 * 1.5 = 72.42
       const reward = calculateScamReward(botScam, 5, 2, 50);
 
-      expect(reward).toBe(33);
+      expect(reward).toBeCloseTo(72.42, 1);
     });
 
     it('should default to 0 bots if not provided', () => {

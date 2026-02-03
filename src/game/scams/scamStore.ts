@@ -66,7 +66,7 @@ export function createScamState(scamId: string, isUnlocked = false): ScamState {
 }
 
 /**
- * Returns the initial scam state with all Tier 1 scams initialized.
+ * Returns the initial scam state with Bot Farms and all Tier 1 scams initialized.
  * Bot Farms and Nigerian Prince Emails start unlocked; all other scams start locked.
  *
  * @returns Initial scam state map
@@ -74,9 +74,13 @@ export function createScamState(scamId: string, isUnlocked = false): ScamState {
 export function getInitialScamState(): ScamStateMap {
   const initialState: ScamStateMap = {};
 
+  // Bot Farms is separate from tiers - always initialized and unlocked
+  initialState[BOT_FARMS.id] = createScamState(BOT_FARMS.id, true);
+
+  // Initialize all Tier 1 scams
   TIER_1_SCAMS.forEach((scam) => {
-    // Bot Farms and Nigerian Prince Emails start unlocked
-    const isUnlocked = scam.id === BOT_FARMS.id || scam.id === NIGERIAN_PRINCE_EMAILS.id;
+    // Only Nigerian Prince Emails starts unlocked
+    const isUnlocked = scam.id === NIGERIAN_PRINCE_EMAILS.id;
     initialState[scam.id] = createScamState(scam.id, isUnlocked);
   });
 

@@ -20,7 +20,7 @@ export const BOT_FARMS: ScamDefinition = {
   name: 'Bot Farms',
   tier: 1,
   baseDuration: 1000, // 1 second - fast for early game feel-good
-  baseReward: 1, // 1 bot per completion
+  baseReward: 0.5, // 0.5 bots per completion
   resourceType: 'bots', // This scam gives bots, not money!
   description: 'Deploy autonomous bots to do your bidding',
   unlockCost: undefined, // Free to start - this is the first scam
@@ -35,10 +35,10 @@ export const NIGERIAN_PRINCE_EMAILS: ScamDefinition = {
   name: 'Nigerian Prince Emails',
   tier: 1,
   baseDuration: 5000, // 5 seconds - takes time to craft that royal backstory
-  baseReward: 15,
+  baseReward: 5,
   resourceType: 'money',
   description: 'A modest sum to secure millions from a deposed prince',
-  unlockCost: 100,
+  unlockCost: 10,
 };
 
 /**
@@ -50,10 +50,10 @@ export const FAKE_LOTTERY_WINNINGS: ScamDefinition = {
   name: 'Fake Lottery Winnings',
   tier: 1,
   baseDuration: 3000, // 3 seconds - people are eager to claim winnings
-  baseReward: 10,
+  baseReward: 50,
   resourceType: 'money',
   description: "Congratulations! You've won! (Just pay the processing fee)",
-  unlockCost: 150,
+  unlockCost: 100,
 };
 
 /**
@@ -65,10 +65,10 @@ export const IPHONE_POPUP: ScamDefinition = {
   name: '"You\'ve Won an iPhone" Popups',
   tier: 1,
   baseDuration: 2000, // 2 seconds - fast popup spam
-  baseReward: 5,
+  baseReward: 125,
   resourceType: 'money',
   description: 'You are the 1,000,000th visitor! Definitely not a lie',
-  unlockCost: 200,
+  unlockCost: 250,
 };
 
 /**
@@ -80,10 +80,10 @@ export const PHISHING_LINKS: ScamDefinition = {
   name: 'Phishing Links',
   tier: 1,
   baseDuration: 4000, // 4 seconds - gotta wait for them to enter credentials
-  baseReward: 12,
+  baseReward: 250,
   resourceType: 'money',
   description: 'Your account has been compromised! Click here to verify',
-  unlockCost: 300,
+  unlockCost: 500,
 };
 
 /**
@@ -95,10 +95,10 @@ export const SURVEY_SCAMS: ScamDefinition = {
   name: 'Survey Scams',
   tier: 1,
   baseDuration: 6000, // 6 seconds - surveys take time to complete
-  baseReward: 18,
+  baseReward: 500,
   resourceType: 'money',
   description: 'Complete 47 surveys for a chance to win absolutely nothing',
-  unlockCost: 500,
+  unlockCost: 1000,
 };
 
 /**
@@ -110,10 +110,10 @@ export const FAKE_ANTIVIRUS_POPUPS: ScamDefinition = {
   name: 'Fake Antivirus Popups',
   tier: 1,
   baseDuration: 3500, // 3.5 seconds - panic makes people act fast
-  baseReward: 14,
+  baseReward: 1250,
   resourceType: 'money',
   description: 'WARNING: 847 viruses detected! Download TotallyLegitAV now',
-  unlockCost: 750,
+  unlockCost: 2500,
 };
 
 /**
@@ -125,10 +125,10 @@ export const GIFT_CARD_SCAMS: ScamDefinition = {
   name: 'Gift Card Scams',
   tier: 1,
   baseDuration: 7000, // 7 seconds - convincing people takes time
-  baseReward: 25,
+  baseReward: 2500,
   resourceType: 'money',
   description: 'The IRS accepts Steam gift cards now. Totally legit policy',
-  unlockCost: 1000,
+  unlockCost: 5000,
 };
 
 /**
@@ -140,10 +140,10 @@ export const ADVANCE_FEE_FRAUD: ScamDefinition = {
   name: 'Advance Fee Fraud',
   tier: 1,
   baseDuration: 8000, // 8 seconds - building trust takes time
-  baseReward: 35,
+  baseReward: 5000,
   resourceType: 'money',
   description: 'Guaranteed 500% returns! Small registration fee required',
-  unlockCost: 2000,
+  unlockCost: 10000,
 };
 
 /**
@@ -155,18 +155,18 @@ export const FAKE_JOB_POSTINGS: ScamDefinition = {
   name: 'Fake Job Postings',
   tier: 1,
   baseDuration: 10000, // 10 seconds - job applications take time
-  baseReward: 50,
+  baseReward: 12500,
   resourceType: 'money',
   description: "Work from home! Be your own boss! (Training fee: $299)",
-  unlockCost: 5000,
+  unlockCost: 25000,
 };
 
 /**
  * Collection of all Tier 1 "Small Time" scams.
- * These are the entry-level scams that new players start with.
+ * These are the entry-level money-generating scams.
+ * Bot Farms is separate - it's a core mechanic, not a tier scam.
  */
 export const TIER_1_SCAMS: ScamDefinition[] = [
-  BOT_FARMS,
   NIGERIAN_PRINCE_EMAILS,
   FAKE_LOTTERY_WINNINGS,
   IPHONE_POPUP,

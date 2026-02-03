@@ -274,58 +274,57 @@ describe('ScamStore', () => {
   });
 
   describe('getTotalTier1Levels', () => {
-    it('should return 10 initially (10 Tier 1 scams at level 1)', () => {
+    it('should return 9 initially (9 Tier 1 scams at level 1, Bot Farms is separate)', () => {
       const { getTotalTier1Levels } = useScamStore.getState();
 
-      // 10 scams × level 1 = 10 total levels
-      expect(getTotalTier1Levels()).toBe(10);
+      // 9 tier 1 scams × level 1 = 9 total levels (Bot Farms not counted)
+      expect(getTotalTier1Levels()).toBe(9);
     });
 
     it('should increase when scams are upgraded', () => {
-      const { getTotalTier1Levels, upgradeScam, unlockScam } = useScamStore.getState();
+      const { getTotalTier1Levels, upgradeScam } = useScamStore.getState();
 
-      // Unlock a scam and upgrade it
-      unlockScam('nigerian-prince-emails');
+      // Nigerian Prince starts unlocked, upgrade it
       upgradeScam('nigerian-prince-emails');
       upgradeScam('nigerian-prince-emails');
 
-      // 10 scams at level 1 + 2 more levels = 12
-      expect(getTotalTier1Levels()).toBe(12);
+      // 9 scams at level 1 + 2 more levels = 11
+      expect(getTotalTier1Levels()).toBe(11);
     });
 
-    it('should sum levels from all Tier 1 scams', () => {
+    it('should sum levels from all Tier 1 scams (not Bot Farms)', () => {
       const { getTotalTier1Levels, upgradeScam, unlockScam } = useScamStore.getState();
 
-      // Upgrade Bot Farms to level 50
-      for (let i = 0; i < 49; i++) {
-        upgradeScam(BOT_FARMS.id);
-      }
-
-      // Unlock and upgrade Nigerian Prince to level 30
-      unlockScam('nigerian-prince-emails');
+      // Upgrade Nigerian Prince to level 30 (starts unlocked)
       for (let i = 0; i < 29; i++) {
         upgradeScam('nigerian-prince-emails');
       }
 
-      // Bot Farms: 50, Nigerian Prince: 30, 8 others: 1 each = 50 + 30 + 8 = 88
-      expect(getTotalTier1Levels()).toBe(88);
+      // Unlock and upgrade Fake Lottery to level 20
+      unlockScam('fake-lottery-winnings');
+      for (let i = 0; i < 19; i++) {
+        upgradeScam('fake-lottery-winnings');
+      }
+
+      // Nigerian Prince: 30, Fake Lottery: 20, 7 others: 1 each = 30 + 20 + 7 = 57
+      expect(getTotalTier1Levels()).toBe(57);
     });
   });
 
   describe('getMilestoneBots', () => {
-    it('should return 0 with initial levels (10 total)', () => {
+    it('should return 0 with initial levels (9 total)', () => {
       const { getMilestoneBots } = useScamStore.getState();
 
-      // 10 total levels / 100 = 0 bots
+      // 9 total levels / 100 = 0 bots
       expect(getMilestoneBots()).toBe(0);
     });
 
     it('should return 1 bot at 100 total levels', () => {
       const { getMilestoneBots, upgradeScam } = useScamStore.getState();
 
-      // Upgrade Bot Farms to level 91 (10 base + 90 more = 100 total)
-      for (let i = 0; i < 90; i++) {
-        upgradeScam(BOT_FARMS.id);
+      // Upgrade Nigerian Prince to level 92 (9 base + 91 more = 100 total)
+      for (let i = 0; i < 91; i++) {
+        upgradeScam('nigerian-prince-emails');
       }
 
       expect(getMilestoneBots()).toBe(1);
@@ -334,18 +333,18 @@ describe('ScamStore', () => {
     it('should return 2 bots at 200 total levels', () => {
       const { getMilestoneBots, upgradeScam, unlockScam } = useScamStore.getState();
 
-      // Upgrade Bot Farms to level 100
+      // Upgrade Nigerian Prince to level 100
       for (let i = 0; i < 99; i++) {
-        upgradeScam(BOT_FARMS.id);
-      }
-
-      // Unlock and upgrade Nigerian Prince to level 91 (100 + 8 others at 1 + 91 = 199, need 1 more)
-      unlockScam('nigerian-prince-emails');
-      for (let i = 0; i < 91; i++) {
         upgradeScam('nigerian-prince-emails');
       }
 
-      // 100 + 92 + 8 = 200
+      // Unlock and upgrade Fake Lottery to level 93 (100 + 7 others at 1 + 93 = 200)
+      unlockScam('fake-lottery-winnings');
+      for (let i = 0; i < 92; i++) {
+        upgradeScam('fake-lottery-winnings');
+      }
+
+      // 100 + 93 + 7 = 200
       expect(getMilestoneBots()).toBe(2);
     });
 
@@ -353,11 +352,12 @@ describe('ScamStore', () => {
       const { getMilestoneBots, upgradeScam } = useScamStore.getState();
 
       // Get to 150 total levels (should still be 1 bot)
-      for (let i = 0; i < 140; i++) {
-        upgradeScam(BOT_FARMS.id);
+      // Need 141 more levels from Nigerian Prince (9 base + 141 = 150)
+      for (let i = 0; i < 141; i++) {
+        upgradeScam('nigerian-prince-emails');
       }
 
-      // 141 + 9 others at 1 = 150
+      // 142 + 8 others at 1 = 150
       expect(getMilestoneBots()).toBe(1);
     });
   });

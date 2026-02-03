@@ -14,7 +14,7 @@ import { PixelButton } from '../components/PixelButton';
 import { CRTFrame } from '../components/CRTFrame';
 import { formatNumber } from '../utils/formatters';
 import { calculateBotMultiplier } from '../game/scams/calculations';
-import { TIER_1_SCAMS } from '../game/scams/definitions';
+import { BOT_FARMS, TIER_1_SCAMS } from '../game/scams/definitions';
 import {
   calculateScamDuration,
   calculateScamReward,
@@ -29,6 +29,10 @@ import type { ScamDefinition } from '../game/scams/types';
  * Look up a scam definition by ID
  */
 function getScamDefinition(scamId: string): ScamDefinition | undefined {
+  // Check Bot Farms first (separate from tiers)
+  if (scamId === BOT_FARMS.id) {
+    return BOT_FARMS;
+  }
   return TIER_1_SCAMS.find((scam) => scam.id === scamId);
 }
 
@@ -233,6 +237,28 @@ export function GameScreen(): React.ReactElement {
           </View>
         </CRTFrame>
 
+        {/* Bot Farms Section - Core game loop mechanic */}
+        <TerminalText
+          size="md"
+          color={COLORS.terminalGreenDim}
+          style={styles.sectionTitle}
+        >
+          {'BOT GENERATION'}
+        </TerminalText>
+
+        <ScamCard
+          scamDefinition={BOT_FARMS}
+          scamState={scams[BOT_FARMS.id]}
+          timer={timerMap[BOT_FARMS.id]}
+          trust={resources.trust}
+          money={resources.money}
+          onStart={() => handleStartScam(BOT_FARMS.id)}
+          onUnlock={() => handleUnlockScam(BOT_FARMS.id)}
+          onUpgrade={() => handleUpgradeScam(BOT_FARMS.id)}
+          testID={`scam-card-${BOT_FARMS.id}`}
+        />
+
+        {/* Tier 1 Scams Section */}
         <TerminalText
           size="md"
           color={COLORS.terminalGreenDim}

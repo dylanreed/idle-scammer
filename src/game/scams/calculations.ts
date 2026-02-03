@@ -1,12 +1,8 @@
 // ABOUTME: Calculation functions for scam duration, rewards, and upgrade costs
-// ABOUTME: Implements bracket-based level scaling with trust multiplier for idle game progression
+// ABOUTME: Accumulating profits with exponential costs to encourage progression
 
 import type { ScamDefinition } from './types';
-import {
-  calculateCumulativeBonus,
-  getTierBase,
-  type ScamTierBase,
-} from '../economy/constants';
+import { getTierBase } from '../economy/constants';
 
 /**
  * Minimum duration as a percentage of base.
@@ -28,56 +24,75 @@ const BOT_COMPOUND_RATE = 0.01;
 const BOT_PURCHASE_BASE_PRICE = 100;
 
 /**
- * Base speed percentage per tier.
- * Higher tiers scale slower (longer time to reach max speed).
- * This is multiplied by bracket speedMult to get actual rate.
+ * Profit increment rate.
+ * Each level adds (level × this rate) to the accumulated profit.
  */
-const SPEED_BASE_RATES: Record<number, number> = {
-  1: 1.0,
-  2: 0.9,
-  3: 0.8,
-  4: 0.7,
-  5: 0.6,
-  6: 0.5,
-  7: 0.45,
-  8: 0.4,
-  9: 0.35,
-  10: 0.3,
-};
+const PROFIT_INCREMENT_RATE = 1.01;
 
 /**
- * Base profit percentage per tier for bracket calculations.
- * All tiers use 1.0 for consistent scaling (bracket multipliers do the work).
+ * Speed multipliers by level bracket.
+ * Higher brackets = faster completion times.
  */
-const PROFIT_BASE_RATES: Record<number, number> = {
-  1: 1.0,
-  2: 1.0,
-  3: 1.0,
-  4: 1.0,
-  5: 1.0,
-  6: 1.0,
-  7: 1.0,
-  8: 1.0,
-  9: 1.0,
-  10: 1.0,
-};
+const SPEED_BRACKETS: { maxLevel: number; multiplier: number }[] = [
+  { maxLevel: 9, multiplier: 1.0 },
+  { maxLevel: 24, multiplier: 1.25 },
+  { maxLevel: 49, multiplier: 2.0 },
+  { maxLevel: 74, multiplier: 5.0 },
+  { maxLevel: 99, multiplier: 7.5 },
+  { maxLevel: Infinity, multiplier: 10.0 },
+];
 
 /**
- * Base cost percentage per tier for bracket calculations.
- * All tiers use 1.0 for consistent scaling (bracket multipliers do the work).
+ * Profit bonus multipliers by level bracket.
+ * These milestone bonuses reward reaching higher levels.
  */
-const COST_BASE_RATES: Record<number, number> = {
-  1: 1.0,
-  2: 1.0,
-  3: 1.0,
-  4: 1.0,
-  5: 1.0,
-  6: 1.0,
-  7: 1.0,
-  8: 1.0,
-  9: 1.0,
-  10: 1.0,
-};
+const PROFIT_BONUS_BRACKETS: { maxLevel: number; multiplier: number }[] = [
+  { maxLevel: 9, multiplier: 1.0 },
+  { maxLevel: 24, multiplier: 1.25 },
+  { maxLevel: 49, multiplier: 2.0 },
+  { maxLevel: 74, multiplier: 5.0 },
+  { maxLevel: 99, multiplier: 7.5 },
+  { maxLevel: Infinity, multiplier: 10.0 },
+];
+
+/**
+ * Cost growth rates by level bracket.
+ * Each rate is the per-level multiplier for that bracket.
+ * Costs accelerate dramatically at higher levels.
+ */
+const COST_BRACKETS: { maxLevel: number; rate: number }[] = [
+  { maxLevel: 9, rate: 1.05 },      // Modest growth early
+  { maxLevel: 24, rate: 1.16 },     // Picking up
+  { maxLevel: 49, rate: 1.35 },     // Aggressive
+  { maxLevel: 74, rate: 1.58 },     // Explosive
+  { maxLevel: 99, rate: 1.78 },     // Astronomical
+  { maxLevel: Infinity, rate: 2.0 }, // Cosmic
+];
+
+/**
+ * Gets the speed multiplier for a given level based on brackets.
+ */
+export function getSpeedMultiplier(level: number): number {
+  for (const bracket of SPEED_BRACKETS) {
+    if (level <= bracket.maxLevel) {
+      return bracket.multiplier;
+    }
+  }
+  return SPEED_BRACKETS[SPEED_BRACKETS.length - 1].multiplier;
+}
+
+/**
+ * Gets the profit bonus multiplier for a given level based on brackets.
+ * 1.0x for levels 1-9, 1.25x for 10-24, 2x for 25-49, etc.
+ */
+export function getProfitBonusMultiplier(level: number): number {
+  for (const bracket of PROFIT_BONUS_BRACKETS) {
+    if (level <= bracket.maxLevel) {
+      return bracket.multiplier;
+    }
+  }
+  return PROFIT_BONUS_BRACKETS[PROFIT_BONUS_BRACKETS.length - 1].multiplier;
+}
 
 /**
  * Calculates the duration of a scam at a given level.
@@ -92,11 +107,10 @@ export function calculateScamDuration(
   definition: ScamDefinition,
   level: number
 ): number {
-  const { baseDuration, tier } = definition;
-  const speedBaseRate = SPEED_BASE_RATES[tier] ?? SPEED_BASE_RATES[1];
+  const { baseDuration } = definition;
 
-  // Calculate speed multiplier from bracket bonuses
-  const speedMultiplier = calculateCumulativeBonus(level, speedBaseRate, 'speedMult');
+  // Get speed multiplier from bracket
+  const speedMultiplier = getSpeedMultiplier(level);
 
   // Duration decreases as speed increases
   const calculatedDuration = baseDuration / speedMultiplier;
@@ -106,16 +120,41 @@ export function calculateScamDuration(
 }
 
 /**
+ * Calculates the accumulated profit bonus for a given level.
+ * Each level adds (level × PROFIT_INCREMENT_RATE) to the total.
+ * This creates steadily increasing gains per level.
+ *
+ * Formula: sum of (i × 1.01) for i from 2 to level
+ *        = 1.01 × (sum of i from 2 to level)
+ *        = 1.01 × ((level × (level + 1) / 2) - 1)
+ *
+ * @param level - Current scam level (1-based)
+ * @returns Accumulated profit bonus to add to base reward
+ */
+export function calculateProfitBonus(level: number): number {
+  if (level <= 1) {
+    return 0;
+  }
+
+  // Sum of integers from 2 to level = (level × (level + 1) / 2) - 1
+  const sumOfLevels = (level * (level + 1)) / 2 - 1;
+  return sumOfLevels * PROFIT_INCREMENT_RATE;
+}
+
+/**
  * Calculates the reward for completing a scam at a given level and trust.
- * Uses bracket-based profit scaling.
+ * Profit accumulates: each level adds (level × 1.01) to the previous profit.
  * Trust directly multiplies all rewards.
  * For bot-type rewards, bots owned provide a compound bonus (+1% per bot).
+ *
+ * Returns fractional values to support incremental accumulation.
+ * Display code should floor values when showing to users.
  *
  * @param definition - The scam definition
  * @param level - Current scam level (1-based)
  * @param trust - Player's trust value (prestige multiplier, starts at 1)
  * @param currentBots - Number of bots owned (for compound bonus on bot rewards)
- * @returns Reward amount (floored to integer)
+ * @returns Reward amount (may be fractional for incremental accumulation)
  */
 export function calculateScamReward(
   definition: ScamDefinition,
@@ -123,26 +162,62 @@ export function calculateScamReward(
   trust: number,
   currentBots: number = 0
 ): number {
-  const { baseReward, resourceType, tier } = definition;
-  const profitBaseRate = PROFIT_BASE_RATES[tier] ?? PROFIT_BASE_RATES[1];
+  const { baseReward, resourceType } = definition;
 
-  // Calculate profit multiplier from bracket bonuses
-  const levelMultiplier = calculateCumulativeBonus(level, profitBaseRate, 'profitMult');
+  // Calculate accumulated profit: base + bonus from all levels
+  const profitBonus = calculateProfitBonus(level);
+  const levelProfit = baseReward + profitBonus;
+
+  // Apply bracket-based profit bonus multiplier (1.25x at 10+, 2x at 25+, etc.)
+  const bracketBonus = getProfitBonusMultiplier(level);
 
   // Bot compound bonus only applies to bot-type rewards
   const botMultiplier =
     resourceType === 'bots' ? calculateBotMultiplier(currentBots) : 1;
 
   // Trust is a direct multiplier
-  const totalReward = baseReward * levelMultiplier * trust * botMultiplier;
+  const totalReward = levelProfit * bracketBonus * trust * botMultiplier;
 
-  // Floor to integer (no fractional resources)
-  return Math.floor(totalReward);
+  // Return fractional value for incremental accumulation
+  return totalReward;
+}
+
+/**
+ * Calculates the cost multiplier using exponential growth with bracket acceleration.
+ * Cost grows faster at higher level brackets, eventually far outpacing profit.
+ *
+ * @param level - Current scam level (1-based)
+ * @returns Cost multiplier
+ */
+export function calculateCostMultiplier(level: number): number {
+  if (level <= 1) {
+    return 1;
+  }
+
+  // Calculate cumulative cost through all brackets
+  let multiplier = 1;
+  let currentLevel = 1;
+
+  for (const bracket of COST_BRACKETS) {
+    if (currentLevel > level) break;
+
+    const bracketEnd = Math.min(bracket.maxLevel, level);
+    const levelsInBracket = bracketEnd - currentLevel + 1;
+
+    if (levelsInBracket > 0) {
+      // Apply this bracket's rate for each level in it
+      multiplier *= Math.pow(bracket.rate, levelsInBracket);
+    }
+
+    currentLevel = bracketEnd + 1;
+  }
+
+  return multiplier;
 }
 
 /**
  * Calculates the cost to upgrade a scam to the next level.
- * Uses initialCost from SCAM_TIER_BASES as the base, then applies bracket scaling.
+ * Uses exponential growth with bracket-based acceleration.
  *
  * @param definition - The scam definition
  * @param level - Current level (cost to upgrade FROM this level)
@@ -153,14 +228,13 @@ export function calculateUpgradeCost(
   level: number
 ): number {
   const { tier } = definition;
-  const costBaseRate = COST_BASE_RATES[tier] ?? COST_BASE_RATES[1];
 
   // Base cost comes from tier's initialCost in the economic spreadsheet
   const tierBase = getTierBase(tier);
   const baseCost = tierBase.initialCost;
 
-  // Calculate cost multiplier from bracket bonuses
-  const costMultiplier = calculateCumulativeBonus(level, costBaseRate, 'costMult');
+  // Exponential cost growth with bracket acceleration
+  const costMultiplier = calculateCostMultiplier(level);
 
   // Apply the multiplier to base cost
   const cost = baseCost * costMultiplier;

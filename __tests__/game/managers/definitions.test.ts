@@ -39,14 +39,20 @@ describe('Manager Definitions', () => {
       expect(uniqueNames.size).toBe(TIER_1_MANAGERS.length);
     });
 
-    it('should cover all Tier 1 scams', () => {
+    it('should cover all Tier 1 scams (plus Bot Farms which is separate)', () => {
       const scamIdsCovered = new Set(TIER_1_MANAGERS.map((m) => m.scamId));
       const tier1ScamIds = new Set(TIER_1_SCAMS.map((s) => s.id));
 
-      expect(scamIdsCovered.size).toBe(tier1ScamIds.size);
+      // All Tier 1 scams should have managers
       tier1ScamIds.forEach((scamId) => {
         expect(scamIdsCovered.has(scamId)).toBe(true);
       });
+
+      // Bot Farms is separate but should also have a manager
+      expect(scamIdsCovered.has('bot-farms')).toBe(true);
+
+      // Total managers = 9 tier 1 scams + 1 bot farms = 10
+      expect(scamIdsCovered.size).toBe(10);
     });
 
     it('should have positive costs for all managers', () => {

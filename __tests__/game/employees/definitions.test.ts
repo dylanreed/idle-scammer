@@ -39,14 +39,20 @@ describe('Employee Definitions', () => {
       expect(uniqueNames.size).toBe(TIER_1_EMPLOYEES.length);
     });
 
-    it('should cover all Tier 1 scams', () => {
+    it('should cover all Tier 1 scams (plus Bot Farms which is separate)', () => {
       const scamIdsCovered = new Set(TIER_1_EMPLOYEES.map((e) => e.scamId));
       const tier1ScamIds = new Set(TIER_1_SCAMS.map((s) => s.id));
 
-      expect(scamIdsCovered.size).toBe(tier1ScamIds.size);
+      // All Tier 1 scams should have employees
       tier1ScamIds.forEach((scamId) => {
         expect(scamIdsCovered.has(scamId)).toBe(true);
       });
+
+      // Bot Farms is separate but should also have an employee
+      expect(scamIdsCovered.has('bot-farms')).toBe(true);
+
+      // Total employees = 9 tier 1 scams + 1 bot farms = 10
+      expect(scamIdsCovered.size).toBe(10);
     });
 
     it('should have positive base costs for all employees', () => {

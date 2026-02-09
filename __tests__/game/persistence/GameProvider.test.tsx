@@ -145,7 +145,7 @@ describe('GameProvider', () => {
           timesCompleted: 50,
         },
       },
-    } as SaveData;
+    } as unknown as SaveData;
 
     mockStorage.loadGame.mockResolvedValue(v1SaveData);
 

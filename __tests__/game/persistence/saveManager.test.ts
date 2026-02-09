@@ -298,7 +298,7 @@ describe('SaveManager', () => {
           trust: 2,
         },
         scams: {},
-      } as SaveData;
+      } as unknown as SaveData;
 
       const result = migrateIfNeeded(oldSaveData);
 
@@ -329,7 +329,7 @@ describe('SaveManager', () => {
             timesCompleted: 100,
           },
         },
-      } as SaveData;
+      } as unknown as SaveData;
 
       const result = migrateIfNeeded(v1SaveData);
 
@@ -354,7 +354,7 @@ describe('SaveManager', () => {
           trust: 1,
         },
         scams: {},
-      } as SaveData;
+      } as unknown as SaveData;
 
       const result = migrateIfNeeded(veryOldSaveData);
 

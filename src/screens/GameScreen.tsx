@@ -123,6 +123,29 @@ export function GameScreen(): React.ReactElement {
     start();
   }, [start]);
 
+  // Auto-start managed scams after load
+  // GameProvider guarantees stores are hydrated before this component mounts,
+  // so we can safely read manager/scam state here.
+  useEffect(() => {
+    for (const managerDef of TIER_1_MANAGERS) {
+      // Skip bot farms since they're handled separately
+      if (managerDef.scamId === 'bot-farms') continue;
+
+      const managerHired = useManagerStore.getState().isManagerHired(managerDef.id);
+      if (!managerHired) continue;
+
+      const scamState = useScamStore.getState().scams[managerDef.scamId];
+      if (!scamState?.isUnlocked) continue;
+
+      const definition = TIER_1_SCAMS.find((s) => s.id === managerDef.scamId);
+      if (!definition) continue;
+
+      const duration = calculateScamDuration(definition, scamState.level);
+      addTimer(managerDef.scamId, duration);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Create a map from scamId to active timer for quick lookup
   const timerMap = useMemo(() => {
     const map: Record<string, ScamTimer> = {};

@@ -47,6 +47,7 @@ describe('Storage', () => {
         timesCompleted: 25,
       },
     },
+    managers: {},
   };
 
   beforeEach(() => {

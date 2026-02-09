@@ -134,10 +134,16 @@ describe('ResourceIcon', () => {
     });
   });
 
-  describe('icon placeholder', () => {
-    it('renders icon container', () => {
+  describe('icon display', () => {
+    it('renders actual image for resources with icons', () => {
       render(<ResourceIcon resourceKey="money" value={100} testID="resource-icon" />);
-      const icon = screen.getByTestId('resource-icon-placeholder');
+      const icon = screen.getByTestId('resource-icon-image');
+      expect(icon).toBeTruthy();
+    });
+
+    it('renders actual image for heat', () => {
+      render(<ResourceIcon resourceKey="heat" value={100} testID="resource-icon" />);
+      const icon = screen.getByTestId('resource-icon-image');
       expect(icon).toBeTruthy();
     });
   });

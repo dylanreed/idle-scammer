@@ -324,27 +324,33 @@ describe('Scam Definitions', () => {
       expect(moneyScams).toHaveLength(9);
     });
 
-    it('should have reasonable duration ranges (2-10 seconds)', () => {
+    it('should have reasonable duration ranges (5s-3min)', () => {
       TIER_1_SCAMS.forEach((scam) => {
-        expect(scam.baseDuration).toBeGreaterThanOrEqual(2000);
-        expect(scam.baseDuration).toBeLessThanOrEqual(10000);
+        expect(scam.baseDuration).toBeGreaterThanOrEqual(5000);
+        expect(scam.baseDuration).toBeLessThanOrEqual(180000);
       });
     });
 
-    it('should have reasonable reward ranges ($0.10-$12,500 money)', () => {
+    it('should have reward = unlock cost (Kongregate economy)', () => {
       TIER_1_SCAMS.forEach((scam) => {
         if (scam.resourceType === 'money') {
-          expect(scam.baseReward).toBeGreaterThanOrEqual(0.1);
-          expect(scam.baseReward).toBeLessThanOrEqual(12500);
+          // For non-free scams, baseReward should equal unlockCost
+          if (scam.unlockCost !== undefined) {
+            expect(scam.baseReward).toBe(scam.unlockCost);
+          }
+          // For free scams, baseReward should equal tier baseCost ($10)
+          else {
+            expect(scam.baseReward).toBe(10);
+          }
         }
       });
     });
 
-    it('should have scaling unlock costs ($250-$25,000 money, Nigerian Prince is free)', () => {
+    it('should have 100x scaling unlock costs ($1K-$10B, Nigerian Prince is free)', () => {
       TIER_1_SCAMS.forEach((scam) => {
         if (scam.unlockCost !== undefined) {
-          expect(scam.unlockCost).toBeGreaterThanOrEqual(250);
-          expect(scam.unlockCost).toBeLessThanOrEqual(25000);
+          expect(scam.unlockCost).toBeGreaterThanOrEqual(1000);
+          expect(scam.unlockCost).toBeLessThanOrEqual(10000000000); // $10B
         }
       });
     });

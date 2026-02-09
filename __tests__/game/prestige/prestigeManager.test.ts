@@ -64,19 +64,21 @@ describe('Prestige Manager', () => {
       expect(result.bonuses).toBeUndefined();
     });
 
-    it('should reset game resources except trust', () => {
+    it('should reset game resources except trust, with starting skill points', () => {
       setupMidGameState();
 
       executePrestige('clean-escape');
 
       const resources = useGameStore.getState().resources;
+      const newTrust = 75 + CLEAN_ESCAPE_TRUST_GAIN; // 85
       expect(resources.money).toBe(STARTING_MONEY);
       expect(resources.reputation).toBe(0);
       expect(resources.heat).toBe(0);
       expect(resources.bots).toBe(0);
-      expect(resources.skillPoints).toBe(0);
+      // Starting skill points = floor(trust - 1) = floor(85 - 1) = 84
+      expect(resources.skillPoints).toBe(Math.floor(newTrust - 1));
       expect(resources.crypto).toBe(0);
-      expect(resources.trust).toBe(75 + CLEAN_ESCAPE_TRUST_GAIN);
+      expect(resources.trust).toBe(newTrust);
     });
 
     it('should reset scam state to initial', () => {
@@ -160,6 +162,7 @@ describe('Prestige Manager', () => {
       executePrestige('snitch');
 
       const resources = useGameStore.getState().resources;
+      const newTrust = 75 - 5; // 70
       // Money: STARTING_MONEY + 10000 * 0.1 = STARTING_MONEY + 1000
       expect(resources.money).toBe(STARTING_MONEY + 1000);
       // Bots: 5000 * 0.1 = 500
@@ -168,12 +171,15 @@ describe('Prestige Manager', () => {
       expect(resources.reputation).toBe(50);
       // Crypto: 25 * 0.1 = 2.5
       expect(resources.crypto).toBeCloseTo(2.5);
-      // Skill points: 50 * 0.1 = 5
-      expect(resources.skillPoints).toBe(5);
+      // Skill points: starting SP from trust + snitch bonus
+      // Starting: floor(70 - 1) = 69, Bonus: floor(50 * 0.1) = 5, Total: 74
+      const startingSP = Math.floor(newTrust - 1);
+      const snitchBonus = Math.floor(50 * 0.1);
+      expect(resources.skillPoints).toBe(startingSP + snitchBonus);
       // Heat should still be 0
       expect(resources.heat).toBe(0);
       // Trust: 75 - 5 = 70
-      expect(resources.trust).toBe(70);
+      expect(resources.trust).toBe(newTrust);
     });
 
     it('should not let trust fall below 1', () => {

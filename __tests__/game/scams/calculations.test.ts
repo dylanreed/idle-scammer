@@ -7,21 +7,26 @@ import {
   calculateUpgradeCost,
   calculateBotMultiplier,
   calculateBotPurchasePrice,
+  getMilestoneMultiplier,
+  isMilestoneLevel,
+  calculateMilestoneBonus,
+  calculateManagerCost,
 } from '../../../src/game/scams/calculations';
 import { BOT_FARMS } from '../../../src/game/scams/definitions';
 import type { ScamDefinition } from '../../../src/game/scams/types';
 
 describe('Scam Calculations', () => {
   // Create a test definition with larger values for bracket-based calculations
-  // Using baseReward: 100 so percentage bonuses are visible after flooring
+  // Kongregate economy: unlockCost = baseReward for testing
   const testScam: ScamDefinition = {
     id: 'test-scam',
     name: 'Test Scam',
     tier: 1,
     baseDuration: 1000, // 1 second
-    baseReward: 100, // Large enough for % bonuses to show
+    baseReward: 100, // Legacy field (new system uses unlockCost)
     resourceType: 'money',
     description: 'Test scam for calculations',
+    unlockCost: 100, // Kongregate: this determines reward at L1
   };
 
   describe('calculateScamDuration', () => {
@@ -166,14 +171,28 @@ describe('Scam Calculations', () => {
     });
 
     it('should factor in tier (higher tiers cost more)', () => {
-      const tier1Scam: ScamDefinition = { ...testScam, tier: 1 };
-      const tier3Scam: ScamDefinition = { ...testScam, tier: 3 };
-      const tier5Scam: ScamDefinition = { ...testScam, tier: 5 };
+      // Create scams WITHOUT unlockCost so they use tier's baseCost
+      const tier1Scam: ScamDefinition = {
+        ...testScam,
+        tier: 1,
+        unlockCost: undefined,
+      };
+      const tier3Scam: ScamDefinition = {
+        ...testScam,
+        tier: 3,
+        unlockCost: undefined,
+      };
+      const tier5Scam: ScamDefinition = {
+        ...testScam,
+        tier: 5,
+        unlockCost: undefined,
+      };
 
       const costTier1 = calculateUpgradeCost(tier1Scam, 1);
       const costTier3 = calculateUpgradeCost(tier3Scam, 1);
       const costTier5 = calculateUpgradeCost(tier5Scam, 1);
 
+      // Tier baseCosts: T1=$10, T3=$100K, T5=$1B
       expect(costTier3).toBeGreaterThan(costTier1);
       expect(costTier5).toBeGreaterThan(costTier3);
     });

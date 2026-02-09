@@ -22,6 +22,11 @@ export interface LevelBracket {
  * speedMult: speed increase per level (multiplied by tierBase)
  * Values scaled for meaningful progression even with small base values.
  * At level 10: ~10% bonus, level 25: ~25% bonus, level 100: ~200%+ bonus
+ *
+ * NOTE: These brackets are NOT used by the scam calculation pipeline.
+ * The actual game uses PROFIT_BRACKETS and SPEED_BRACKETS defined in
+ * scams/calculations.ts. These are retained for future tier-specific
+ * bracket scaling if needed.
  */
 export const LEVEL_BRACKETS: LevelBracket[] = [
   { maxLevel: 25, speedMult: 1.0, profitMult: 3.0, costMult: 5.0 },
@@ -37,38 +42,46 @@ export const LEVEL_BRACKETS: LevelBracket[] = [
 /**
  * Base values for each scam tier (1-10).
  * These define the starting point before level scaling.
+ *
+ * New Kongregate-style economy:
+ * - Cost: base × costRate^(level-1) (simple exponential)
+ * - Profit: base × (1 + level × profitGrowth) × bracketBonus (linear)
  */
 export interface ScamTierBase {
   /** Tier number (1-10) */
   tier: number;
-  /** Initial upgrade cost at level 1 */
-  initialCost: number;
-  /** Base profit per completion at level 1 */
-  initialProfit: number;
+  /** Base cost for free scams (scams with unlockCost use that instead) */
+  baseCost: number;
+  /** Cost growth rate per level (1.15 = 15% increase) */
+  costRate: number;
+  /** Profit growth rate per level (0.10 = 10% increase) */
+  profitGrowth: number;
   /** Base duration in milliseconds */
   baseDuration: number;
-  /** Cost exponent for triangular growth */
-  costExponent: number;
-  /** Profit rate for growth calculation */
-  profitRate: number;
 }
 
 /**
  * Base values for all 10 scam tiers from the economic spreadsheet.
- * Cost formula: baseCost × exponent^(triangular(n) - 1)
- * Profit formula: Tier-specific based on rate
+ *
+ * Kongregate-style economy tuned for crossover at L35:
+ * - Cost: baseCost × 1.07^(level-1)  (7% increase per level)
+ * - Profit: baseCost × (1 + (level-1) × 0.10) × bracketBonus
+ *
+ * With bracket bonuses (2.5x at L35), crossover happens around L35.
  */
 export const SCAM_TIER_BASES: ScamTierBase[] = [
-  { tier: 1, initialCost: 1, initialProfit: 0.1, baseDuration: 5000, costExponent: 1.0099, profitRate: 0.45 },
-  { tier: 2, initialCost: 250, initialProfit: 250, baseDuration: 2000, costExponent: 1.03, profitRate: 1.3 },
-  { tier: 3, initialCost: 100000, initialProfit: 50000, baseDuration: 5000, costExponent: 1.01, profitRate: 3 },
-  { tier: 4, initialCost: 500000, initialProfit: 100000, baseDuration: 10000, costExponent: 1.015, profitRate: 2.5 },
-  { tier: 5, initialCost: 2500000, initialProfit: 500000, baseDuration: 30000, costExponent: 1.02, profitRate: 2.5 },
-  { tier: 6, initialCost: 10000000, initialProfit: 2000000, baseDuration: 60000, costExponent: 1.02, profitRate: 2.5 },
-  { tier: 7, initialCost: 50000000, initialProfit: 10000000, baseDuration: 120000, costExponent: 1.02, profitRate: 2.5 },
-  { tier: 8, initialCost: 250000000, initialProfit: 50000000, baseDuration: 300000, costExponent: 1.02, profitRate: 2.5 },
-  { tier: 9, initialCost: 1000000000, initialProfit: 200000000, baseDuration: 600000, costExponent: 1.02, profitRate: 2.5 },
-  { tier: 10, initialCost: 5000000000, initialProfit: 1000000000, baseDuration: 1200000, costExponent: 1.02, profitRate: 2.5 },
+  // costRate 1.07 = 7% cost increase per level (tuned for L35 crossover)
+  // profitGrowth 0.10 = 10% profit increase per level
+  { tier: 1, baseCost: 10, costRate: 1.07, profitGrowth: 0.10, baseDuration: 5000 },
+  { tier: 2, baseCost: 1000, costRate: 1.07, profitGrowth: 0.10, baseDuration: 5000 },
+  { tier: 3, baseCost: 100000, costRate: 1.07, profitGrowth: 0.10, baseDuration: 5000 },
+  { tier: 4, baseCost: 10000000, costRate: 1.07, profitGrowth: 0.10, baseDuration: 10000 },
+  { tier: 5, baseCost: 1000000000, costRate: 1.07, profitGrowth: 0.10, baseDuration: 30000 },
+  { tier: 6, baseCost: 100000000000, costRate: 1.07, profitGrowth: 0.10, baseDuration: 60000 },
+  { tier: 7, baseCost: 10000000000000, costRate: 1.07, profitGrowth: 0.10, baseDuration: 120000 },
+  { tier: 8, baseCost: 1000000000000000, costRate: 1.07, profitGrowth: 0.10, baseDuration: 300000 },
+  { tier: 9, baseCost: 100000000000000000, costRate: 1.07, profitGrowth: 0.10, baseDuration: 600000 },
+  { tier: 10, baseCost: 10000000000000000000, costRate: 1.07, profitGrowth: 0.10, baseDuration: 1200000 },
 ];
 
 /**

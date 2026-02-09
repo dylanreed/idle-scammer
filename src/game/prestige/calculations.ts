@@ -10,7 +10,10 @@ import {
   CLEAN_ESCAPE_TRUST_GAIN,
   SNITCH_TRUST_PENALTY,
   SNITCH_RESOURCE_KEEP_PERCENT,
+  SKILL_POINTS_PER_TRUST,
+  TIER_TRUST_REQUIREMENTS,
 } from './constants';
+import type { ScamTier } from '../scams/types';
 
 /**
  * Calculates heat gained from completing a scam.
@@ -21,6 +24,45 @@ import {
  */
 export function calculateHeatFromScam(scamDefinition: ScamDefinition): number {
   return HEAT_PER_SCAM_TIER[scamDefinition.tier];
+}
+
+/**
+ * Calculates starting skill points based on trust level.
+ * Higher trust = more skill points to spend at the start of a run.
+ * This is the core prestige reward for clean escapes.
+ *
+ * Formula: floor(trust - 1) * SKILL_POINTS_PER_TRUST
+ * - Trust 1: 0 SP (fresh player, no bonus)
+ * - Trust 11: 10 SP (one clean escape from start)
+ * - Trust 21: 20 SP (two clean escapes)
+ *
+ * @param trust - The player's current trust value
+ * @returns The number of skill points to start with
+ */
+export function calculateStartingSkillPoints(trust: number): number {
+  return Math.floor(Math.max(0, trust - 1)) * SKILL_POINTS_PER_TRUST;
+}
+
+/**
+ * Checks if a scam tier is accessible based on trust level.
+ * Higher tiers require more trust, earned through clean escapes.
+ *
+ * @param tier - The scam tier to check
+ * @param trust - The player's current trust value
+ * @returns True if the tier is accessible
+ */
+export function isTierAccessible(tier: ScamTier, trust: number): boolean {
+  return trust >= TIER_TRUST_REQUIREMENTS[tier];
+}
+
+/**
+ * Gets the trust required to unlock a specific tier.
+ *
+ * @param tier - The scam tier
+ * @returns The minimum trust needed to access that tier
+ */
+export function getTierTrustRequirement(tier: ScamTier): number {
+  return TIER_TRUST_REQUIREMENTS[tier];
 }
 
 /**

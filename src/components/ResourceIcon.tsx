@@ -2,10 +2,11 @@
 // ABOUTME: Color-coded per resource type with compact number formatting
 
 import React from 'react';
-import { View, Text, StyleSheet, ViewStyle, StyleProp } from 'react-native';
+import { View, Text, Image, StyleSheet, ViewStyle, StyleProp } from 'react-native';
 import { COLORS, FONTS, FONT_SIZES, SPACING } from './theme';
 import { formatNumber } from '../utils/formatters';
 import type { ResourceKey } from '../game/types';
+import { getResourceIcon } from '../game/assets';
 
 /**
  * Color mapping for each resource type.
@@ -69,13 +70,22 @@ export function ResourceIcon({
   const color = RESOURCE_COLORS[resourceKey];
   const label = RESOURCE_LABELS[resourceKey];
   const formattedValue = formatNumber(value);
+  const icon = getResourceIcon(resourceKey);
 
   return (
     <View testID={testID} style={[styles.container, style]}>
-      <View testID="resource-icon-placeholder" style={[styles.iconPlaceholder, { borderColor: color }]}>
-        {/* Icon placeholder - will be replaced with actual icons later */}
-        <Text style={[styles.iconText, { color }]}>{label[0]}</Text>
-      </View>
+      {icon ? (
+        <Image
+          source={icon}
+          style={styles.icon}
+          testID="resource-icon-image"
+        />
+      ) : (
+        <View testID="resource-icon-placeholder" style={[styles.iconPlaceholder, { borderColor: color }]}>
+          {/* Fallback letter placeholder for resources without icons */}
+          <Text style={[styles.iconText, { color }]}>{label[0]}</Text>
+        </View>
+      )}
       <Text testID="resource-value" style={[styles.value, { color }]}>
         {formattedValue}
       </Text>
@@ -90,6 +100,11 @@ const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
     minWidth: 48,
+  },
+  icon: {
+    width: 28,
+    height: 28,
+    marginBottom: SPACING.xs,
   },
   iconPlaceholder: {
     width: 24,

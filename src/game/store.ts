@@ -4,6 +4,7 @@
 import { create } from 'zustand';
 import type { GameResources, GameState, ResourceKey } from './types';
 import { calculateBotPurchasePrice } from './scams/calculations';
+import { calculateStartingSkillPoints } from './prestige/calculations';
 
 /**
  * Starting money for new games.
@@ -115,10 +116,14 @@ export const useGameStore = create<GameState>()((set, get) => ({
         ? currentTrust + trustModifier
         : currentTrust;
 
+      // Calculate starting skill points based on new trust level
+      const startingSkillPoints = calculateStartingSkillPoints(newTrust);
+
       return {
         resources: {
           ...getInitialResources(),
           trust: newTrust,
+          skillPoints: startingSkillPoints,
         },
       };
     });

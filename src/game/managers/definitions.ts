@@ -23,12 +23,14 @@ export const BOT_3000: ManagerDefinition = {
  *
  * Claims to be the REAL Nigerian prince. The others are imposters.
  * His father was deposed (again) and he needs your help (again).
+ *
+ * Cost = 0.75 × next scam unlock ($1K) = $750
  */
 export const PRINCE_OKONKWO: ManagerDefinition = {
   id: 'prince-okonkwo',
   name: 'Prince Okonkwo III',
   scamId: 'nigerian-prince-emails',
-  cost: 100, // First manager - affordable early game
+  cost: 750, // 0.75 × iPhone Popup unlock ($1K)
   flavorText: "I am the REAL prince, unlike those other 47,000 imposters. My father, the king, he is very sick and I need... wait, you've heard this before?",
 };
 
@@ -37,12 +39,14 @@ export const PRINCE_OKONKWO: ManagerDefinition = {
  *
  * Has never won a real lottery in his life, but has convinced
  * thousands of people that they have.
+ *
+ * Cost = 0.75 × next scam unlock ($10M) = $7.5M
  */
 export const LUCKY_LARRY: ManagerDefinition = {
   id: 'lucky-larry',
   name: 'Lucky Larry Lotto',
   scamId: 'fake-lottery-winnings',
-  cost: 5000, // ~2.5x scam unlock cost of $2,000
+  cost: 7500000, // 0.75 × Fake Antivirus unlock ($10M)
   flavorText: "CONGRATULATIONS! You're our millionth viewer! I say that a lot. Like, CONSTANTLY.",
 };
 
@@ -51,12 +55,14 @@ export const LUCKY_LARRY: ManagerDefinition = {
  *
  * A hyperactive popup enthusiast from the early 2000s.
  * Still thinks flash animations are cutting edge.
+ *
+ * Cost = 0.75 × next scam unlock ($10K) = $7.5K
  */
 export const POPUP_PETE: ManagerDefinition = {
   id: 'popup-pete',
   name: 'Popup Pete',
   scamId: 'iphone-popup',
-  cost: 10000,
+  cost: 7500, // 0.75 × Phishing unlock ($10K)
   flavorText: "YOU WON! CLICK HERE! NO WAIT, HERE! ACTUALLY EVERYWHERE! *aggressive blinking intensifies*",
 };
 
@@ -65,12 +71,14 @@ export const POPUP_PETE: ManagerDefinition = {
  *
  * A self-proclaimed "social engineer" who has mastered the art
  * of making fake login pages look almost real.
+ *
+ * Cost = 0.75 × next scam unlock ($100K) = $75K
  */
 export const PHISHMASTER_PHIL: ManagerDefinition = {
   id: 'phishmaster-phil',
   name: 'PhishMaster Phil',
   scamId: 'phishing-links',
-  cost: 25000,
+  cost: 75000, // 0.75 × Survey unlock ($100K)
   flavorText: "Please verify your account by clicking this totally-not-suspicious link. The extra 'l' in 'Paypall' is for 'legitimate'.",
 };
 
@@ -79,12 +87,14 @@ export const PHISHMASTER_PHIL: ManagerDefinition = {
  *
  * Has been conducting fake surveys since Web 1.0.
  * Her surveys always have "just 3 more questions."
+ *
+ * Cost = 0.75 × next scam unlock ($1M) = $750K
  */
 export const SURVEY_SUSAN: ManagerDefinition = {
   id: 'survey-susan',
   name: 'Survey Susan',
   scamId: 'survey-scams',
-  cost: 50000,
+  cost: 750000, // 0.75 × Fake Lottery unlock ($1M)
   flavorText: "Just 47 more questions and you'll win that $500 gift card! Also, what's your mother's maiden name? For... demographics.",
 };
 
@@ -93,12 +103,14 @@ export const SURVEY_SUSAN: ManagerDefinition = {
  *
  * A dramatic fear-monger who makes every computer problem
  * sound like digital armageddon. Named after a certain antivirus.
+ *
+ * Cost = 0.75 × next scam unlock ($100M) = $75M
  */
 export const DREAD_NORTON: ManagerDefinition = {
   id: 'dread-norton',
   name: 'Dread Norton',
   scamId: 'fake-antivirus-popups',
-  cost: 100000,
+  cost: 75000000, // 0.75 × Gift Card unlock ($100M)
   flavorText: "WARNING! CRITICAL ALERT! Your computer has 847 VIRUSES and ONE is currently EATING YOUR RAM! Download my totally free software NOW!",
 };
 
@@ -107,12 +119,14 @@ export const DREAD_NORTON: ManagerDefinition = {
  *
  * An elegant scammer who has convinced thousands that the IRS,
  * FBI, and local police all accept Steam gift cards.
+ *
+ * Cost = 0.75 × next scam unlock ($1B) = $750M
  */
 export const GWEN_CARDSWORTH: ManagerDefinition = {
   id: 'gwen-cardsworth',
   name: 'Gwen Cardsworth',
   scamId: 'gift-card-scams',
-  cost: 250000,
+  cost: 750000000, // 0.75 × Advance Fee unlock ($1B)
   flavorText: "Yes, the IRS DOES accept iTunes gift cards now. It's a new policy. Very official. Read me the numbers on the back, please.",
 };
 
@@ -121,12 +135,14 @@ export const GWEN_CARDSWORTH: ManagerDefinition = {
  *
  * A smooth-talking investment guru who always needs
  * "just a small processing fee" to release your millions.
+ *
+ * Cost = 0.75 × next scam unlock ($10B) = $7.5B
  */
 export const FELIX_UPFRONT: ManagerDefinition = {
   id: 'felix-upfront',
   name: 'Felix Upfront',
   scamId: 'advance-fee-fraud',
-  cost: 500000,
+  cost: 7500000000, // 0.75 × Fake Job unlock ($10B)
   flavorText: "Your inheritance of $4.7 million is ready! I just need a small $500 processing fee. Then another $300 for customs. Then $200 for the lawyers...",
 };
 
@@ -135,12 +151,14 @@ export const FELIX_UPFRONT: ManagerDefinition = {
  *
  * Runs the most exclusive job listings on the internet.
  * Work from home! Be your own boss! Training fee required!
+ *
+ * Cost = 0.75 × $100B (continuing 10× progression past last T1 scam)
  */
 export const CARLA_CAREERS: ManagerDefinition = {
   id: 'carla-careers',
   name: 'Carla Careers',
   scamId: 'fake-job-postings',
-  cost: 1000000,
+  cost: 75000000000, // 0.75 × $100B (continuing 10× progression)
   flavorText: "Make $10,000/week from HOME stuffing envelopes! Guaranteed! Just pay the $299 starter kit fee and you're basically ALREADY rich!",
 };
 

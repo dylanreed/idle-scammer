@@ -229,11 +229,13 @@ describe('GameStore', () => {
       expect(resources.reputation).toBe(0);
       expect(resources.heat).toBe(0);
       expect(resources.bots).toBe(0);
-      expect(resources.skillPoints).toBe(0);
       expect(resources.crypto).toBe(0);
 
       // Trust should be preserved
       expect(resources.trust).toBe(75);
+
+      // Skill points should be set based on trust: floor(75 - 1) = 74
+      expect(resources.skillPoints).toBe(Math.floor(75 - 1));
     });
 
     it('should preserve trust across multiple prestiges', () => {

@@ -21,6 +21,7 @@ const mockScamDefinition: ScamDefinition = {
 
 // Mock scam state (unlocked, level 1)
 const mockUnlockedState: ScamState = {
+  scamId: 'test-scam',
   isUnlocked: true,
   level: 1,
   timesCompleted: 0,
@@ -28,6 +29,7 @@ const mockUnlockedState: ScamState = {
 
 // Mock scam state (locked)
 const mockLockedState: ScamState = {
+  scamId: 'test-scam',
   isUnlocked: false,
   level: 1,
   timesCompleted: 0,
@@ -62,7 +64,6 @@ function createDefaultProps(overrides: Partial<ScamCardProps> = {}): ScamCardPro
     trust: 1,
     money: 1000,
     onStart: jest.fn(),
-    onCollect: jest.fn(),
     onUnlock: jest.fn(),
     onUpgrade: jest.fn(),
     testID: 'test-scam-card',
@@ -164,13 +165,14 @@ describe('ScamCard', () => {
 
     it('should display upgrade cost in button', () => {
       render(<ScamCard {...createDefaultProps()} />);
-      // Upgrade cost for tier 1 level 1 is $1 (initialCost from SCAM_TIER_BASES)
-      expect(screen.getByText(/UPGRADE.*\$1\)/)).toBeTruthy();
+      // Upgrade cost for level 1 is based on unlockCost ($100 from mock definition)
+      expect(screen.getByText(/UPGRADE.*\$100\)/)).toBeTruthy();
     });
 
     it('should disable upgrade button when cannot afford', () => {
-      render(<ScamCard {...createDefaultProps({ money: 5 })} />);
+      render(<ScamCard {...createDefaultProps({ money: 50 })} />);
       // Button should exist but be disabled (we check by testID)
+      // Upgrade cost is $100, player has $50 - cannot afford
       const upgradeButton = screen.getByTestId('test-scam-card-upgrade');
       expect(upgradeButton).toBeTruthy();
       // Press should still work (disabled is visual), handler decides

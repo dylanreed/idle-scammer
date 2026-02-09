@@ -2,7 +2,7 @@
 // ABOUTME: Shows scam state, progress bar, and action buttons (start, collect, unlock)
 
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, Image } from 'react-native';
 import { CRTFrame } from './CRTFrame';
 import { PixelButton } from './PixelButton';
 import { ProgressBar } from './ProgressBar';
@@ -17,6 +17,8 @@ import {
   calculateScamReward,
   calculateUpgradeCost,
 } from '../game/scams/calculations';
+import { getScamIcon, getManagerPortrait } from '../game/assets';
+import { getManagerByScamId } from '../game/managers/definitions';
 
 /**
  * Possible states a scam card can be in.
@@ -42,6 +44,9 @@ export interface ScamCardProps {
 
   /** Player's current money for unlock/upgrade affordability check */
   money: number;
+
+  /** Whether a manager is hired for this scam (affects button display) */
+  hasManager?: boolean;
 
   /** Called when player clicks start button */
   onStart: () => void;
@@ -105,6 +110,7 @@ export function ScamCard({
   timer,
   trust,
   money,
+  hasManager = false,
   onStart,
   onUnlock,
   onUpgrade,
@@ -112,6 +118,7 @@ export function ScamCard({
 }: ScamCardProps): React.ReactElement {
   const status = getScamStatus(scamState, timer);
   const level = scamState?.level ?? 1;
+  const isRunning = status === 'running';
 
   // Calculate values for display
   const duration = calculateScamDuration(scamDefinition, level);
@@ -130,10 +137,24 @@ export function ScamCard({
       ? `+${formatNumber(reward)} bots`
       : `+$${formatNumber(reward)}`;
 
+  // Get scam icon
+  const scamIcon = getScamIcon(scamDefinition.id);
+
+  // Get manager portrait if hired
+  const manager = getManagerByScamId(scamDefinition.id);
+  const managerPortrait = hasManager && manager ? getManagerPortrait(manager.id) : undefined;
+
   return (
     <CRTFrame testID={testID} style={styles.card}>
-      {/* Header with name and level */}
+      {/* Header with icon, name, level, and manager portrait */}
       <View style={styles.header}>
+        {scamIcon && (
+          <Image
+            source={scamIcon}
+            style={styles.scamIcon}
+            testID={testID ? `${testID}-icon` : undefined}
+          />
+        )}
         <TerminalText size="lg" style={styles.name}>
           {scamDefinition.name}
         </TerminalText>
@@ -141,6 +162,13 @@ export function ScamCard({
           <TerminalText size="sm" color={COLORS.terminalGreenDim}>
             {`Lvl ${level}`}
           </TerminalText>
+        )}
+        {managerPortrait && (
+          <Image
+            source={managerPortrait}
+            style={styles.managerPortrait}
+            testID={testID ? `${testID}-manager` : undefined}
+          />
         )}
       </View>
 
@@ -161,8 +189,8 @@ export function ScamCard({
         </View>
       )}
 
-      {/* Progress bar (when running) */}
-      {status === 'running' && (
+      {/* Progress bar (always visible when unlocked) */}
+      {status !== 'locked' && (
         <View style={styles.progressContainer}>
           <ProgressBar
             progress={progress}
@@ -187,7 +215,7 @@ export function ScamCard({
           </PixelButton>
         )}
 
-        {status === 'idle' && (
+        {status === 'idle' && !hasManager && (
           <PixelButton
             onPress={onStart}
             variant="primary"
@@ -197,14 +225,25 @@ export function ScamCard({
           </PixelButton>
         )}
 
-        {status === 'running' && (
+        {status === 'idle' && hasManager && (
+          <PixelButton
+            onPress={() => {}}
+            disabled
+            variant="secondary"
+            testID={testID ? `${testID}-auto` : undefined}
+          >
+            AUTO (MANAGED)
+          </PixelButton>
+        )}
+
+        {isRunning && (
           <PixelButton
             onPress={() => {}}
             disabled
             variant="primary"
             testID={testID ? `${testID}-running` : undefined}
           >
-            RUNNING...
+            {hasManager ? 'AUTO RUNNING...' : 'RUNNING...'}
           </PixelButton>
         )}
       </View>
@@ -246,6 +285,16 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: SPACING.xs,
+  },
+  scamIcon: {
+    width: 48,
+    height: 48,
+    marginRight: SPACING.sm,
+  },
+  managerPortrait: {
+    width: 36,
+    height: 36,
+    marginLeft: SPACING.sm,
   },
   name: {
     flex: 1,

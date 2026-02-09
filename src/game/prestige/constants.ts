@@ -44,3 +44,31 @@ export const SNITCH_TRUST_PENALTY = -5;
  * The feds give you a cut, but at what cost to your reputation?
  */
 export const SNITCH_RESOURCE_KEEP_PERCENT = 0.1;
+
+/**
+ * Skill points granted per point of trust above 1.
+ * Formula: startingSP = floor(trust - 1) * SKILL_POINTS_PER_TRUST
+ *
+ * At trust 1: 0 SP (fresh start)
+ * At trust 2: 1 SP
+ * At trust 11: 10 SP (one clean escape from start)
+ */
+export const SKILL_POINTS_PER_TRUST = 1;
+
+/**
+ * Minimum trust required to access each scam tier.
+ * Players must build trust through clean escapes to unlock higher tiers.
+ *
+ * Tier 1: Trust 1 (default - everyone starts here)
+ * Tier 2: Trust 11 (one clean escape)
+ * Tier 3: Trust 21 (two clean escapes)
+ * Tier 4: Trust 31 (three clean escapes)
+ * Tier 5: Trust 41 (four clean escapes)
+ */
+export const TIER_TRUST_REQUIREMENTS: Record<ScamTier, number> = {
+  1: 1,
+  2: 11,
+  3: 21,
+  4: 31,
+  5: 41,
+};

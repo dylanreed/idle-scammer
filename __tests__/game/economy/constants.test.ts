@@ -38,20 +38,32 @@ describe('Economy Constants', () => {
       expect(SCAM_TIER_BASES).toHaveLength(10);
     });
 
-    it('should have increasing initial costs', () => {
+    it('should have increasing base costs (100x per tier)', () => {
       for (let i = 1; i < SCAM_TIER_BASES.length; i++) {
-        expect(SCAM_TIER_BASES[i].initialCost).toBeGreaterThan(
-          SCAM_TIER_BASES[i - 1].initialCost
+        expect(SCAM_TIER_BASES[i].baseCost).toBeGreaterThan(
+          SCAM_TIER_BASES[i - 1].baseCost
         );
       }
     });
 
-    it('should have tier 1 cost at $1', () => {
-      expect(SCAM_TIER_BASES[0].initialCost).toBe(1);
+    it('should have tier 1 baseCost at $10', () => {
+      expect(SCAM_TIER_BASES[0].baseCost).toBe(10);
     });
 
-    it('should have tier 10 cost at $5 billion', () => {
-      expect(SCAM_TIER_BASES[9].initialCost).toBe(5000000000);
+    it('should have tier 10 baseCost at $10 quintillion', () => {
+      expect(SCAM_TIER_BASES[9].baseCost).toBe(10000000000000000000);
+    });
+
+    it('should have consistent cost rate of 1.07 (7% per level, tuned for L35 crossover)', () => {
+      SCAM_TIER_BASES.forEach((tier) => {
+        expect(tier.costRate).toBe(1.07);
+      });
+    });
+
+    it('should have consistent profit growth of 0.10 (10% per level)', () => {
+      SCAM_TIER_BASES.forEach((tier) => {
+        expect(tier.profitGrowth).toBe(0.1);
+      });
     });
   });
 
@@ -59,15 +71,17 @@ describe('Economy Constants', () => {
     it('should return tier 1 base for tier 1', () => {
       const base = getTierBase(1);
       expect(base.tier).toBe(1);
-      expect(base.initialCost).toBe(1);
-      expect(base.initialProfit).toBe(0.1);
+      expect(base.baseCost).toBe(10);
+      expect(base.costRate).toBe(1.07); // Tuned for L35 crossover
+      expect(base.profitGrowth).toBe(0.1);
     });
 
     it('should return tier 5 base for tier 5', () => {
       const base = getTierBase(5);
       expect(base.tier).toBe(5);
-      expect(base.initialCost).toBe(2500000);
-      expect(base.initialProfit).toBe(500000);
+      expect(base.baseCost).toBe(1000000000); // $1B
+      expect(base.costRate).toBe(1.07); // Tuned for L35 crossover
+      expect(base.profitGrowth).toBe(0.1);
     });
 
     it('should return tier 1 for invalid tier numbers', () => {

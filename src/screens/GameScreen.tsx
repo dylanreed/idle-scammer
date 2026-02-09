@@ -2,7 +2,8 @@
 // ABOUTME: Displays ResourceHUD, ScamCards, managers, and handles game loop integration
 
 import React, { useEffect, useCallback, useMemo, useRef } from 'react';
-import { View, ScrollView, StyleSheet, SafeAreaView } from 'react-native';
+import { View, ScrollView, StyleSheet, Image } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { ResourceHUD } from '../components/ResourceHUD';
 import { ScamCard } from '../components/ScamCard';
@@ -15,12 +16,15 @@ import { useScamStore } from '../game/scams/scamStore';
 import { useManagerStore } from '../game/managers/managerStore';
 import { TIER_1_SCAMS } from '../game/scams/definitions';
 import { getManagerByScamId, TIER_1_MANAGERS } from '../game/managers/definitions';
+import { getManagerPortrait } from '../game/assets';
 import {
   calculateScamDuration,
   calculateScamReward,
   calculateUpgradeCost,
+  calculateMilestoneBonus,
+  isMilestoneLevel,
 } from '../game/scams/calculations';
-import { calculateHeatFromScam } from '../game/prestige/calculations';
+import { calculateHeatFromScam, isTierAccessible } from '../game/prestige/calculations';
 import { useGameLoop } from '../game/engine/gameLoop';
 import { formatNumber } from '../utils/formatters';
 import type { ScamTimer } from '../game/engine/types';
@@ -53,11 +57,12 @@ export function GameScreen(): React.ReactElement {
   const hireManager = useManagerStore((state) => state.hireManager);
   const isManagerHired = useManagerStore((state) => state.isManagerHired);
 
-  // Ref to hold removeTimer function (needed for auto-collect in handleTimerComplete)
+  // Refs to hold timer functions (needed for auto-collect and manager auto-restart)
   const removeTimerRef = useRef<((scamId: string) => void) | null>(null);
+  const addTimerRef = useRef<((scamId: string, durationMs: number) => void) | null>(null);
 
   /**
-   * Handle scam timer completion - award resources and auto-collect (remove timer)
+   * Handle scam timer completion - award resources, auto-collect, and manager auto-restart
    */
   const handleTimerComplete = useCallback(
     (timer: ScamTimer) => {
@@ -88,8 +93,20 @@ export function GameScreen(): React.ReactElement {
       if (removeTimerRef.current) {
         removeTimerRef.current(timer.scamId);
       }
+
+      // Manager auto-restart: if manager is hired, start the scam again
+      const manager = getManagerByScamId(timer.scamId);
+      if (manager && isManagerHired(manager.id) && addTimerRef.current) {
+        // Schedule auto-restart on next tick to avoid state conflicts
+        const duration = calculateScamDuration(definition, scamState.level);
+        setTimeout(() => {
+          if (addTimerRef.current) {
+            addTimerRef.current(timer.scamId, duration);
+          }
+        }, 0);
+      }
     },
-    [scams, resources.trust, addMoney, addHeat, incrementCompletion]
+    [scams, resources.trust, addMoney, addHeat, incrementCompletion, isManagerHired]
   );
 
   // Initialize the game loop
@@ -97,8 +114,9 @@ export function GameScreen(): React.ReactElement {
     onTimerComplete: handleTimerComplete,
   });
 
-  // Store removeTimer in ref for use in handleTimerComplete (auto-collect)
+  // Store timer functions in refs for use in handleTimerComplete
   removeTimerRef.current = removeTimer;
+  addTimerRef.current = addTimer;
 
   // Start the game loop on mount
   useEffect(() => {
@@ -113,6 +131,19 @@ export function GameScreen(): React.ReactElement {
     }
     return map;
   }, [engineState.activeTimers]);
+
+  // Find the cheapest locked, unaffordable scam to show as the "save toward" goal.
+  // TIER_1_SCAMS is sorted by ascending unlock cost, so the first match is the cheapest.
+  const nextGoalScamId = useMemo(() => {
+    const goal = TIER_1_SCAMS.find((scamDef) => {
+      if (!isTierAccessible(scamDef.tier, resources.trust)) return false;
+      const scamState = scams[scamDef.id];
+      if (scamState?.isUnlocked) return false;
+      if (scamDef.unlockCost === undefined) return false;
+      return resources.money < scamDef.unlockCost;
+    });
+    return goal?.id;
+  }, [scams, resources.money, resources.trust]);
 
   /**
    * Handle starting a scam
@@ -169,18 +200,30 @@ export function GameScreen(): React.ReactElement {
       const upgradeCost = calculateUpgradeCost(definition, scamState.level);
       if (resources.money < upgradeCost) return;
 
+      // Calculate the new level after upgrade
+      const newLevel = scamState.level + 1;
+
       // Deduct cost and upgrade
       addMoney(-upgradeCost);
       upgradeScam(scamId);
+
+      // Pay out milestone bonus if reaching a milestone level
+      if (isMilestoneLevel(newLevel)) {
+        const milestoneBonus = calculateMilestoneBonus(definition, newLevel, resources.trust);
+        if (milestoneBonus > 0) {
+          addMoney(milestoneBonus);
+          console.log(`🎉 MILESTONE L${newLevel}! Bonus: $${milestoneBonus}`);
+        }
+      }
     },
-    [scams, resources.money, addMoney, upgradeScam]
+    [scams, resources.money, resources.trust, addMoney, upgradeScam]
   );
 
   /**
-   * Handle hiring a manager
+   * Handle hiring a manager - immediately starts automating the scam
    */
   const handleHireManager = useCallback(
-    (managerId: string, cost: number) => {
+    (managerId: string, cost: number, scamId: string) => {
       // Check if already hired
       if (isManagerHired(managerId)) return;
 
@@ -190,8 +233,16 @@ export function GameScreen(): React.ReactElement {
       // Deduct cost and hire
       addMoney(-cost);
       hireManager(managerId);
+
+      // Auto-start the scam if not already running
+      const definition = getScamDefinition(scamId);
+      const scamState = scams[scamId];
+      if (definition && scamState?.isUnlocked && !timerMap[scamId]) {
+        const duration = calculateScamDuration(definition, scamState.level);
+        addTimer(scamId, duration);
+      }
     },
-    [resources.money, addMoney, hireManager, isManagerHired]
+    [resources.money, addMoney, hireManager, isManagerHired, scams, timerMap, addTimer]
   );
 
   return (
@@ -228,20 +279,47 @@ export function GameScreen(): React.ReactElement {
           {'TIER 1: SMALL TIME'}
         </TerminalText>
 
-        {TIER_1_SCAMS.map((scamDef) => (
-          <ScamCard
-            key={scamDef.id}
-            scamDefinition={scamDef}
-            scamState={scams[scamDef.id]}
-            timer={timerMap[scamDef.id]}
-            trust={resources.trust}
-            money={resources.money}
-            onStart={() => handleStartScam(scamDef.id)}
-            onUnlock={() => handleUnlockScam(scamDef.id)}
-            onUpgrade={() => handleUpgradeScam(scamDef.id)}
-            testID={`scam-card-${scamDef.id}`}
-          />
-        ))}
+        {TIER_1_SCAMS
+          .filter((scamDef) => {
+            // Only show scams from accessible tiers
+            if (!isTierAccessible(scamDef.tier, resources.trust)) {
+              return false;
+            }
+            // Show if already unlocked
+            const scamState = scams[scamDef.id];
+            if (scamState?.isUnlocked) {
+              return true;
+            }
+            // Show if free to unlock (no cost)
+            if (scamDef.unlockCost === undefined) {
+              return true;
+            }
+            // Show if player can afford to unlock
+            if (resources.money >= scamDef.unlockCost) {
+              return true;
+            }
+            // Show the next unaffordable scam so players know what to save toward
+            return scamDef.id === nextGoalScamId;
+          })
+          .map((scamDef) => {
+            const manager = getManagerByScamId(scamDef.id);
+            const hasManager = manager ? isManagerHired(manager.id) : false;
+            return (
+              <ScamCard
+                key={scamDef.id}
+                scamDefinition={scamDef}
+                scamState={scams[scamDef.id]}
+                timer={timerMap[scamDef.id]}
+                trust={resources.trust}
+                money={resources.money}
+                hasManager={hasManager}
+                onStart={() => handleStartScam(scamDef.id)}
+                onUnlock={() => handleUnlockScam(scamDef.id)}
+                onUpgrade={() => handleUpgradeScam(scamDef.id)}
+                testID={`scam-card-${scamDef.id}`}
+              />
+            );
+          })}
 
         {/* Managers Section */}
         <TerminalText
@@ -263,8 +341,12 @@ export function GameScreen(): React.ReactElement {
               const scamState = scams[manager.scamId];
               const scamUnlocked = scamState?.isUnlocked ?? false;
 
+              const portrait = getManagerPortrait(manager.id);
               return (
                 <View key={manager.id} style={styles.managerRow}>
+                  {portrait && (
+                    <Image source={portrait} style={styles.managerPortrait} />
+                  )}
                   <View style={styles.managerInfo}>
                     <TerminalText size="sm" color={hired ? COLORS.terminalGreen : COLORS.terminalGreenDim}>
                       {manager.name}
@@ -275,10 +357,9 @@ export function GameScreen(): React.ReactElement {
                   </View>
                   {!hired && scamUnlocked && (
                     <PixelButton
-                      onPress={() => handleHireManager(manager.id, manager.cost)}
+                      onPress={() => handleHireManager(manager.id, manager.cost, manager.scamId)}
                       disabled={!canAfford}
                       variant="primary"
-                      size="small"
                     >
                       HIRE
                     </PixelButton>
@@ -337,6 +418,11 @@ const styles = StyleSheet.create({
     paddingVertical: SPACING.xs,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.terminalGreenDim + '40',
+  },
+  managerPortrait: {
+    width: 40,
+    height: 40,
+    marginRight: SPACING.sm,
   },
   managerInfo: {
     flex: 1,

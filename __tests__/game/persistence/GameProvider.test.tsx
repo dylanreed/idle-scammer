@@ -5,14 +5,7 @@ import React from 'react';
 import { render, screen, waitFor, act } from '@testing-library/react-native';
 import { Text } from 'react-native';
 
-// Mock AsyncStorage before any imports that use it
-jest.mock('@react-native-async-storage/async-storage', () => ({
-  setItem: jest.fn(() => Promise.resolve()),
-  getItem: jest.fn(() => Promise.resolve(null)),
-  removeItem: jest.fn(() => Promise.resolve()),
-}));
-
-// Mock the storage module
+// Mock the storage module (AsyncStorage is mocked globally in jest.setup.js)
 jest.mock('../../../src/game/persistence/storage');
 
 import { GameProvider } from '../../../src/game/persistence/GameProvider';

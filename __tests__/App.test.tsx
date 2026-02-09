@@ -2,17 +2,31 @@
 // ABOUTME: Verifies basic rendering and test setup works correctly
 
 import React from 'react';
-import { render, screen } from '@testing-library/react-native';
+import { render, screen, waitFor } from '@testing-library/react-native';
 import App from '../App';
 
+// Mock the storage module so GameProvider doesn't try to load real saves
+jest.mock('../src/game/persistence/storage', () => ({
+  loadGame: jest.fn(() => Promise.resolve(null)),
+  saveGame: jest.fn(() => Promise.resolve()),
+  clearSave: jest.fn(() => Promise.resolve()),
+  hasSaveData: jest.fn(() => Promise.resolve(false)),
+}));
+
 describe('App', () => {
-  it('renders without crashing', () => {
+  it('renders without crashing', async () => {
     render(<App />);
-    expect(screen.root).toBeTruthy();
+
+    await waitFor(() => {
+      expect(screen.root).toBeTruthy();
+    });
   });
 
-  it('displays the game screen with Nigerian Prince Emails', () => {
+  it('displays the game screen with Nigerian Prince Emails', async () => {
     render(<App />);
-    expect(screen.getByText(/Nigerian Prince Emails/i)).toBeTruthy();
+
+    await waitFor(() => {
+      expect(screen.getByText(/Nigerian Prince Emails/i)).toBeTruthy();
+    });
   });
 });

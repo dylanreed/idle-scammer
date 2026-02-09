@@ -29,6 +29,9 @@ export interface ManagerStoreActions {
   /** Get all manager states as an array */
   getAllManagerStates: () => ManagerState[];
 
+  /** Bulk-restore all manager state from save data */
+  hydrate: (managers: ManagerStateMap) => void;
+
   /** Reset all manager state (for prestige - all must be rehired) */
   resetManagers: () => void;
 }
@@ -115,6 +118,10 @@ export const useManagerStore = create<ManagerStoreState>()((set, get) => ({
 
   getAllManagerStates: () => {
     return Object.values(get().managers);
+  },
+
+  hydrate: (managers: ManagerStateMap) => {
+    set({ managers });
   },
 
   resetManagers: () => {

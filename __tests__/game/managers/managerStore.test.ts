@@ -260,6 +260,53 @@ describe('ManagerStore', () => {
     });
   });
 
+  describe('hydrate', () => {
+    it('should replace all manager state with provided values', () => {
+      const { hydrate } = useManagerStore.getState();
+
+      const savedManagers = {
+        'prince-okonkwo': { managerId: 'prince-okonkwo', isHired: true },
+        'popup-pete': { managerId: 'popup-pete', isHired: true },
+        'lucky-larry': { managerId: 'lucky-larry', isHired: false },
+      };
+
+      hydrate(savedManagers);
+
+      const managers = useManagerStore.getState().managers;
+      expect(managers).toEqual(savedManagers);
+      expect(managers['prince-okonkwo'].isHired).toBe(true);
+      expect(managers['lucky-larry'].isHired).toBe(false);
+    });
+
+    it('should overwrite existing state completely', () => {
+      const { hireManager, hydrate } = useManagerStore.getState();
+
+      // Build up some state
+      hireManager('bot-3000');
+      hireManager('prince-okonkwo');
+
+      // Hydrate should replace it all
+      hydrate({
+        'lucky-larry': { managerId: 'lucky-larry', isHired: true },
+      });
+
+      const managers = useManagerStore.getState().managers;
+      expect(managers['lucky-larry']?.isHired).toBe(true);
+      expect(managers['bot-3000']).toBeUndefined();
+      expect(managers['prince-okonkwo']).toBeUndefined();
+    });
+
+    it('should preserve action functions after hydration', () => {
+      const { hydrate } = useManagerStore.getState();
+
+      hydrate({});
+
+      // Actions should still work
+      useManagerStore.getState().hireManager('bot-3000');
+      expect(useManagerStore.getState().isManagerHired('bot-3000')).toBe(true);
+    });
+  });
+
   describe('prestige simulation', () => {
     it('should allow complete rebuild after reset (prestige flow)', () => {
       const store = useManagerStore.getState();

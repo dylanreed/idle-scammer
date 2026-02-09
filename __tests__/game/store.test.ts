@@ -391,6 +391,65 @@ describe('GameStore', () => {
     });
   });
 
+  describe('hydrate', () => {
+    it('should replace all resources with provided values', () => {
+      const { hydrate } = useGameStore.getState();
+
+      const savedResources: GameResources = {
+        money: 5000,
+        reputation: 100,
+        heat: 50,
+        bots: 200,
+        skillPoints: 15,
+        crypto: 3.5,
+        trust: 5,
+      };
+
+      hydrate(savedResources);
+
+      const resources = useGameStore.getState().resources;
+      expect(resources).toEqual(savedResources);
+    });
+
+    it('should overwrite existing state completely', () => {
+      const { addMoney, hydrate } = useGameStore.getState();
+
+      // Build up some state
+      addMoney(999);
+
+      // Hydrate should replace it all
+      hydrate({
+        money: 42,
+        reputation: 0,
+        heat: 0,
+        bots: 0,
+        skillPoints: 0,
+        crypto: 0,
+        trust: 1,
+      });
+
+      expect(useGameStore.getState().resources.money).toBe(42);
+    });
+
+    it('should preserve action functions after hydration', () => {
+      const { hydrate } = useGameStore.getState();
+
+      hydrate({
+        money: 100,
+        reputation: 0,
+        heat: 0,
+        bots: 0,
+        skillPoints: 0,
+        crypto: 0,
+        trust: 1,
+      });
+
+      // Actions should still work after hydration
+      useGameStore.getState().addMoney(50);
+      expect(useGameStore.getState().resources.money).toBe(150);
+    });
+  });
+
   describe('getBotPurchasePrice', () => {
     it('should return current bot purchase price', () => {
       useGameStore.setState({

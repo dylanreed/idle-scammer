@@ -75,6 +75,9 @@ export interface GameActions {
    * @returns true if purchase succeeded, false if not enough money
    */
   buyBot: () => boolean;
+
+  /** Bulk-restore all resources from save data */
+  hydrate: (resources: GameResources) => void;
 }
 
 /**

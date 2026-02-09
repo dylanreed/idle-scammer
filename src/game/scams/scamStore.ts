@@ -31,6 +31,9 @@ export interface ScamStoreActions {
   /** Get state for a specific scam (undefined if not found) */
   getScamState: (scamId: string) => ScamState | undefined;
 
+  /** Bulk-restore all scam state from save data */
+  hydrate: (scams: ScamStateMap) => void;
+
   /** Reset all scam state (for prestige) */
   resetScams: () => void;
 
@@ -170,6 +173,10 @@ export const useScamStore = create<ScamStoreState>()((set, get) => ({
 
   getScamState: (scamId: string) => {
     return get().scams[scamId];
+  },
+
+  hydrate: (scams: ScamStateMap) => {
+    set({ scams });
   },
 
   resetScams: () => {

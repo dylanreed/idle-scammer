@@ -129,6 +129,10 @@ export const useGameStore = create<GameState>()((set, get) => ({
     });
   },
 
+  hydrate: (resources: GameResources) => {
+    set({ resources });
+  },
+
   buyBot: () => {
     const state = get();
     const price = calculateBotPurchasePrice(state.resources.bots);

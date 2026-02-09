@@ -273,6 +273,73 @@ describe('ScamStore', () => {
     });
   });
 
+  describe('hydrate', () => {
+    it('should replace all scam state with provided values', () => {
+      const { hydrate } = useScamStore.getState();
+
+      const savedScams = {
+        'bot-farms': {
+          scamId: 'bot-farms',
+          level: 15,
+          isUnlocked: true,
+          timesCompleted: 500,
+        },
+        'nigerian-prince-emails': {
+          scamId: 'nigerian-prince-emails',
+          level: 10,
+          isUnlocked: true,
+          timesCompleted: 200,
+        },
+      };
+
+      hydrate(savedScams);
+
+      const scams = useScamStore.getState().scams;
+      expect(scams).toEqual(savedScams);
+      expect(scams['bot-farms'].level).toBe(15);
+      expect(scams['nigerian-prince-emails'].timesCompleted).toBe(200);
+    });
+
+    it('should overwrite existing state completely', () => {
+      const { upgradeScam, hydrate } = useScamStore.getState();
+
+      // Build up some state
+      upgradeScam(BOT_FARMS.id);
+      upgradeScam(BOT_FARMS.id);
+
+      // Hydrate should replace it all
+      hydrate({
+        'bot-farms': {
+          scamId: 'bot-farms',
+          level: 42,
+          isUnlocked: true,
+          timesCompleted: 0,
+        },
+      });
+
+      expect(useScamStore.getState().scams['bot-farms'].level).toBe(42);
+      // Original Tier 1 scams should be gone since hydrate replaces entirely
+      expect(useScamStore.getState().scams['nigerian-prince-emails']).toBeUndefined();
+    });
+
+    it('should preserve action functions after hydration', () => {
+      const { hydrate } = useScamStore.getState();
+
+      hydrate({
+        'bot-farms': {
+          scamId: 'bot-farms',
+          level: 1,
+          isUnlocked: true,
+          timesCompleted: 0,
+        },
+      });
+
+      // Actions should still work
+      useScamStore.getState().upgradeScam('bot-farms');
+      expect(useScamStore.getState().scams['bot-farms'].level).toBe(2);
+    });
+  });
+
   describe('getTotalTier1Levels', () => {
     it('should return 9 initially (9 Tier 1 scams at level 1, Bot Farms is separate)', () => {
       const { getTotalTier1Levels } = useScamStore.getState();

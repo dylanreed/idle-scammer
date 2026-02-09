@@ -10,8 +10,8 @@ import {
 
 describe('Persistence Types', () => {
   describe('constants', () => {
-    it('should export SAVE_VERSION starting at 1', () => {
-      expect(SAVE_VERSION).toBe(1);
+    it('should export SAVE_VERSION at 2', () => {
+      expect(SAVE_VERSION).toBe(2);
     });
 
     it('should export correct STORAGE_KEY', () => {
@@ -24,9 +24,9 @@ describe('Persistence Types', () => {
   });
 
   describe('SaveData interface', () => {
-    it('should accept valid SaveData structure', () => {
+    it('should accept valid SaveData structure with managers', () => {
       const validSaveData: SaveData = {
-        version: 1,
+        version: 2,
         savedAt: Date.now(),
         resources: {
           money: 100,
@@ -45,16 +45,23 @@ describe('Persistence Types', () => {
             timesCompleted: 100,
           },
         },
+        managers: {
+          'prince-okonkwo': {
+            managerId: 'prince-okonkwo',
+            isHired: true,
+          },
+        },
       };
 
       // TypeScript compilation is the main test - this verifies runtime shape
-      expect(validSaveData.version).toBe(1);
+      expect(validSaveData.version).toBe(2);
       expect(validSaveData.savedAt).toBeGreaterThan(0);
       expect(validSaveData.resources).toBeDefined();
       expect(validSaveData.scams).toBeDefined();
+      expect(validSaveData.managers).toBeDefined();
     });
 
-    it('should require all SaveData fields', () => {
+    it('should require all SaveData fields including managers', () => {
       // This test documents the expected structure
       const saveData: SaveData = {
         version: SAVE_VERSION,
@@ -69,12 +76,14 @@ describe('Persistence Types', () => {
           trust: 1,
         },
         scams: {},
+        managers: {},
       };
 
       expect(saveData).toHaveProperty('version');
       expect(saveData).toHaveProperty('savedAt');
       expect(saveData).toHaveProperty('resources');
       expect(saveData).toHaveProperty('scams');
+      expect(saveData).toHaveProperty('managers');
     });
   });
 });

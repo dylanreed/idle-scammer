@@ -1,19 +1,21 @@
 // ABOUTME: Tests for save manager functions that coordinate stores and save data
-// ABOUTME: Validates createSaveData, applySaveData, and migrateIfNeeded
+// ABOUTME: Validates createSaveData, applySaveData, migrateIfNeeded, and reconstructActiveTimers
 
 import {
   createSaveData,
   applySaveData,
   migrateIfNeeded,
+  reconstructActiveTimers,
 } from '../../../src/game/persistence/saveManager';
 import { SAVE_VERSION } from '../../../src/game/persistence/types';
 import type { SaveData } from '../../../src/game/persistence/types';
 import type { GameResources } from '../../../src/game/types';
 import type { ScamStateMap } from '../../../src/game/scams/scamStore';
+import type { ManagerStateMap } from '../../../src/game/managers/managerStore';
 
 describe('SaveManager', () => {
   describe('createSaveData', () => {
-    it('should create SaveData from game and scam state', () => {
+    it('should create SaveData from game, scam, and manager state', () => {
       const resources: GameResources = {
         money: 1000,
         reputation: 50,
@@ -33,13 +35,21 @@ describe('SaveManager', () => {
         },
       };
 
-      const result = createSaveData(resources, scams);
+      const managers: ManagerStateMap = {
+        'prince-okonkwo': {
+          managerId: 'prince-okonkwo',
+          isHired: true,
+        },
+      };
+
+      const result = createSaveData(resources, scams, managers);
 
       expect(result.version).toBe(SAVE_VERSION);
       expect(result.savedAt).toBeGreaterThan(0);
       expect(result.savedAt).toBeLessThanOrEqual(Date.now());
       expect(result.resources).toEqual(resources);
       expect(result.scams).toEqual(scams);
+      expect(result.managers).toEqual(managers);
     });
 
     it('should capture current timestamp', () => {
@@ -55,8 +65,9 @@ describe('SaveManager', () => {
         trust: 1,
       };
       const scams: ScamStateMap = {};
+      const managers: ManagerStateMap = {};
 
-      const result = createSaveData(resources, scams);
+      const result = createSaveData(resources, scams, managers);
 
       const after = Date.now();
 
@@ -64,7 +75,7 @@ describe('SaveManager', () => {
       expect(result.savedAt).toBeLessThanOrEqual(after);
     });
 
-    it('should handle empty scams state', () => {
+    it('should handle empty scams and managers state', () => {
       const resources: GameResources = {
         money: 100,
         reputation: 0,
@@ -75,10 +86,12 @@ describe('SaveManager', () => {
         trust: 1,
       };
       const scams: ScamStateMap = {};
+      const managers: ManagerStateMap = {};
 
-      const result = createSaveData(resources, scams);
+      const result = createSaveData(resources, scams, managers);
 
       expect(result.scams).toEqual({});
+      expect(result.managers).toEqual({});
     });
 
     it('should handle multiple scam states', () => {
@@ -113,17 +126,44 @@ describe('SaveManager', () => {
         },
       };
 
-      const result = createSaveData(resources, scams);
+      const managers: ManagerStateMap = {};
+
+      const result = createSaveData(resources, scams, managers);
 
       expect(Object.keys(result.scams)).toHaveLength(3);
       expect(result.scams['bot-farms'].level).toBe(10);
       expect(result.scams['phishing'].level).toBe(3);
       expect(result.scams['crypto-pump'].isUnlocked).toBe(false);
     });
+
+    it('should handle multiple manager states', () => {
+      const resources: GameResources = {
+        money: 5000,
+        reputation: 100,
+        heat: 50,
+        bots: 1000,
+        skillPoints: 25,
+        crypto: 10,
+        trust: 5,
+      };
+
+      const scams: ScamStateMap = {};
+      const managers: ManagerStateMap = {
+        'prince-okonkwo': { managerId: 'prince-okonkwo', isHired: true },
+        'popup-pete': { managerId: 'popup-pete', isHired: true },
+        'lucky-larry': { managerId: 'lucky-larry', isHired: false },
+      };
+
+      const result = createSaveData(resources, scams, managers);
+
+      expect(Object.keys(result.managers)).toHaveLength(3);
+      expect(result.managers['prince-okonkwo'].isHired).toBe(true);
+      expect(result.managers['lucky-larry'].isHired).toBe(false);
+    });
   });
 
   describe('applySaveData', () => {
-    it('should return resources and scams from SaveData', () => {
+    it('should return resources, scams, and managers from SaveData', () => {
       const saveData: SaveData = {
         version: SAVE_VERSION,
         savedAt: Date.now(),
@@ -144,15 +184,22 @@ describe('SaveManager', () => {
             timesCompleted: 100,
           },
         },
+        managers: {
+          'prince-okonkwo': {
+            managerId: 'prince-okonkwo',
+            isHired: true,
+          },
+        },
       };
 
-      const { resources, scams } = applySaveData(saveData);
+      const { resources, scams, managers } = applySaveData(saveData);
 
       expect(resources).toEqual(saveData.resources);
       expect(scams).toEqual(saveData.scams);
+      expect(managers).toEqual(saveData.managers);
     });
 
-    it('should handle empty scams in save data', () => {
+    it('should handle empty scams and managers in save data', () => {
       const saveData: SaveData = {
         version: SAVE_VERSION,
         savedAt: Date.now(),
@@ -166,12 +213,14 @@ describe('SaveManager', () => {
           trust: 1,
         },
         scams: {},
+        managers: {},
       };
 
-      const { resources, scams } = applySaveData(saveData);
+      const { resources, scams, managers } = applySaveData(saveData);
 
       expect(resources.trust).toBe(1);
       expect(Object.keys(scams)).toHaveLength(0);
+      expect(Object.keys(managers)).toHaveLength(0);
     });
 
     it('should preserve decimal values', () => {
@@ -188,6 +237,7 @@ describe('SaveManager', () => {
           trust: 1.5,
         },
         scams: {},
+        managers: {},
       };
 
       const { resources } = applySaveData(saveData);
@@ -220,6 +270,12 @@ describe('SaveManager', () => {
             timesCompleted: 100,
           },
         },
+        managers: {
+          'prince-okonkwo': {
+            managerId: 'prince-okonkwo',
+            isHired: true,
+          },
+        },
       };
 
       const result = migrateIfNeeded(saveData);
@@ -228,10 +284,7 @@ describe('SaveManager', () => {
       expect(result.version).toBe(SAVE_VERSION);
     });
 
-    it('should migrate data when version is older', () => {
-      // Since we're at version 1, there's nothing to migrate from
-      // But the function should handle future migrations
-      // For now, test that version 0 or invalid versions are handled
+    it('should migrate v0 data to current version with empty managers', () => {
       const oldSaveData = {
         version: 0,
         savedAt: Date.now(),
@@ -249,40 +302,45 @@ describe('SaveManager', () => {
 
       const result = migrateIfNeeded(oldSaveData);
 
-      // After migration, version should be current
       expect(result.version).toBe(SAVE_VERSION);
-      // Data should be preserved
       expect(result.resources.money).toBe(500);
       expect(result.resources.trust).toBe(2);
+      expect(result.managers).toEqual({});
     });
 
-    it('should handle missing fields in older versions', () => {
-      // Simulating a version 0 save that might be missing fields
-      const incompleteSaveData = {
-        version: 0,
+    it('should migrate v1 data to v2 by adding empty managers', () => {
+      const v1SaveData = {
+        version: 1,
         savedAt: Date.now(),
         resources: {
-          money: 100,
-          reputation: 10,
-          heat: 5,
-          bots: 50,
-          skillPoints: 2,
-          crypto: 0,
-          trust: 1,
+          money: 1000,
+          reputation: 50,
+          heat: 25,
+          bots: 500,
+          skillPoints: 10,
+          crypto: 2.5,
+          trust: 3,
         },
-        scams: {},
+        scams: {
+          'bot-farms': {
+            scamId: 'bot-farms',
+            level: 5,
+            isUnlocked: true,
+            timesCompleted: 100,
+          },
+        },
       } as SaveData;
 
-      const result = migrateIfNeeded(incompleteSaveData);
+      const result = migrateIfNeeded(v1SaveData);
 
-      expect(result.version).toBe(SAVE_VERSION);
-      expect(result.resources).toBeDefined();
-      expect(result.scams).toBeDefined();
+      expect(result.version).toBe(2);
+      expect(result.managers).toEqual({});
+      // Existing data preserved
+      expect(result.resources.money).toBe(1000);
+      expect(result.scams['bot-farms'].level).toBe(5);
     });
 
-    it('should run migrations sequentially from old to current version', () => {
-      // This tests the concept that migrations go 0->1, 1->2, etc.
-      // At version 1, we just verify the pattern is in place
+    it('should handle sequential migrations v0 -> v1 -> v2', () => {
       const veryOldSaveData = {
         version: 0,
         savedAt: Date.now() - 100000,
@@ -300,8 +358,147 @@ describe('SaveManager', () => {
 
       const result = migrateIfNeeded(veryOldSaveData);
 
-      // Should end up at current version
       expect(result.version).toBe(SAVE_VERSION);
+      expect(result.managers).toEqual({});
+    });
+  });
+
+  describe('reconstructActiveTimers', () => {
+    it('should return empty array when no managers are hired', () => {
+      const scams: ScamStateMap = {
+        'nigerian-prince-emails': {
+          scamId: 'nigerian-prince-emails',
+          level: 5,
+          isUnlocked: true,
+          timesCompleted: 10,
+        },
+      };
+      const managers: ManagerStateMap = {};
+
+      const timers = reconstructActiveTimers(scams, managers);
+
+      expect(timers).toEqual([]);
+    });
+
+    it('should create timer for hired manager with unlocked scam', () => {
+      const scams: ScamStateMap = {
+        'nigerian-prince-emails': {
+          scamId: 'nigerian-prince-emails',
+          level: 1,
+          isUnlocked: true,
+          timesCompleted: 10,
+        },
+      };
+      const managers: ManagerStateMap = {
+        'prince-okonkwo': {
+          managerId: 'prince-okonkwo',
+          isHired: true,
+        },
+      };
+
+      const timers = reconstructActiveTimers(scams, managers);
+
+      expect(timers).toHaveLength(1);
+      expect(timers[0].scamId).toBe('nigerian-prince-emails');
+      expect(timers[0].duration).toBeGreaterThan(0);
+      expect(timers[0].isComplete).toBe(false);
+    });
+
+    it('should not create timer for hired manager with locked scam', () => {
+      const scams: ScamStateMap = {
+        'nigerian-prince-emails': {
+          scamId: 'nigerian-prince-emails',
+          level: 1,
+          isUnlocked: false,
+          timesCompleted: 0,
+        },
+      };
+      const managers: ManagerStateMap = {
+        'prince-okonkwo': {
+          managerId: 'prince-okonkwo',
+          isHired: true,
+        },
+      };
+
+      const timers = reconstructActiveTimers(scams, managers);
+
+      expect(timers).toEqual([]);
+    });
+
+    it('should not create timer for unhired manager', () => {
+      const scams: ScamStateMap = {
+        'nigerian-prince-emails': {
+          scamId: 'nigerian-prince-emails',
+          level: 1,
+          isUnlocked: true,
+          timesCompleted: 10,
+        },
+      };
+      const managers: ManagerStateMap = {
+        'prince-okonkwo': {
+          managerId: 'prince-okonkwo',
+          isHired: false,
+        },
+      };
+
+      const timers = reconstructActiveTimers(scams, managers);
+
+      expect(timers).toEqual([]);
+    });
+
+    it('should create timers for multiple hired managers', () => {
+      const scams: ScamStateMap = {
+        'nigerian-prince-emails': {
+          scamId: 'nigerian-prince-emails',
+          level: 5,
+          isUnlocked: true,
+          timesCompleted: 10,
+        },
+        'iphone-popup': {
+          scamId: 'iphone-popup',
+          level: 3,
+          isUnlocked: true,
+          timesCompleted: 5,
+        },
+        'phishing-links': {
+          scamId: 'phishing-links',
+          level: 1,
+          isUnlocked: false,
+          timesCompleted: 0,
+        },
+      };
+      const managers: ManagerStateMap = {
+        'prince-okonkwo': { managerId: 'prince-okonkwo', isHired: true },
+        'popup-pete': { managerId: 'popup-pete', isHired: true },
+        'phishmaster-phil': { managerId: 'phishmaster-phil', isHired: true },
+      };
+
+      const timers = reconstructActiveTimers(scams, managers);
+
+      // phishing-links is locked, so only 2 timers
+      expect(timers).toHaveLength(2);
+      const scamIds = timers.map((t) => t.scamId);
+      expect(scamIds).toContain('nigerian-prince-emails');
+      expect(scamIds).toContain('iphone-popup');
+    });
+
+    it('should use correct duration based on scam level', () => {
+      const scams: ScamStateMap = {
+        'nigerian-prince-emails': {
+          scamId: 'nigerian-prince-emails',
+          level: 1,
+          isUnlocked: true,
+          timesCompleted: 0,
+        },
+      };
+      const managers: ManagerStateMap = {
+        'prince-okonkwo': { managerId: 'prince-okonkwo', isHired: true },
+      };
+
+      const timers = reconstructActiveTimers(scams, managers);
+
+      // Nigerian Prince Emails base duration is 5000ms, level 1 speed multiplier is 1.0
+      expect(timers[0].duration).toBe(5000);
     });
   });
 });

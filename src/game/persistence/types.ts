@@ -3,12 +3,13 @@
 
 import type { GameResources } from '../types';
 import type { ScamState } from '../scams/types';
+import type { ManagerState } from '../managers/types';
 
 /**
  * Current save data format version.
  * Increment when changing SaveData structure (requires migration logic).
  */
-export const SAVE_VERSION = 1;
+export const SAVE_VERSION = 2;
 
 /**
  * AsyncStorage key for game save data.
@@ -36,4 +37,7 @@ export interface SaveData {
 
   /** Map of scam IDs to their runtime state */
   scams: Record<string, ScamState>;
+
+  /** Map of manager IDs to their runtime state */
+  managers: Record<string, ManagerState>;
 }

@@ -10,6 +10,12 @@ import {
 } from '../../../src/game/engine/gameLoop';
 import type { EngineState, ScamTimer } from '../../../src/game/engine/types';
 import { MAX_OFFLINE_MS, OFFLINE_EFFICIENCY } from '../../../src/game/engine/types';
+import {
+  NIGERIAN_PRINCE_EMAILS,
+  BOT_FARMS,
+  IPHONE_POPUP,
+} from '../../../src/game/scams/definitions';
+import type { ScamStateMap } from '../../../src/game/scams/scamStore';
 
 describe('Game Loop', () => {
   describe('createEngineState', () => {
@@ -314,6 +320,211 @@ describe('Game Loop', () => {
 
       // Should only count up to when we paused
       expect(progress.elapsedMs).toBe(5000);
+    });
+
+    it('should calculate real money earnings for a money scam', () => {
+      // Nigerian Prince Emails: baseDuration=5000, baseReward=10 at level 1
+      const timer: ScamTimer = {
+        scamId: 'nigerian-prince-emails',
+        startTime: 0,
+        duration: 5000,
+        isComplete: false,
+      };
+      const state: EngineState = {
+        lastTickTime: 0,
+        activeTimers: [timer],
+        isPaused: false,
+      };
+
+      const scamStates: ScamStateMap = {
+        'nigerian-prince-emails': {
+          scamId: 'nigerian-prince-emails',
+          level: 1,
+          isUnlocked: true,
+          timesCompleted: 0,
+        },
+      };
+
+      // 10 seconds = 2 cycles of 5000ms
+      const progress = calculateOfflineProgress(0, 10000, state, scamStates, 1);
+
+      // 2 cycles × $10 base × OFFLINE_EFFICIENCY(0.5) = $10
+      expect(progress.earnings.money).toBe(10);
+      expect(progress.completedScams).toBe(2);
+    });
+
+    it('should calculate real bot earnings for bot farms', () => {
+      const timer: ScamTimer = {
+        scamId: 'bot-farms',
+        startTime: 0,
+        duration: 1000,
+        isComplete: false,
+      };
+      const state: EngineState = {
+        lastTickTime: 0,
+        activeTimers: [timer],
+        isPaused: false,
+      };
+
+      const scamStates: ScamStateMap = {
+        'bot-farms': {
+          scamId: 'bot-farms',
+          level: 1,
+          isUnlocked: true,
+          timesCompleted: 0,
+        },
+      };
+
+      // 5 seconds = 5 cycles of 1000ms
+      const progress = calculateOfflineProgress(0, 5000, state, scamStates, 1);
+
+      // 5 cycles × 0.5 bots × OFFLINE_EFFICIENCY(0.5) = 1.25 bots
+      expect(progress.earnings.bots).toBeCloseTo(1.25);
+    });
+
+    it('should apply trust multiplier to earnings', () => {
+      const timer: ScamTimer = {
+        scamId: 'nigerian-prince-emails',
+        startTime: 0,
+        duration: 5000,
+        isComplete: false,
+      };
+      const state: EngineState = {
+        lastTickTime: 0,
+        activeTimers: [timer],
+        isPaused: false,
+      };
+
+      const scamStates: ScamStateMap = {
+        'nigerian-prince-emails': {
+          scamId: 'nigerian-prince-emails',
+          level: 1,
+          isUnlocked: true,
+          timesCompleted: 0,
+        },
+      };
+
+      // 10 seconds = 2 cycles, trust = 3
+      const progress = calculateOfflineProgress(0, 10000, state, scamStates, 3);
+
+      // 2 cycles × $10 × trust(3) × OFFLINE_EFFICIENCY(0.5) = $30
+      expect(progress.earnings.money).toBe(30);
+    });
+
+    it('should sum earnings from multiple timers', () => {
+      const timer1: ScamTimer = {
+        scamId: 'nigerian-prince-emails',
+        startTime: 0,
+        duration: 5000,
+        isComplete: false,
+      };
+      const timer2: ScamTimer = {
+        scamId: 'iphone-popup',
+        startTime: 0,
+        duration: 10000,
+        isComplete: false,
+      };
+      const state: EngineState = {
+        lastTickTime: 0,
+        activeTimers: [timer1, timer2],
+        isPaused: false,
+      };
+
+      const scamStates: ScamStateMap = {
+        'nigerian-prince-emails': {
+          scamId: 'nigerian-prince-emails',
+          level: 1,
+          isUnlocked: true,
+          timesCompleted: 0,
+        },
+        'iphone-popup': {
+          scamId: 'iphone-popup',
+          level: 1,
+          isUnlocked: true,
+          timesCompleted: 0,
+        },
+      };
+
+      // 20 seconds elapsed
+      // Nigerian Prince: 4 cycles × $10 × 0.5 = $20
+      // iPhone Popup: 2 cycles × $1000 × 0.5 = $1000
+      const progress = calculateOfflineProgress(0, 20000, state, scamStates, 1);
+
+      expect(progress.earnings.money).toBe(1020);
+      expect(progress.completedScams).toBe(6);
+    });
+
+    it('should gracefully handle unknown scam IDs', () => {
+      const timer: ScamTimer = {
+        scamId: 'nonexistent-scam',
+        startTime: 0,
+        duration: 1000,
+        isComplete: false,
+      };
+      const state: EngineState = {
+        lastTickTime: 0,
+        activeTimers: [timer],
+        isPaused: false,
+      };
+
+      const scamStates: ScamStateMap = {};
+
+      // Should not throw, earnings stay at 0
+      const progress = calculateOfflineProgress(0, 5000, state, scamStates, 1);
+
+      expect(progress.completedScams).toBe(5);
+      expect(progress.earnings.money).toBe(0);
+    });
+
+    it('should calculate heat from offline scam completions', () => {
+      const timer: ScamTimer = {
+        scamId: 'nigerian-prince-emails',
+        startTime: 0,
+        duration: 5000,
+        isComplete: false,
+      };
+      const state: EngineState = {
+        lastTickTime: 0,
+        activeTimers: [timer],
+        isPaused: false,
+      };
+
+      const scamStates: ScamStateMap = {
+        'nigerian-prince-emails': {
+          scamId: 'nigerian-prince-emails',
+          level: 1,
+          isUnlocked: true,
+          timesCompleted: 0,
+        },
+      };
+
+      // 10 seconds = 2 cycles
+      const progress = calculateOfflineProgress(0, 10000, state, scamStates, 1);
+
+      // Heat should be > 0 for tier 1 scams
+      expect(progress.earnings.heat).toBeGreaterThan(0);
+    });
+
+    it('should return zero earnings when no scamStates provided (backwards compat)', () => {
+      const timer: ScamTimer = {
+        scamId: 'nigerian-prince-emails',
+        startTime: 0,
+        duration: 5000,
+        isComplete: false,
+      };
+      const state: EngineState = {
+        lastTickTime: 0,
+        activeTimers: [timer],
+        isPaused: false,
+      };
+
+      // Call without scamStates/trust (old signature)
+      const progress = calculateOfflineProgress(0, 10000, state);
+
+      // Completions still counted, but earnings are 0
+      expect(progress.completedScams).toBe(2);
+      expect(progress.earnings.money).toBe(0);
+      expect(progress.earnings.bots).toBe(0);
     });
   });
 

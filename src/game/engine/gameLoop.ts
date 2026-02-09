@@ -8,8 +8,12 @@ import type {
   OfflineProgress,
   OfflineEarnings,
 } from './types';
-import { MAX_OFFLINE_MS, TICK_INTERVAL_MS } from './types';
+import { MAX_OFFLINE_MS, OFFLINE_EFFICIENCY, TICK_INTERVAL_MS } from './types';
 import { createTimer, updateTimer } from './timer';
+import { TIER_1_SCAMS, BOT_FARMS } from '../scams/definitions';
+import { calculateScamReward } from '../scams/calculations';
+import { calculateHeatFromScam } from '../prestige/calculations';
+import type { ScamStateMap } from '../scams/scamStore';
 
 /**
  * Result of a single game tick
@@ -83,18 +87,28 @@ export function tick(state: EngineState, currentTime: number): TickResult {
 }
 
 /**
+ * All scam definitions for offline earnings lookup.
+ */
+const ALL_SCAM_DEFS = [BOT_FARMS, ...TIER_1_SCAMS];
+
+/**
  * Calculates what progress was made while the game was closed.
  * Uses simplified simulation - counts complete scam cycles based on timer durations.
+ * When scamStates and trust are provided, computes real earnings per cycle.
  *
  * @param lastTickTime - Last known tick time (ms)
  * @param currentTime - Current time when returning (ms)
  * @param state - Engine state when game was closed
+ * @param scamStates - Current scam states for reward lookup (optional)
+ * @param trust - Player's trust multiplier (optional, defaults to 1)
  * @returns OfflineProgress with elapsed time, earnings, and completed scams
  */
 export function calculateOfflineProgress(
   lastTickTime: number,
   currentTime: number,
-  state: EngineState
+  state: EngineState,
+  scamStates?: ScamStateMap,
+  trust: number = 1
 ): OfflineProgress {
   // Use pausedAt time if the game was paused
   const effectiveEndTime = state.isPaused && state.pausedAt !== undefined
@@ -105,18 +119,6 @@ export function calculateOfflineProgress(
   const rawElapsed = effectiveEndTime - lastTickTime;
   const elapsedMs = Math.min(Math.max(rawElapsed, 0), MAX_OFFLINE_MS);
 
-  // Count completed scam cycles for each active timer
-  let completedScams = 0;
-  for (const timer of state.activeTimers) {
-    if (timer.duration > 0) {
-      // How many complete cycles fit in the elapsed time?
-      const cycles = Math.floor(elapsedMs / timer.duration);
-      completedScams += cycles;
-    }
-  }
-
-  // Earnings calculation placeholder
-  // Actual earnings will depend on scam definitions (added later)
   const earnings: OfflineEarnings = {
     money: 0,
     reputation: 0,
@@ -125,6 +127,40 @@ export function calculateOfflineProgress(
     skillPoints: 0,
     crypto: 0,
   };
+
+  // Count completed scam cycles for each active timer
+  let completedScams = 0;
+  for (const timer of state.activeTimers) {
+    if (timer.duration > 0) {
+      // How many complete cycles fit in the elapsed time?
+      const cycles = Math.floor(elapsedMs / timer.duration);
+      completedScams += cycles;
+
+      // Calculate real earnings if scam state is available
+      if (scamStates && cycles > 0) {
+        const scamState = scamStates[timer.scamId];
+        const scamDef = ALL_SCAM_DEFS.find((s) => s.id === timer.scamId);
+
+        if (scamState && scamDef) {
+          const rewardPerCycle = calculateScamReward(scamDef, scamState.level, trust);
+          const totalReward = rewardPerCycle * cycles * OFFLINE_EFFICIENCY;
+          const heatPerCycle = calculateHeatFromScam(scamDef);
+
+          if (scamDef.resourceType === 'money') {
+            earnings.money += totalReward;
+          } else if (scamDef.resourceType === 'bots') {
+            earnings.bots += totalReward;
+          } else if (scamDef.resourceType === 'reputation') {
+            earnings.reputation += totalReward;
+          } else if (scamDef.resourceType === 'crypto') {
+            earnings.crypto += totalReward;
+          }
+
+          earnings.heat += heatPerCycle * cycles * OFFLINE_EFFICIENCY;
+        }
+      }
+    }
+  }
 
   return {
     elapsedMs,

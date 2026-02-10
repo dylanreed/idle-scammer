@@ -75,6 +75,7 @@ describe('GameProvider', () => {
         skillPoints: 15,
         crypto: 3.5,
         trust: 5,
+        snitchCount: 0,
       },
       scams: {
         'bot-farms': {
@@ -137,6 +138,7 @@ describe('GameProvider', () => {
         skillPoints: 0,
         crypto: 0,
         trust: 1,
+        snitchCount: 0,
       },
       scams: {
         'bot-farms': {
@@ -216,6 +218,7 @@ describe('GameProvider', () => {
         skillPoints: 0,
         crypto: 0,
         trust: 1,
+        snitchCount: 0,
       },
       scams: {
         'nigerian-prince-emails': {

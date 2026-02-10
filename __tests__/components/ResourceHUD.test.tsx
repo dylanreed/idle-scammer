@@ -14,6 +14,7 @@ const mockResources: GameResources = {
   skillPoints: 10,
   crypto: 500,
   trust: 1,
+  snitchCount: 0,
 };
 
 describe('ResourceHUD', () => {
@@ -73,6 +74,7 @@ describe('ResourceHUD', () => {
         skillPoints: 0,
         crypto: 0,
         trust: 1, // Trust starts at 1
+        snitchCount: 0,
       };
 
       render(<ResourceHUD resources={zeroResources} />);
@@ -91,6 +93,7 @@ describe('ResourceHUD', () => {
         skillPoints: 1000,
         crypto: 10000000000,
         trust: 100,
+        snitchCount: 0,
       };
 
       render(<ResourceHUD resources={largeResources} />);

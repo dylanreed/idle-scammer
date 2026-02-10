@@ -216,6 +216,7 @@ describe('GameStore', () => {
           skillPoints: 50,
           crypto: 2.5,
           trust: 75,
+          snitchCount: 0,
         },
       });
 
@@ -233,6 +234,9 @@ describe('GameStore', () => {
 
       // Trust should be preserved
       expect(resources.trust).toBe(75);
+
+      // snitchCount should be preserved
+      expect(resources.snitchCount).toBe(0);
 
       // Skill points should be set based on trust: floor(75 - 1) = 74
       expect(resources.skillPoints).toBe(Math.floor(75 - 1));
@@ -270,6 +274,7 @@ describe('GameStore', () => {
           skillPoints: 50,
           crypto: 2.5,
           trust: 100,
+          snitchCount: 0,
         },
       });
 
@@ -293,6 +298,7 @@ describe('GameStore', () => {
           skillPoints: 50,
           crypto: 2.5,
           trust: 50,
+          snitchCount: 0,
         },
       });
 
@@ -403,6 +409,7 @@ describe('GameStore', () => {
         skillPoints: 15,
         crypto: 3.5,
         trust: 5,
+        snitchCount: 0,
       };
 
       hydrate(savedResources);
@@ -426,6 +433,7 @@ describe('GameStore', () => {
         skillPoints: 0,
         crypto: 0,
         trust: 1,
+        snitchCount: 0,
       });
 
       expect(useGameStore.getState().resources.money).toBe(42);
@@ -442,6 +450,7 @@ describe('GameStore', () => {
         skillPoints: 0,
         crypto: 0,
         trust: 1,
+        snitchCount: 0,
       });
 
       // Actions should still work after hydration

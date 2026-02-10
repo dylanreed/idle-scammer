@@ -116,7 +116,7 @@ function ChoicePhase({
             {'CLEAN ESCAPE'}
           </PixelButton>
           <TerminalText size="sm" color={COLORS.terminalGreenDim} style={styles.choiceSubtext}>
-            {'+10 Trust / Lose Everything'}
+            {'Trust Reward / Lose Everything'}
           </TerminalText>
         </View>
 
@@ -129,7 +129,7 @@ function ChoicePhase({
             {'SNITCH'}
           </PixelButton>
           <TerminalText size="sm" color={COLORS.terminalGreenDim} style={styles.choiceSubtext}>
-            {'-5 Trust / Keep 10% Resources'}
+            {'-50% Trust / Keep 10% Resources'}
           </TerminalText>
         </View>
       </View>

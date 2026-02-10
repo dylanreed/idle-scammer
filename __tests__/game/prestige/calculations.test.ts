@@ -8,6 +8,7 @@ import {
   isPrestigeForced,
   calculateCleanEscapeResult,
   calculateSnitchResult,
+  calculatePerformanceTrustGain,
 } from '../../../src/game/prestige/calculations';
 import {
   MAX_HEAT,
@@ -16,12 +17,16 @@ import {
   HEAT_TIER_DISCOUNT,
   HEAT_DECAY_RATE,
   TRUST_DECAY_BOOST,
-  CLEAN_ESCAPE_TRUST_GAIN,
-  SNITCH_TRUST_PENALTY,
+  TRUST_MONEY_WEIGHT,
+  TRUST_COMPLETION_WEIGHT,
+  TRUST_LEVEL_WEIGHT,
+  MIN_TRUST_GAIN,
+  SNITCH_TRUST_PERCENT,
   SNITCH_RESOURCE_KEEP_PERCENT,
 } from '../../../src/game/prestige/constants';
 import type { ScamDefinition } from '../../../src/game/scams/types';
 import type { GameResources } from '../../../src/game/types';
+import type { PerformanceMetrics } from '../../../src/game/prestige/types';
 
 describe('Prestige Calculations', () => {
   describe('calculateHeatFromScam', () => {
@@ -294,29 +299,153 @@ describe('Prestige Calculations', () => {
     });
   });
 
+  describe('calculatePerformanceTrustGain', () => {
+    it('should return MIN_TRUST_GAIN for zero metrics', () => {
+      const result = calculatePerformanceTrustGain({
+        money: 0,
+        totalCompletions: 0,
+        totalLevels: 0,
+      });
+      expect(result).toBe(MIN_TRUST_GAIN);
+    });
+
+    it('should return higher trust for higher money', () => {
+      const low = calculatePerformanceTrustGain({
+        money: 100,
+        totalCompletions: 10,
+        totalLevels: 5,
+      });
+      const high = calculatePerformanceTrustGain({
+        money: 100_000,
+        totalCompletions: 10,
+        totalLevels: 5,
+      });
+      expect(high).toBeGreaterThan(low);
+    });
+
+    it('should return higher trust for more completions', () => {
+      const low = calculatePerformanceTrustGain({
+        money: 1000,
+        totalCompletions: 5,
+        totalLevels: 5,
+      });
+      const high = calculatePerformanceTrustGain({
+        money: 1000,
+        totalCompletions: 500,
+        totalLevels: 5,
+      });
+      expect(high).toBeGreaterThan(low);
+    });
+
+    it('should return higher trust for more levels', () => {
+      const low = calculatePerformanceTrustGain({
+        money: 1000,
+        totalCompletions: 10,
+        totalLevels: 2,
+      });
+      const high = calculatePerformanceTrustGain({
+        money: 1000,
+        totalCompletions: 10,
+        totalLevels: 50,
+      });
+      expect(high).toBeGreaterThan(low);
+    });
+
+    it('should follow exact formula for known values', () => {
+      // Mid-game scenario: $100K, 500 completions, 60 levels
+      const metrics: PerformanceMetrics = {
+        money: 100_000,
+        totalCompletions: 500,
+        totalLevels: 60,
+      };
+      const expected = Math.max(
+        MIN_TRUST_GAIN,
+        Math.floor(
+          TRUST_MONEY_WEIGHT * Math.log10(Math.max(metrics.money, 1)) +
+          TRUST_COMPLETION_WEIGHT * Math.sqrt(metrics.totalCompletions) +
+          TRUST_LEVEL_WEIGHT * metrics.totalLevels
+        )
+      );
+      expect(calculatePerformanceTrustGain(metrics)).toBe(expected);
+    });
+
+    it('should show logarithmic diminishing returns on money', () => {
+      const base: PerformanceMetrics = { money: 0, totalCompletions: 0, totalLevels: 0 };
+      const gain100to1k = calculatePerformanceTrustGain({ ...base, money: 1_000 }) -
+        calculatePerformanceTrustGain({ ...base, money: 100 });
+      const gain100kto1m = calculatePerformanceTrustGain({ ...base, money: 1_000_000 }) -
+        calculatePerformanceTrustGain({ ...base, money: 100_000 });
+      // The absolute gain from 100→1K should equal the gain from 100K→1M (log scale)
+      // Both are 1 order of magnitude, so gains should be roughly equal
+      expect(Math.abs(gain100to1k - gain100kto1m)).toBeLessThanOrEqual(1);
+    });
+
+    it('should show sqrt diminishing returns on completions', () => {
+      // sqrt produces diminishing *marginal* returns: each additional fixed block
+      // of completions adds less. Going from 0→100 adds more than 900→1000.
+      const rawScore = (completions: number) =>
+        TRUST_COMPLETION_WEIGHT * Math.sqrt(completions);
+      const gain0to100 = rawScore(100) - rawScore(0);
+      const gain900to1000 = rawScore(1000) - rawScore(900);
+      // First 100 completions add more than the 100 from 900→1000
+      expect(gain0to100).toBeGreaterThan(gain900to1000);
+    });
+
+    it('should be monotonically increasing in each dimension', () => {
+      const base: PerformanceMetrics = { money: 1000, totalCompletions: 50, totalLevels: 10 };
+
+      // Increasing money
+      for (const multiplier of [1, 10, 100, 1000]) {
+        const lower = calculatePerformanceTrustGain({ ...base, money: base.money * multiplier });
+        const higher = calculatePerformanceTrustGain({ ...base, money: base.money * multiplier * 10 });
+        expect(higher).toBeGreaterThanOrEqual(lower);
+      }
+
+      // Increasing completions
+      for (const add of [0, 50, 100, 500]) {
+        const lower = calculatePerformanceTrustGain({ ...base, totalCompletions: base.totalCompletions + add });
+        const higher = calculatePerformanceTrustGain({ ...base, totalCompletions: base.totalCompletions + add + 100 });
+        expect(higher).toBeGreaterThanOrEqual(lower);
+      }
+
+      // Increasing levels
+      for (const add of [0, 10, 50, 100]) {
+        const lower = calculatePerformanceTrustGain({ ...base, totalLevels: base.totalLevels + add });
+        const higher = calculatePerformanceTrustGain({ ...base, totalLevels: base.totalLevels + add + 50 });
+        expect(higher).toBeGreaterThanOrEqual(lower);
+      }
+    });
+  });
+
   describe('calculateCleanEscapeResult', () => {
-    it('should return trust gain from clean escape', () => {
+    it('should return trust gain from clean escape based on performance', () => {
       const currentTrust = 50;
-      const result = calculateCleanEscapeResult(currentTrust);
+      const metrics: PerformanceMetrics = { money: 10000, totalCompletions: 20, totalLevels: 5 };
+      const result = calculateCleanEscapeResult(currentTrust, metrics);
+      const expectedGain = calculatePerformanceTrustGain(metrics);
 
       expect(result.choice).toBe('clean-escape');
       expect(result.previousTrust).toBe(50);
-      expect(result.newTrust).toBe(50 + CLEAN_ESCAPE_TRUST_GAIN);
+      expect(result.newTrust).toBe(50 + expectedGain);
       expect(result.bonuses).toBeUndefined();
     });
 
     it('should work with initial trust of 1', () => {
-      const result = calculateCleanEscapeResult(1);
+      const metrics: PerformanceMetrics = { money: 500, totalCompletions: 5, totalLevels: 2 };
+      const result = calculateCleanEscapeResult(1, metrics);
+      const expectedGain = calculatePerformanceTrustGain(metrics);
 
       expect(result.previousTrust).toBe(1);
-      expect(result.newTrust).toBe(1 + CLEAN_ESCAPE_TRUST_GAIN);
+      expect(result.newTrust).toBe(1 + expectedGain);
     });
 
     it('should work with high trust values', () => {
-      const result = calculateCleanEscapeResult(1000);
+      const metrics: PerformanceMetrics = { money: 1_000_000_000, totalCompletions: 5000, totalLevels: 300 };
+      const result = calculateCleanEscapeResult(1000, metrics);
+      const expectedGain = calculatePerformanceTrustGain(metrics);
 
       expect(result.previousTrust).toBe(1000);
-      expect(result.newTrust).toBe(1000 + CLEAN_ESCAPE_TRUST_GAIN);
+      expect(result.newTrust).toBe(1000 + expectedGain);
     });
   });
 
@@ -329,6 +458,7 @@ describe('Prestige Calculations', () => {
       skillPoints: 0,
       crypto: 0,
       trust: 1,
+      snitchCount: 0,
       ...overrides,
     });
 
@@ -338,14 +468,15 @@ describe('Prestige Calculations', () => {
 
       expect(result.choice).toBe('snitch');
       expect(result.previousTrust).toBe(50);
-      expect(result.newTrust).toBe(50 + SNITCH_TRUST_PENALTY); // 50 - 5 = 45
+      // max(1, floor(50 * 0.5)) = 25
+      expect(result.newTrust).toBe(25);
     });
 
     it('should not reduce trust below 1', () => {
       const resources = makeResources({ money: 10000, trust: 2 });
       const result = calculateSnitchResult(2, resources);
 
-      // 2 - 5 = -3, but should be clamped to 1
+      // max(1, floor(2 * 0.5)) = 1
       expect(result.newTrust).toBe(1);
     });
 

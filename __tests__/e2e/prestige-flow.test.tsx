@@ -8,7 +8,8 @@ import { useGameStore } from '../../src/game/store';
 import { useScamStore } from '../../src/game/scams/scamStore';
 import { useManagerStore } from '../../src/game/managers/managerStore';
 import { useEmployeeStore } from '../../src/game/employees/employeeStore';
-import { MAX_HEAT, CLEAN_ESCAPE_TRUST_GAIN } from '../../src/game/prestige/constants';
+import { MAX_HEAT } from '../../src/game/prestige/constants';
+import { calculatePerformanceTrustGain } from '../../src/game/prestige/calculations';
 
 // Mock the assets module to avoid requiring image files
 jest.mock('../../src/game/assets', () => ({
@@ -81,11 +82,15 @@ describe('Prestige Flow E2E', () => {
 
     // Verify result phase
     expect(screen.getByText('YOU GOT AWAY CLEAN')).toBeTruthy();
-    expect(screen.getByText(/Trust: 1 → 11/)).toBeTruthy();
+
+    // Trust change should reflect performance-based gain (dynamic, not fixed +10)
+    // The exact value depends on money/completions/levels at prestige time,
+    // so we just verify the trust change pattern appears
+    expect(screen.getByText(/Trust: 1 →/)).toBeTruthy();
     expect(screen.getByText('ALL RESOURCES RESET')).toBeTruthy();
 
-    // Verify starting skill points shown (trust 11 = 10 SP)
-    expect(screen.getByText(/Starting Skill Points: 10/)).toBeTruthy();
+    // Verify starting skill points shown
+    expect(screen.getByText(/Starting Skill Points:/)).toBeTruthy();
 
     // Press continue
     expect(screen.getByTestId('prestige-continue-btn')).toBeTruthy();
@@ -99,7 +104,7 @@ describe('Prestige Flow E2E', () => {
 
     // Verify post-prestige state: trust increased, other resources reset
     const postResources = useGameStore.getState().resources;
-    expect(postResources.trust).toBe(1 + CLEAN_ESCAPE_TRUST_GAIN);
+    expect(postResources.trust).toBeGreaterThan(1);
     expect(postResources.money).toBe(0);
     expect(postResources.heat).toBe(0);
     expect(postResources.bots).toBe(0);

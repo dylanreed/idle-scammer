@@ -10,8 +10,8 @@ import {
 
 describe('Persistence Types', () => {
   describe('constants', () => {
-    it('should export SAVE_VERSION at 3', () => {
-      expect(SAVE_VERSION).toBe(3);
+    it('should export SAVE_VERSION at 4', () => {
+      expect(SAVE_VERSION).toBe(4);
     });
 
     it('should export correct STORAGE_KEY', () => {
@@ -36,6 +36,7 @@ describe('Persistence Types', () => {
           skillPoints: 3,
           crypto: 1.5,
           trust: 2,
+          snitchCount: 0,
         },
         scams: {
           'bot-farms': {
@@ -81,6 +82,7 @@ describe('Persistence Types', () => {
           skillPoints: 0,
           crypto: 0,
           trust: 1,
+          snitchCount: 0,
         },
         scams: {},
         managers: {},

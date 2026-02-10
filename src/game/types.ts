@@ -28,6 +28,10 @@ export interface GameResources {
    *  Starts at 1 as a base multiplier (reward * trust). Gains from clean escapes,
    *  loses from snitching. */
   trust: number;
+
+  /** Lifetime snitch count - persists across prestiges.
+   *  Each snitch increases employee costs by 1%. */
+  snitchCount: number;
 }
 
 /**

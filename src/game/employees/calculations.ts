@@ -4,6 +4,7 @@
 import type { EmployeeDefinition, EmployeeState } from './types';
 import { ALL_SCAMS } from '../scams/definitions';
 import { getManagerByScamId } from '../managers/definitions';
+import { SNITCH_EMPLOYEE_COST_PENALTY } from '../prestige/constants';
 
 /**
  * Exponential growth rate for employee costs.
@@ -137,11 +138,13 @@ export function getManagerCostForScam(scamId: string): number {
 
 /**
  * Returns the cost to hire the Nth employee for a scam (0-indexed count).
- * Applies the standard 1.15x exponential growth on top of the dynamic baseCost.
+ * Applies the standard 1.15x exponential growth on top of the dynamic baseCost,
+ * plus a 1% cost inflation per lifetime snitch.
  */
-export function getEmployeeCostForScam(scamId: string, count: number): number {
+export function getEmployeeCostForScam(scamId: string, count: number, snitchCount: number = 0): number {
   const baseCost = getEmployeeBaseCost(scamId);
-  return Math.floor(baseCost * Math.pow(EMPLOYEE_COST_GROWTH_RATE, count));
+  const snitchMultiplier = 1 + SNITCH_EMPLOYEE_COST_PENALTY * snitchCount;
+  return Math.floor(baseCost * Math.pow(EMPLOYEE_COST_GROWTH_RATE, count) * snitchMultiplier);
 }
 
 /**
@@ -198,22 +201,25 @@ export function calculateEmployeeHeat(totalEmployeeCount: number, deltaSeconds: 
 
 /**
  * Calculates the cost to hire the next employee of a given type.
- * Uses exponential scaling (idle game convention).
+ * Uses exponential scaling (idle game convention), plus snitch penalty.
  *
- * Formula: floor(baseCost * growthRate^currentCount)
+ * Formula: floor(baseCost * growthRate^currentCount * snitchMultiplier)
  *
  * @param definition - The employee definition
  * @param currentCount - How many of this type are already hired
+ * @param snitchCount - Lifetime snitch count (default 0)
  * @returns Cost to hire the next employee (floored to integer)
  */
 export function calculateEmployeeCost(
   definition: EmployeeDefinition,
-  currentCount: number
+  currentCount: number,
+  snitchCount: number = 0
 ): number {
   const { baseCost } = definition;
 
-  // Exponential growth: baseCost * growthRate^count
-  const cost = baseCost * Math.pow(EMPLOYEE_COST_GROWTH_RATE, currentCount);
+  // Exponential growth: baseCost * growthRate^count * snitchMultiplier
+  const snitchMultiplier = 1 + SNITCH_EMPLOYEE_COST_PENALTY * snitchCount;
+  const cost = baseCost * Math.pow(EMPLOYEE_COST_GROWTH_RATE, currentCount) * snitchMultiplier;
 
   // Floor to integer
   return Math.floor(cost);

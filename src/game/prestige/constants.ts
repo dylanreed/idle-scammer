@@ -54,16 +54,33 @@ export const HEAT_DECAY_RATE = 0.001;
 export const TRUST_DECAY_BOOST = 1.0;
 
 /**
- * Trust gained from a clean escape.
- * Rewarding players who don't betray their criminal network.
+ * Performance-based trust gain weights.
+ * Trust from clean escape = max(MIN_TRUST_GAIN, floor(
+ *   TRUST_MONEY_WEIGHT * log10(max(money, 1)) +
+ *   TRUST_COMPLETION_WEIGHT * sqrt(totalCompletions) +
+ *   TRUST_LEVEL_WEIGHT * totalLevels
+ * ))
+ *
+ * Diminishing returns on money (log), sqrt on completions, linear on levels.
  */
-export const CLEAN_ESCAPE_TRUST_GAIN = 10;
+export const TRUST_MONEY_WEIGHT = 1.5;
+export const TRUST_COMPLETION_WEIGHT = 0.3;
+export const TRUST_LEVEL_WEIGHT = 0.1;
+export const MIN_TRUST_GAIN = 1;
 
 /**
- * Trust penalty from snitching (negative number).
+ * Fraction of trust lost when snitching.
+ * Snitching costs 50% of your current trust (floor, minimum trust = 1).
  * The criminal underworld doesn't forget rats.
  */
-export const SNITCH_TRUST_PENALTY = -5;
+export const SNITCH_TRUST_PERCENT = 0.5;
+
+/**
+ * Employee cost inflation per lifetime snitch.
+ * Each snitch permanently increases all employee costs by 1%.
+ * Multiplier = 1 + (SNITCH_EMPLOYEE_COST_PENALTY * snitchCount).
+ */
+export const SNITCH_EMPLOYEE_COST_PENALTY = 0.01;
 
 /**
  * Percentage of resources kept when snitching.

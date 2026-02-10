@@ -22,6 +22,7 @@ const defaultResources: GameResources = {
   skillPoints: 0,
   crypto: 0,
   trust: 1,
+  snitchCount: 0,
 };
 
 describe('Employee Persistence', () => {

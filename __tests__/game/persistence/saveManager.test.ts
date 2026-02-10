@@ -24,6 +24,7 @@ describe('SaveManager', () => {
         skillPoints: 10,
         crypto: 2.5,
         trust: 3,
+        snitchCount: 0,
       };
 
       const scams: ScamStateMap = {
@@ -63,6 +64,7 @@ describe('SaveManager', () => {
         skillPoints: 0,
         crypto: 0,
         trust: 1,
+        snitchCount: 0,
       };
       const scams: ScamStateMap = {};
       const managers: ManagerStateMap = {};
@@ -84,6 +86,7 @@ describe('SaveManager', () => {
         skillPoints: 0,
         crypto: 0,
         trust: 1,
+        snitchCount: 0,
       };
       const scams: ScamStateMap = {};
       const managers: ManagerStateMap = {};
@@ -103,6 +106,7 @@ describe('SaveManager', () => {
         skillPoints: 25,
         crypto: 10,
         trust: 5,
+        snitchCount: 0,
       };
 
       const scams: ScamStateMap = {
@@ -145,6 +149,7 @@ describe('SaveManager', () => {
         skillPoints: 25,
         crypto: 10,
         trust: 5,
+        snitchCount: 0,
       };
 
       const scams: ScamStateMap = {};
@@ -175,6 +180,7 @@ describe('SaveManager', () => {
           skillPoints: 10,
           crypto: 2.5,
           trust: 3,
+          snitchCount: 0,
         },
         scams: {
           'bot-farms': {
@@ -212,6 +218,7 @@ describe('SaveManager', () => {
           skillPoints: 0,
           crypto: 0,
           trust: 1,
+          snitchCount: 0,
         },
         scams: {},
         managers: {},
@@ -237,6 +244,7 @@ describe('SaveManager', () => {
           skillPoints: 0,
           crypto: 0.123456,
           trust: 1.5,
+          snitchCount: 0,
         },
         scams: {},
         managers: {},
@@ -264,6 +272,7 @@ describe('SaveManager', () => {
           skillPoints: 10,
           crypto: 2.5,
           trust: 3,
+          snitchCount: 0,
         },
         scams: {
           'bot-farms': {
@@ -300,6 +309,7 @@ describe('SaveManager', () => {
           skillPoints: 5,
           crypto: 1,
           trust: 2,
+          snitchCount: 0,
         },
         scams: {},
       } as unknown as SaveData;
@@ -324,6 +334,7 @@ describe('SaveManager', () => {
           skillPoints: 10,
           crypto: 2.5,
           trust: 3,
+          snitchCount: 0,
         },
         scams: {
           'bot-farms': {
@@ -357,6 +368,7 @@ describe('SaveManager', () => {
           skillPoints: 1,
           crypto: 1,
           trust: 1,
+          snitchCount: 0,
         },
         scams: {},
       } as unknown as SaveData;

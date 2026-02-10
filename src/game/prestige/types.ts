@@ -2,6 +2,19 @@
 // ABOUTME: Defines PrestigeChoice, PrestigeResult, and PrestigeBonus interfaces
 
 /**
+ * Metrics gathered from the current run to calculate performance-based trust gain.
+ * All data comes from existing stores — no new state tracking needed.
+ */
+export interface PerformanceMetrics {
+  /** Total money earned this run */
+  money: number;
+  /** Sum of timesCompleted across all unlocked scams */
+  totalCompletions: number;
+  /** Sum of levels across all unlocked scams */
+  totalLevels: number;
+}
+
+/**
  * Types of bonuses that can be kept when snitching.
  * Corresponds to resettable game resources.
  */

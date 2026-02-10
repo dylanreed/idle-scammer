@@ -385,14 +385,14 @@ export function GameScreen(): React.ReactElement {
       // Trust-based cap: can't hire more than trust level per type
       if (!canHireEmployee(resources.trust, count)) return;
 
-      const cost = getEmployeeCostForScam(scamId, count);
+      const cost = getEmployeeCostForScam(scamId, count, resources.snitchCount);
 
       if (resources.money < cost) return;
 
       addMoney(-cost);
       hireEmployee(employeeId);
     },
-    [resources.money, resources.trust, addMoney, hireEmployee]
+    [resources.money, resources.trust, resources.snitchCount, addMoney, hireEmployee]
   );
 
   /**
@@ -531,7 +531,7 @@ export function GameScreen(): React.ReactElement {
                 const empDef = scamEmployees.length > 0 ? scamEmployees[0] : undefined;
                 const empCount = empDef ? useEmployeeStore.getState().getEmployeeCount(empDef.id) : 0;
                 const empBonuses = useEmployeeStore.getState().getScamBonuses(scamDef.id);
-                const empCost = empDef ? getEmployeeCostForScam(scamDef.id, empCount) : undefined;
+                const empCost = empDef ? getEmployeeCostForScam(scamDef.id, empCount, resources.snitchCount) : undefined;
 
                 const empMaxCount = getMaxEmployeesPerType(resources.trust);
 

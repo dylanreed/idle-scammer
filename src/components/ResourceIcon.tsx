@@ -20,6 +20,7 @@ const RESOURCE_COLORS: Record<ResourceKey, string> = {
   skillPoints: COLORS.trustBlue,
   crypto: COLORS.hotPink,
   trust: COLORS.trustBlue,
+  snitchCount: COLORS.warningRed,
 };
 
 /**
@@ -33,6 +34,7 @@ const RESOURCE_LABELS: Record<ResourceKey, string> = {
   skillPoints: 'SP',
   crypto: 'CRYPTO',
   trust: 'TRUST',
+  snitchCount: 'SNITCHES',
 };
 
 /**

@@ -5,7 +5,7 @@ import { useGameStore } from '../store';
 import { useScamStore } from '../scams/scamStore';
 import { useEmployeeStore } from '../employees/employeeStore';
 import { useManagerStore } from '../managers/managerStore';
-import type { PrestigeResult, PrestigeBonus } from './types';
+import type { PrestigeResult, PrestigeBonus, PerformanceMetrics } from './types';
 import { calculateCleanEscapeResult, calculateSnitchResult } from './calculations';
 
 /**
@@ -40,6 +40,7 @@ export function fullReset(): void {
     skillPoints: 0,
     crypto: 0,
     trust: 1,
+    snitchCount: 0,
   });
 
   // Reset scams to initial state
@@ -104,11 +105,25 @@ export function executePrestige(choice: 'clean-escape' | 'snitch'): PrestigeResu
   const currentResources = useGameStore.getState().resources;
   const currentTrust = currentResources.trust;
 
+  // Gather performance metrics from scam store for trust calculation
+  const scams = useScamStore.getState().scams;
+  const metrics: PerformanceMetrics = {
+    money: currentResources.money,
+    totalCompletions: 0,
+    totalLevels: 0,
+  };
+  for (const scamState of Object.values(scams)) {
+    if (scamState.isUnlocked) {
+      metrics.totalCompletions += scamState.timesCompleted;
+      metrics.totalLevels += scamState.level;
+    }
+  }
+
   // Calculate result based on choice
   let result: PrestigeResult;
 
   if (choice === 'clean-escape') {
-    result = calculateCleanEscapeResult(currentTrust);
+    result = calculateCleanEscapeResult(currentTrust, metrics);
 
     // Reset all stores with trust gain modifier
     useGameStore.getState().prestigeReset(result.newTrust - currentTrust);
@@ -123,6 +138,10 @@ export function executePrestige(choice: 'clean-escape' | 'snitch'): PrestigeResu
     useScamStore.getState().resetScams();
     useEmployeeStore.getState().resetEmployees();
     useManagerStore.getState().resetManagers();
+
+    // Increment lifetime snitch count (after reset, since prestigeReset preserves it)
+    const gameStore = useGameStore.getState();
+    gameStore.setResource('snitchCount', gameStore.resources.snitchCount + 1);
 
     // Apply snitch bonuses (after reset so they're added to zero)
     if (result.bonuses && result.bonuses.length > 0) {

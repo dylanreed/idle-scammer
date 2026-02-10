@@ -27,6 +27,7 @@ export function getInitialResources(): GameResources {
     skillPoints: 0,
     crypto: 0,
     trust: 1,
+    snitchCount: 0,
   };
 }
 
@@ -124,6 +125,7 @@ export const useGameStore = create<GameState>()((set, get) => ({
           ...getInitialResources(),
           trust: newTrust,
           skillPoints: startingSkillPoints,
+          snitchCount: state.resources.snitchCount,
         },
       };
     });

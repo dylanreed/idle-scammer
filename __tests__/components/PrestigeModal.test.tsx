@@ -16,6 +16,7 @@ const mockResources: GameResources = {
   skillPoints: 5,
   crypto: 3.5,
   trust: 11,
+  snitchCount: 0,
 };
 
 const cleanEscapeResult: PrestigeResult = {

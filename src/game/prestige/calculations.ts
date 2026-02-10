@@ -3,7 +3,7 @@
 
 import type { ScamDefinition } from '../scams/types';
 import type { GameResources } from '../types';
-import type { PrestigeResult, PrestigeBonus } from './types';
+import type { PrestigeResult, PrestigeBonus, PerformanceMetrics } from './types';
 import {
   MAX_HEAT,
   MIN_HEAT_PER_COMPLETION,
@@ -13,8 +13,11 @@ import {
   HEAT_TIER_DISCOUNT,
   HEAT_DECAY_RATE,
   TRUST_DECAY_BOOST,
-  CLEAN_ESCAPE_TRUST_GAIN,
-  SNITCH_TRUST_PENALTY,
+  TRUST_MONEY_WEIGHT,
+  TRUST_COMPLETION_WEIGHT,
+  TRUST_LEVEL_WEIGHT,
+  MIN_TRUST_GAIN,
+  SNITCH_TRUST_PERCENT,
   SNITCH_RESOURCE_KEEP_PERCENT,
   SKILL_POINTS_PER_TRUST,
   TIER_TRUST_REQUIREMENTS,
@@ -125,17 +128,34 @@ export function isPrestigeForced(currentHeat: number): boolean {
 }
 
 /**
+ * Calculates performance-based trust gain from a clean escape.
+ * Uses a composite score: log10 of money, sqrt of completions, and linear levels.
+ * Guarantees at least MIN_TRUST_GAIN (1) so a clean escape is never worthless.
+ *
+ * @param metrics - Run performance metrics (money, completions, levels)
+ * @returns Trust points to gain (integer, >= MIN_TRUST_GAIN)
+ */
+export function calculatePerformanceTrustGain(metrics: PerformanceMetrics): number {
+  const moneyScore = TRUST_MONEY_WEIGHT * Math.log10(Math.max(metrics.money, 1));
+  const completionScore = TRUST_COMPLETION_WEIGHT * Math.sqrt(metrics.totalCompletions);
+  const levelScore = TRUST_LEVEL_WEIGHT * metrics.totalLevels;
+  return Math.max(MIN_TRUST_GAIN, Math.floor(moneyScore + completionScore + levelScore));
+}
+
+/**
  * Calculates the result of choosing a clean escape.
- * Trust is increased; no resources are kept.
+ * Trust gain is based on run performance, not a flat constant.
  *
  * @param currentTrust - The player's current trust value
+ * @param metrics - Run performance metrics for calculating trust gain
  * @returns PrestigeResult with trust gain and no bonuses
  */
-export function calculateCleanEscapeResult(currentTrust: number): PrestigeResult {
+export function calculateCleanEscapeResult(currentTrust: number, metrics: PerformanceMetrics): PrestigeResult {
+  const trustGain = calculatePerformanceTrustGain(metrics);
   return {
     choice: 'clean-escape',
     previousTrust: currentTrust,
-    newTrust: currentTrust + CLEAN_ESCAPE_TRUST_GAIN,
+    newTrust: currentTrust + trustGain,
     bonuses: undefined,
   };
 }
@@ -152,8 +172,8 @@ export function calculateSnitchResult(
   currentTrust: number,
   resources: GameResources
 ): PrestigeResult {
-  // Calculate new trust (minimum 1)
-  const newTrust = Math.max(1, currentTrust + SNITCH_TRUST_PENALTY);
+  // Calculate new trust: lose 50% (floor, minimum 1)
+  const newTrust = Math.max(1, Math.floor(currentTrust * (1 - SNITCH_TRUST_PERCENT)));
 
   // Calculate resource bonuses (10% of each resettable resource)
   const bonuses: PrestigeBonus[] = [];

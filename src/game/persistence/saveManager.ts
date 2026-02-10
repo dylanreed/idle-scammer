@@ -98,6 +98,18 @@ export function migrateIfNeeded(saveData: SaveData): SaveData {
     };
   }
 
+  // Migration from version 3 to version 4: add snitchCount to resources
+  if (migrated.version < 4) {
+    migrated = {
+      ...migrated,
+      version: 4,
+      resources: {
+        ...migrated.resources,
+        snitchCount: (migrated.resources as GameResources).snitchCount ?? 0,
+      },
+    };
+  }
+
   return migrated;
 }
 

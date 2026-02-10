@@ -10,7 +10,7 @@ import type { EmployeeState } from '../employees/types';
  * Current save data format version.
  * Increment when changing SaveData structure (requires migration logic).
  */
-export const SAVE_VERSION = 3;
+export const SAVE_VERSION = 4;
 
 /**
  * AsyncStorage key for game save data.

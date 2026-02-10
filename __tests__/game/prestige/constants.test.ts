@@ -10,8 +10,12 @@ import {
   HEAT_TIER_DISCOUNT,
   HEAT_DECAY_RATE,
   TRUST_DECAY_BOOST,
-  CLEAN_ESCAPE_TRUST_GAIN,
-  SNITCH_TRUST_PENALTY,
+  TRUST_MONEY_WEIGHT,
+  TRUST_COMPLETION_WEIGHT,
+  TRUST_LEVEL_WEIGHT,
+  MIN_TRUST_GAIN,
+  SNITCH_TRUST_PERCENT,
+  SNITCH_EMPLOYEE_COST_PENALTY,
   SNITCH_RESOURCE_KEEP_PERCENT,
 } from '../../../src/game/prestige/constants';
 
@@ -89,23 +93,49 @@ describe('Prestige Constants', () => {
     });
   });
 
-  describe('CLEAN_ESCAPE_TRUST_GAIN', () => {
-    it('should be 10 (reward for clean escape)', () => {
-      expect(CLEAN_ESCAPE_TRUST_GAIN).toBe(10);
+  describe('Performance trust constants', () => {
+    it('should have TRUST_MONEY_WEIGHT = 1.5', () => {
+      expect(TRUST_MONEY_WEIGHT).toBe(1.5);
     });
 
-    it('should be positive', () => {
-      expect(CLEAN_ESCAPE_TRUST_GAIN).toBeGreaterThan(0);
+    it('should have TRUST_COMPLETION_WEIGHT = 0.3', () => {
+      expect(TRUST_COMPLETION_WEIGHT).toBe(0.3);
+    });
+
+    it('should have TRUST_LEVEL_WEIGHT = 0.1', () => {
+      expect(TRUST_LEVEL_WEIGHT).toBe(0.1);
+    });
+
+    it('should have MIN_TRUST_GAIN = 1', () => {
+      expect(MIN_TRUST_GAIN).toBe(1);
+    });
+
+    it('should have all positive values', () => {
+      expect(TRUST_MONEY_WEIGHT).toBeGreaterThan(0);
+      expect(TRUST_COMPLETION_WEIGHT).toBeGreaterThan(0);
+      expect(TRUST_LEVEL_WEIGHT).toBeGreaterThan(0);
+      expect(MIN_TRUST_GAIN).toBeGreaterThan(0);
     });
   });
 
-  describe('SNITCH_TRUST_PENALTY', () => {
-    it('should be -5 (penalty for snitching)', () => {
-      expect(SNITCH_TRUST_PENALTY).toBe(-5);
+  describe('SNITCH_TRUST_PERCENT', () => {
+    it('should be 0.5 (snitching takes 50% of trust)', () => {
+      expect(SNITCH_TRUST_PERCENT).toBe(0.5);
     });
 
-    it('should be negative', () => {
-      expect(SNITCH_TRUST_PENALTY).toBeLessThan(0);
+    it('should be between 0 and 1', () => {
+      expect(SNITCH_TRUST_PERCENT).toBeGreaterThan(0);
+      expect(SNITCH_TRUST_PERCENT).toBeLessThan(1);
+    });
+  });
+
+  describe('SNITCH_EMPLOYEE_COST_PENALTY', () => {
+    it('should be 0.01', () => {
+      expect(SNITCH_EMPLOYEE_COST_PENALTY).toBe(0.01);
+    });
+
+    it('should be positive', () => {
+      expect(SNITCH_EMPLOYEE_COST_PENALTY).toBeGreaterThan(0);
     });
   });
 
@@ -121,13 +151,6 @@ describe('Prestige Constants', () => {
   });
 
   describe('balance sanity checks', () => {
-    it('clean escape gain should be larger than snitch penalty magnitude', () => {
-      // This encourages clean escapes as the "better" choice
-      expect(CLEAN_ESCAPE_TRUST_GAIN).toBeGreaterThan(
-        Math.abs(SNITCH_TRUST_PENALTY)
-      );
-    });
-
     it('snitch resource keep should provide meaningful but not overpowered bonus', () => {
       // 10% is meaningful enough to be tempting but not game-breaking
       expect(SNITCH_RESOURCE_KEEP_PERCENT).toBeGreaterThanOrEqual(0.05);

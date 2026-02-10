@@ -32,6 +32,7 @@ describe('Storage', () => {
       skillPoints: 10,
       crypto: 2.5,
       trust: 3,
+      snitchCount: 0,
     },
     scams: {
       'bot-farms': {

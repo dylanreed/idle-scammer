@@ -434,6 +434,20 @@ export function GameScreen(): React.ReactElement {
   );
 
   /**
+   * Handle voluntary prestige - player clicks "FLEE THE COUNTRY" in OpsPanel
+   */
+  const handleVoluntaryPrestige = useCallback(() => {
+    if (showPrestigeRef.current) return;
+    showPrestigeRef.current = true;
+    setShowPrestige(true);
+    setPrestigePhase('choice');
+    setPrestigeResult(undefined);
+    if (pauseRef.current) {
+      pauseRef.current();
+    }
+  }, []);
+
+  /**
    * Handle prestige choice - execute prestige and show result
    */
   const handlePrestigeChoice = useCallback(
@@ -541,6 +555,7 @@ export function GameScreen(): React.ReactElement {
             scams={scams}
             isManagerHired={isManagerHired}
             onHireManager={handleHireManager}
+            onPrestige={handleVoluntaryPrestige}
             testID="ops-panel"
           />
         }

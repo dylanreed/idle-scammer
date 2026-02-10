@@ -61,6 +61,7 @@ describe('Bot Assignment Flow E2E', () => {
     scams: {},
     isManagerHired: jest.fn(() => false),
     onHireManager: jest.fn(),
+    onPrestige: jest.fn(),
   };
 
   beforeEach(() => {

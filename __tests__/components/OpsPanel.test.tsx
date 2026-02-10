@@ -2,7 +2,7 @@
 // ABOUTME: Verifies BotAssignmentPanel and ManagerPanel are rendered in correct order within ScrollView
 
 import React from 'react';
-import { render, screen } from '@testing-library/react-native';
+import { render, screen, fireEvent } from '@testing-library/react-native';
 import { OpsPanel } from '../../src/components/OpsPanel';
 import type { OpsPanelProps } from '../../src/components/OpsPanel';
 import type { GameResources } from '../../src/game/types';
@@ -51,6 +51,7 @@ const defaultProps: OpsPanelProps = {
   scams: {},
   isManagerHired: jest.fn(() => false),
   onHireManager: jest.fn(),
+  onPrestige: jest.fn(),
   testID: 'ops-panel',
 };
 
@@ -102,5 +103,21 @@ describe('OpsPanel', () => {
     const tree = toJSON() as any;
     // The root element should be a ScrollView with nestedScrollEnabled
     expect(tree.props.nestedScrollEnabled).toBe(true);
+  });
+
+  describe('voluntary prestige button', () => {
+    it('renders a FLEE THE COUNTRY button', () => {
+      render(<OpsPanel {...defaultProps} />);
+      expect(screen.getByTestId('flee-button')).toBeTruthy();
+      expect(screen.getByText('FLEE THE COUNTRY')).toBeTruthy();
+    });
+
+    it('calls onPrestige when pressed', () => {
+      const mockOnPrestige = jest.fn();
+      render(<OpsPanel {...defaultProps} onPrestige={mockOnPrestige} />);
+
+      fireEvent.press(screen.getByTestId('flee-button'));
+      expect(mockOnPrestige).toHaveBeenCalledTimes(1);
+    });
   });
 });

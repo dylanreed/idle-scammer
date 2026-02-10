@@ -5,7 +5,10 @@ import React from 'react';
 import { ScrollView, StyleSheet } from 'react-native';
 import { BotAssignmentPanel } from './BotAssignmentPanel';
 import { ManagerPanel } from './ManagerPanel';
-import { SPACING } from './theme';
+import { PixelButton } from './PixelButton';
+import { CRTFrame } from './CRTFrame';
+import { TerminalText } from './TerminalText';
+import { COLORS, SPACING } from './theme';
 import type { GameResources } from '../game/types';
 import type { ScamState } from '../game/scams/types';
 
@@ -22,6 +25,9 @@ export interface OpsPanelProps {
   /** Called when the player hires a manager */
   onHireManager: (managerId: string, cost: number, scamId: string) => void;
 
+  /** Called when the player voluntarily prestiges */
+  onPrestige: () => void;
+
   /** Test ID for testing */
   testID?: string;
 }
@@ -35,6 +41,7 @@ export function OpsPanel({
   scams,
   isManagerHired,
   onHireManager,
+  onPrestige,
   testID,
 }: OpsPanelProps): React.ReactElement {
   return (
@@ -53,6 +60,21 @@ export function OpsPanel({
         onHireManager={onHireManager}
         testID="manager-panel"
       />
+      <CRTFrame testID="prestige-section">
+        <TerminalText size="md" color={COLORS.terminalGreen}>
+          {'ESCAPE PLAN'}
+        </TerminalText>
+        <TerminalText size="sm" color={COLORS.terminalGreenDim}>
+          {'Cash out your trust and start fresh.'}
+        </TerminalText>
+        <PixelButton
+          onPress={onPrestige}
+          variant="primary"
+          testID="flee-button"
+        >
+          {'FLEE THE COUNTRY'}
+        </PixelButton>
+      </CRTFrame>
     </ScrollView>
   );
 }

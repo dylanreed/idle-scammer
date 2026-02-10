@@ -78,17 +78,17 @@ describe('GameProvider', () => {
         snitchCount: 0,
       },
       scams: {
-        'bot-farms': {
-          scamId: 'bot-farms',
-          level: 10,
-          isUnlocked: true,
-          timesCompleted: 500,
-        },
         'nigerian-prince-emails': {
           scamId: 'nigerian-prince-emails',
           level: 5,
           isUnlocked: true,
           timesCompleted: 100,
+        },
+        'iphone-popup': {
+          scamId: 'iphone-popup',
+          level: 3,
+          isUnlocked: true,
+          timesCompleted: 50,
         },
       },
       managers: {
@@ -98,6 +98,7 @@ describe('GameProvider', () => {
         },
       },
       employees: {},
+      botAssignments: {},
     };
 
     mockStorage.loadGame.mockResolvedValue(savedData);
@@ -118,8 +119,8 @@ describe('GameProvider', () => {
     expect(gameResources.trust).toBe(5);
 
     const scams = useScamStore.getState().scams;
-    expect(scams['bot-farms'].level).toBe(10);
     expect(scams['nigerian-prince-emails'].level).toBe(5);
+    expect(scams['iphone-popup'].level).toBe(3);
 
     const managers = useManagerStore.getState().managers;
     expect(managers['prince-okonkwo'].isHired).toBe(true);
@@ -141,8 +142,8 @@ describe('GameProvider', () => {
         snitchCount: 0,
       },
       scams: {
-        'bot-farms': {
-          scamId: 'bot-farms',
+        'nigerian-prince-emails': {
+          scamId: 'nigerian-prince-emails',
           level: 3,
           isUnlocked: true,
           timesCompleted: 50,
@@ -235,6 +236,7 @@ describe('GameProvider', () => {
         },
       },
       employees: {},
+      botAssignments: {},
     };
 
     mockStorage.loadGame.mockResolvedValue(savedData);

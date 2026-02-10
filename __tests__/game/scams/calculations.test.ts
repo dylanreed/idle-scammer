@@ -5,15 +5,12 @@ import {
   calculateScamDuration,
   calculateScamReward,
   calculateUpgradeCost,
-  calculateBotMultiplier,
-  calculateBotPurchasePrice,
   getMilestoneMultiplier,
   isMilestoneLevel,
   calculateMilestoneBonus,
   calculateManagerCost,
   getScamCostRate,
 } from '../../../src/game/scams/calculations';
-import { BOT_FARMS } from '../../../src/game/scams/definitions';
 import type { ScamDefinition } from '../../../src/game/scams/types';
 
 describe('Scam Calculations', () => {
@@ -55,12 +52,6 @@ describe('Scam Calculations', () => {
       expect(duration).toBeGreaterThan(0);
       // Should be at least 10% of base (100ms minimum for 1000ms base)
       expect(duration).toBeGreaterThanOrEqual(100);
-    });
-
-    it('should work with Bot Farms definition', () => {
-      const duration = calculateScamDuration(BOT_FARMS, 1);
-
-      expect(duration).toBe(BOT_FARMS.baseDuration);
     });
 
     it('should scale smoothly without jumps', () => {
@@ -115,20 +106,6 @@ describe('Scam Calculations', () => {
       expect(rewardL5T3).toBeGreaterThan(rewardL1T1);
       // Should be at least 1.39x due to trust alone
       expect(rewardL5T3).toBeGreaterThanOrEqual(rewardL1T1 * 1.39);
-    });
-
-    it('should work with Bot Farms (generates bots)', () => {
-      const reward = calculateScamReward(BOT_FARMS, 1, 1);
-
-      // Bot Farms rewards 0.5 bots at base (accumulates fractionally)
-      expect(reward).toBe(0.5);
-    });
-
-    it('should return fractional values for incremental accumulation', () => {
-      // Rewards can be fractional to allow slow accumulation
-      const reward = calculateScamReward(BOT_FARMS, 1, 1);
-
-      expect(reward).toBe(0.5);
     });
 
     it('should handle fractional trust', () => {
@@ -240,141 +217,43 @@ describe('Scam Calculations', () => {
       expect(Number.isInteger(cost)).toBe(true);
     });
 
-    it('should work with Bot Farms (upgrade costs bots)', () => {
-      const cost = calculateUpgradeCost(BOT_FARMS, 1);
-
-      expect(cost).toBeGreaterThan(0);
-      expect(Number.isInteger(cost)).toBe(true);
-    });
   });
 
-  describe('calculateBotMultiplier', () => {
-    it('should return 1x with 0 bots', () => {
-      const multiplier = calculateBotMultiplier(0);
+  describe('calculateScamReward with botProfitBonus', () => {
+    it('should apply botProfitBonus as multiplier', () => {
+      // botProfitBonus of 1.0 means +100% = 2x reward
+      const rewardNoBonus = calculateScamReward(testScam, 1, 1, 0);
+      const rewardWithBonus = calculateScamReward(testScam, 1, 1, 1.0);
 
-      expect(multiplier).toBe(1);
+      expect(rewardWithBonus).toBe(rewardNoBonus * 2);
     });
 
-    it('should return 1.01x with 1 bot (1% bonus)', () => {
-      const multiplier = calculateBotMultiplier(1);
+    it('should apply fractional botProfitBonus', () => {
+      // botProfitBonus of 0.5 means +50% = 1.5x reward
+      const rewardNoBonus = calculateScamReward(testScam, 1, 1, 0);
+      const rewardWithBonus = calculateScamReward(testScam, 1, 1, 0.5);
 
-      expect(multiplier).toBe(1.01);
+      expect(rewardWithBonus).toBeCloseTo(rewardNoBonus * 1.5, 1);
     });
 
-    it('should return 2x with 100 bots (100% bonus)', () => {
-      const multiplier = calculateBotMultiplier(100);
-
-      expect(multiplier).toBe(2);
-    });
-
-    it('should return 11x with 1000 bots (1000% bonus)', () => {
-      const multiplier = calculateBotMultiplier(1000);
-
-      expect(multiplier).toBe(11);
-    });
-
-    it('should scale linearly (1% per bot)', () => {
-      const mult50 = calculateBotMultiplier(50);
-      const mult75 = calculateBotMultiplier(75);
-
-      expect(mult50).toBe(1.5);
-      expect(mult75).toBe(1.75);
-    });
-  });
-
-  describe('calculateBotPurchasePrice', () => {
-    it('should cost $100 for first bot (0 owned)', () => {
-      const price = calculateBotPurchasePrice(0);
-
-      // $100 × (0 + 1)² = $100
-      expect(price).toBe(100);
-    });
-
-    it('should cost $400 when you have 1 bot', () => {
-      const price = calculateBotPurchasePrice(1);
-
-      // $100 × (1 + 1)² = $100 × 4 = $400
-      expect(price).toBe(400);
-    });
-
-    it('should cost $900 when you have 2 bots', () => {
-      const price = calculateBotPurchasePrice(2);
-
-      // $100 × (2 + 1)² = $100 × 9 = $900
-      expect(price).toBe(900);
-    });
-
-    it('should cost $10,000 when you have 9 bots', () => {
-      const price = calculateBotPurchasePrice(9);
-
-      // $100 × (9 + 1)² = $100 × 100 = $10,000
-      expect(price).toBe(10000);
-    });
-
-    it('should cost $1,010,000 when you have 100 bots', () => {
-      const price = calculateBotPurchasePrice(100);
-
-      // $100 × (100 + 1)² = $100 × 10201 = $1,020,100
-      expect(price).toBe(1020100);
-    });
-
-    it('should scale quadratically (expensive!)', () => {
-      const price10 = calculateBotPurchasePrice(10);
-      const price20 = calculateBotPurchasePrice(20);
-
-      // 10 bots: $100 × 11² = $12,100
-      // 20 bots: $100 × 21² = $44,100
-      expect(price10).toBe(12100);
-      expect(price20).toBe(44100);
-    });
-  });
-
-  describe('calculateScamReward with bot multiplier', () => {
-    const botScam: ScamDefinition = {
-      id: 'bot-scam',
-      name: 'Bot Scam',
-      tier: 1,
-      baseDuration: 1000,
-      baseReward: 10,
-      resourceType: 'bots',
-      description: 'Generates bots',
-    };
-
-    it('should apply bot multiplier to bot-type rewards', () => {
-      // With 100 bots, should get 2x rewards
-      const rewardNoBots = calculateScamReward(botScam, 1, 1, 0);
-      const rewardWithBots = calculateScamReward(botScam, 1, 1, 100);
-
-      expect(rewardWithBots).toBe(rewardNoBots * 2);
-    });
-
-    it('should NOT apply bot multiplier to money-type rewards', () => {
-      const moneyScam: ScamDefinition = { ...botScam, resourceType: 'money' };
-
-      const rewardNoBots = calculateScamReward(moneyScam, 1, 1, 0);
-      const rewardWithBots = calculateScamReward(moneyScam, 1, 1, 100);
-
-      expect(rewardWithBots).toBe(rewardNoBots);
-    });
-
-    it('should combine level, trust, and bot bonuses', () => {
-      // Test that trust and bot bonuses stack multiplicatively
-      const baseReward = calculateScamReward(botScam, 5, 1, 0);
-      const withTrust = calculateScamReward(botScam, 5, 2, 0);
-      const withBots = calculateScamReward(botScam, 5, 1, 50); // 50 bots = 1.5x
-      const withBoth = calculateScamReward(botScam, 5, 2, 50);
+    it('should combine level, trust, and botProfitBonus', () => {
+      // Test that trust and botProfitBonus stack multiplicatively
+      const baseReward = calculateScamReward(testScam, 5, 1, 0);
+      const withTrust = calculateScamReward(testScam, 5, 2, 0);
+      const withBonus = calculateScamReward(testScam, 5, 1, 0.5); // +50% = 1.5x
+      const withBoth = calculateScamReward(testScam, 5, 2, 0.5);
 
       // Trust 2^0.3 ≈ 1.2311 should multiply the reward
       expect(withTrust).toBeCloseTo(baseReward * 1.2311, 1);
-      // 50 bots should give 1.5x
-      expect(withBots).toBeCloseTo(baseReward * 1.5, 1);
+      // botProfitBonus 0.5 should give 1.5x
+      expect(withBonus).toBeCloseTo(baseReward * 1.5, 1);
       // Combined should be 1.2311 * 1.5 ≈ 1.8467x
       expect(withBoth).toBeCloseTo(baseReward * 1.8467, 1);
     });
 
-    it('should default to 0 bots if not provided', () => {
-      const rewardDefault = calculateScamReward(botScam, 1, 1);
-      const rewardExplicit = calculateScamReward(botScam, 1, 1, 0);
+    it('should default to 0 botProfitBonus if not provided', () => {
+      const rewardDefault = calculateScamReward(testScam, 1, 1);
+      const rewardExplicit = calculateScamReward(testScam, 1, 1, 0);
 
       expect(rewardDefault).toBe(rewardExplicit);
     });

@@ -77,8 +77,8 @@ describe('Employee Rebalance E2E', () => {
     // High trust to hire many
     useGameStore.getState().hydrate({ ...useGameStore.getState().resources, trust: 20 });
 
-    // Hire 10 bot wranglers directly (cheapest employee)
-    useEmployeeStore.getState().hireEmployee('bot-wrangler', 10);
+    // Hire 10 email copywriters directly
+    useEmployeeStore.getState().hireEmployee('email-copywriter', 10);
 
     render(<GameScreen />);
     act(() => { jest.advanceTimersByTime(100); });
@@ -99,10 +99,4 @@ describe('Employee Rebalance E2E', () => {
     expect(firstHireCost).toBe(120);
   });
 
-  it('should match cost to minimum for bot farms (non-money scam)', () => {
-    clearEmployeeCostCache();
-    // Bot Farms produces bots, not money. Minimum cost = $10.
-    const firstHireCost = getEmployeeCostForScam('bot-farms', 0);
-    expect(firstHireCost).toBe(10);
-  });
 });

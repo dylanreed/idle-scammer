@@ -9,7 +9,6 @@ import type { ResourceKey } from '../types';
  * These are the pixel art icons displayed on scam cards.
  */
 export const SCAM_ICONS: Record<string, ImageSourcePropType> = {
-  'bot-farms': require('../../../assets/tier-1/scams/bot-farm.png'),
   'nigerian-prince-emails': require('../../../assets/tier-1/scams/prince-email.png'),
   'fake-lottery-winnings': require('../../../assets/tier-1/scams/lottery-ticket.png'),
   'iphone-popup': require('../../../assets/tier-1/scams/pop-up-ad.png'),
@@ -26,7 +25,6 @@ export const SCAM_ICONS: Record<string, ImageSourcePropType> = {
  * These are character portraits shown in the manager purchase UI.
  *
  * Portrait assignments based on personality:
- * - bot-3000: pretend-human (AI trying to pass as human)
  * - prince-okonkwo: flashy-suit (royal attire)
  * - lucky-larry: cryptobro (hype man energy)
  * - popup-pete: tech-bro (early 2000s web enthusiast)
@@ -38,7 +36,6 @@ export const SCAM_ICONS: Record<string, ImageSourcePropType> = {
  * - carla-careers: hacker (tech-savvy scammer)
  */
 export const MANAGER_PORTRAITS: Record<string, ImageSourcePropType> = {
-  'bot-3000': require('../../../assets/tier-1/managers/pretend-human.png'),
   'prince-okonkwo': require('../../../assets/tier-1/managers/flashy-suit.png'),
   'lucky-larry': require('../../../assets/tier-1/managers/cryptobro.png'),
   'popup-pete': require('../../../assets/tier-1/managers/tech-bro.png'),

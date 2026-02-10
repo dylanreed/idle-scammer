@@ -3,7 +3,6 @@
 
 import { create } from 'zustand';
 import type { GameResources, GameState, ResourceKey } from './types';
-import { calculateBotPurchasePrice } from './scams/calculations';
 import { calculateStartingSkillPoints } from './prestige/calculations';
 
 /**
@@ -126,6 +125,7 @@ export const useGameStore = create<GameState>()((set, get) => ({
           trust: newTrust,
           skillPoints: startingSkillPoints,
           snitchCount: state.resources.snitchCount,
+          bots: state.resources.bots,
         },
       };
     });
@@ -134,31 +134,4 @@ export const useGameStore = create<GameState>()((set, get) => ({
   hydrate: (resources: GameResources) => {
     set({ resources });
   },
-
-  buyBot: () => {
-    const state = get();
-    const price = calculateBotPurchasePrice(state.resources.bots);
-
-    if (state.resources.money < price) {
-      return false;
-    }
-
-    set((current) => ({
-      resources: {
-        ...current.resources,
-        money: current.resources.money - price,
-        bots: current.resources.bots + 1,
-      },
-    }));
-
-    return true;
-  },
 }));
-
-/**
- * Helper to get the current bot purchase price.
- * Uses the store's current bot count.
- */
-export function getBotPurchasePrice(): number {
-  return calculateBotPurchasePrice(useGameStore.getState().resources.bots);
-}

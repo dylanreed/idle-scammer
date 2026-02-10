@@ -1,14 +1,12 @@
 // ABOUTME: Tests for scam store with all 5 tiers of scams
-// ABOUTME: Validates that all 50 scams are initialized, locked/unlocked correctly, and can be managed
+// ABOUTME: Validates that all 49 scams are initialized, locked/unlocked correctly, and can be managed
 
 import {
   useScamStore,
   getInitialScamState,
-  createScamState,
 } from '../../../src/game/scams/scamStore';
 import {
   ALL_SCAMS,
-  BOT_FARMS,
   NIGERIAN_PRINCE_EMAILS,
 } from '../../../src/game/scams/definitions';
 import { TIER_2_SCAMS } from '../../../src/game/scams/tier2';
@@ -22,17 +20,15 @@ describe('ScamStore - Multi-Tier Support', () => {
   });
 
   describe('getInitialScamState - all tiers', () => {
-    it('should include all 50 scams', () => {
+    it('should include all 49 scams', () => {
       const state = getInitialScamState();
       const scamIds = Object.keys(state);
 
-      expect(scamIds).toHaveLength(50);
+      expect(scamIds).toHaveLength(49);
     });
 
-    it('should include Bot Farms and all Tier 1 scams', () => {
+    it('should include all Tier 1 scams', () => {
       const state = getInitialScamState();
-
-      expect(state[BOT_FARMS.id]).toBeDefined();
 
       ALL_SCAMS.filter((s) => s.tier === 1).forEach((scam) => {
         expect(state[scam.id]).toBeDefined();
@@ -78,12 +74,6 @@ describe('ScamStore - Multi-Tier Support', () => {
   });
 
   describe('initial lock state', () => {
-    it('Bot Farms should start unlocked', () => {
-      const state = getInitialScamState();
-
-      expect(state[BOT_FARMS.id].isUnlocked).toBe(true);
-    });
-
     it('Nigerian Prince Emails should start unlocked', () => {
       const state = getInitialScamState();
 
@@ -96,8 +86,8 @@ describe('ScamStore - Multi-Tier Support', () => {
       const tier1Scams = ALL_SCAMS.filter((s) => s.tier === 1);
 
       tier1Scams.forEach((scam) => {
-        // Skip Bot Farms and Nigerian Prince (both start unlocked)
-        if (scam.id === BOT_FARMS.id || scam.id === NIGERIAN_PRINCE_EMAILS.id) {
+        // Skip Nigerian Prince (starts unlocked)
+        if (scam.id === NIGERIAN_PRINCE_EMAILS.id) {
           return;
         }
 
@@ -261,11 +251,10 @@ describe('ScamStore - Multi-Tier Support', () => {
   });
 
   describe('resetScams - all tiers', () => {
-    it('should reset all 50 scams to initial state', () => {
+    it('should reset all 49 scams to initial state', () => {
       const { unlockScam, upgradeScam, resetScams } = useScamStore.getState();
 
       // Make progress across tiers
-      upgradeScam(BOT_FARMS.id);
       upgradeScam(NIGERIAN_PRINCE_EMAILS.id);
 
       unlockScam(TIER_2_SCAMS[0].id);
@@ -279,13 +268,10 @@ describe('ScamStore - Multi-Tier Support', () => {
 
       const scams = useScamStore.getState().scams;
 
-      // Verify we still have 50 scams
-      expect(Object.keys(scams)).toHaveLength(50);
+      // Verify we still have 49 scams
+      expect(Object.keys(scams)).toHaveLength(49);
 
       // Verify reset state
-      expect(scams[BOT_FARMS.id].level).toBe(1);
-      expect(scams[BOT_FARMS.id].isUnlocked).toBe(true);
-
       expect(scams[NIGERIAN_PRINCE_EMAILS.id].level).toBe(1);
       expect(scams[NIGERIAN_PRINCE_EMAILS.id].isUnlocked).toBe(true);
 
@@ -296,7 +282,7 @@ describe('ScamStore - Multi-Tier Support', () => {
       expect(scams[TIER_3_SCAMS[0].id].isUnlocked).toBe(false);
     });
 
-    it('should bring back all 50 scams after reset', () => {
+    it('should bring back all 49 scams after reset', () => {
       const { resetScams } = useScamStore.getState();
 
       resetScams();
@@ -326,13 +312,12 @@ describe('ScamStore - Multi-Tier Support', () => {
       });
     });
 
-    it('should preserve Bot Farms and Nigerian Prince as unlocked after reset', () => {
+    it('should preserve Nigerian Prince as unlocked after reset', () => {
       const { resetScams } = useScamStore.getState();
 
       resetScams();
 
       const scams = useScamStore.getState().scams;
-      expect(scams[BOT_FARMS.id].isUnlocked).toBe(true);
       expect(scams[NIGERIAN_PRINCE_EMAILS.id].isUnlocked).toBe(true);
     });
   });
@@ -342,9 +327,9 @@ describe('ScamStore - Multi-Tier Support', () => {
       const { getScamState } = useScamStore.getState();
 
       // Test one scam from each tier
-      const botFarmsState = getScamState(BOT_FARMS.id);
-      expect(botFarmsState).toBeDefined();
-      expect(botFarmsState?.scamId).toBe(BOT_FARMS.id);
+      const nigerianPrinceState = getScamState(NIGERIAN_PRINCE_EMAILS.id);
+      expect(nigerianPrinceState).toBeDefined();
+      expect(nigerianPrinceState?.scamId).toBe(NIGERIAN_PRINCE_EMAILS.id);
 
       const tier2State = getScamState(TIER_2_SCAMS[0].id);
       expect(tier2State).toBeDefined();
@@ -363,7 +348,7 @@ describe('ScamStore - Multi-Tier Support', () => {
       expect(tier5State?.scamId).toBe(TIER_5_SCAMS[0].id);
     });
 
-    it('should return correct state for all 50 scams', () => {
+    it('should return correct state for all 49 scams', () => {
       const { getScamState } = useScamStore.getState();
 
       ALL_SCAMS.forEach((scam) => {

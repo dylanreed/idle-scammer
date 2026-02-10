@@ -8,21 +8,6 @@ import { TIER_4_MANAGERS } from './tier4';
 import { TIER_5_MANAGERS } from './tier5';
 
 /**
- * B0T-3000 - The Bot Farms Manager
- *
- * A sentient AI from the 90s that never got the memo about Y2K.
- * Runs the bot operation with ruthless mechanical efficiency.
- * Cost is low since this is the foundational scam.
- */
-export const BOT_3000: ManagerDefinition = {
-  id: 'bot-3000',
-  name: 'B0T-3000',
-  scamId: 'bot-farms',
-  cost: 50, // Low cost since bots are currently disabled
-  flavorText: 'BEEP BOOP. AUTOMATION PROTOCOL ENGAGED. RESISTANCE IS... ACTUALLY PRETTY EASY TO OVERCOME.',
-};
-
-/**
  * Prince Okonkwo III - The Nigerian Prince Emails Manager
  *
  * Claims to be the REAL Nigerian prince. The others are imposters.
@@ -171,7 +156,6 @@ export const CARLA_CAREERS: ManagerDefinition = {
  * One manager per scam, each with unique personality.
  */
 export const TIER_1_MANAGERS: ManagerDefinition[] = [
-  BOT_3000,
   PRINCE_OKONKWO,
   LUCKY_LARRY,
   POPUP_PETE,

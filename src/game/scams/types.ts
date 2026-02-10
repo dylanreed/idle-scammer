@@ -9,7 +9,7 @@ export type ScamTier = 1 | 2 | 3 | 4 | 5;
 
 /**
  * Resource types that scams can reward.
- * Most scams reward money, but Bot Farms reward bots (foundational resource).
+ * Most scams reward money; higher tiers reward reputation or crypto.
  */
 export type ResourceType = 'money' | 'bots' | 'reputation' | 'crypto';
 
@@ -18,10 +18,10 @@ export type ResourceType = 'money' | 'bots' | 'reputation' | 'crypto';
  * Contains base stats that get modified by level, trust, and upgrades.
  */
 export interface ScamDefinition {
-  /** Unique identifier (kebab-case, e.g., 'bot-farms') */
+  /** Unique identifier (kebab-case, e.g., 'nigerian-prince-emails') */
   id: string;
 
-  /** Display name (e.g., 'Bot Farms') */
+  /** Display name (e.g., 'Nigerian Prince Emails') */
   name: string;
 
   /** Difficulty tier (1-5) - determines unlock requirements and scaling */

@@ -98,12 +98,12 @@ describe('PrestigeModal', () => {
 
     it('should render clean escape subtext', () => {
       render(<PrestigeModal {...createDefaultProps()} />);
-      expect(screen.getByText('+10 Trust / Lose Everything')).toBeTruthy();
+      expect(screen.getByText('Trust Reward / Lose Everything')).toBeTruthy();
     });
 
     it('should render snitch subtext', () => {
       render(<PrestigeModal {...createDefaultProps()} />);
-      expect(screen.getByText('-5 Trust / Keep 10% Resources')).toBeTruthy();
+      expect(screen.getByText('-50% Trust / Keep 10% Resources')).toBeTruthy();
     });
 
     it('should display current resource summary', () => {

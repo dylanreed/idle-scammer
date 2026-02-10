@@ -7,17 +7,17 @@ describe('Employee Types', () => {
   describe('EmployeeDefinition', () => {
     it('should have all required fields for an employee definition', () => {
       const testEmployee: EmployeeDefinition = {
-        id: 'bot-wrangler',
-        name: 'Bot Wrangler',
-        scamId: 'bot-farms',
+        id: 'email-copywriter',
+        name: 'Email Copywriter',
+        scamId: 'nigerian-prince-emails',
         baseCost: 100,
         speedBoost: 0.05, // 5% duration reduction
         rewardBoost: 0.1, // 10% reward increase
       };
 
-      expect(testEmployee.id).toBe('bot-wrangler');
-      expect(testEmployee.name).toBe('Bot Wrangler');
-      expect(testEmployee.scamId).toBe('bot-farms');
+      expect(testEmployee.id).toBe('email-copywriter');
+      expect(testEmployee.name).toBe('Email Copywriter');
+      expect(testEmployee.scamId).toBe('nigerian-prince-emails');
       expect(testEmployee.baseCost).toBe(100);
       expect(testEmployee.speedBoost).toBe(0.05);
       expect(testEmployee.rewardBoost).toBe(0.1);
@@ -69,17 +69,17 @@ describe('Employee Types', () => {
   describe('EmployeeState', () => {
     it('should have all required fields for employee state', () => {
       const testState: EmployeeState = {
-        employeeId: 'bot-wrangler',
+        employeeId: 'email-copywriter',
         count: 5,
       };
 
-      expect(testState.employeeId).toBe('bot-wrangler');
+      expect(testState.employeeId).toBe('email-copywriter');
       expect(testState.count).toBe(5);
     });
 
     it('should allow zero count (no employees hired)', () => {
       const state: EmployeeState = {
-        employeeId: 'bot-wrangler',
+        employeeId: 'email-copywriter',
         count: 0,
       };
 
@@ -88,7 +88,7 @@ describe('Employee Types', () => {
 
     it('should allow large counts for late game', () => {
       const state: EmployeeState = {
-        employeeId: 'bot-wrangler',
+        employeeId: 'email-copywriter',
         count: 10000,
       };
 

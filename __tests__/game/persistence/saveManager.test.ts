@@ -28,8 +28,8 @@ describe('SaveManager', () => {
       };
 
       const scams: ScamStateMap = {
-        'bot-farms': {
-          scamId: 'bot-farms',
+        'nigerian-prince-emails': {
+          scamId: 'nigerian-prince-emails',
           level: 5,
           isUnlocked: true,
           timesCompleted: 100,
@@ -51,6 +51,7 @@ describe('SaveManager', () => {
       expect(result.resources).toEqual(resources);
       expect(result.scams).toEqual(scams);
       expect(result.managers).toEqual(managers);
+      expect(result.botAssignments).toEqual({});
     });
 
     it('should capture current timestamp', () => {
@@ -110,8 +111,8 @@ describe('SaveManager', () => {
       };
 
       const scams: ScamStateMap = {
-        'bot-farms': {
-          scamId: 'bot-farms',
+        'nigerian-prince-emails': {
+          scamId: 'nigerian-prince-emails',
           level: 10,
           isUnlocked: true,
           timesCompleted: 500,
@@ -135,7 +136,7 @@ describe('SaveManager', () => {
       const result = createSaveData(resources, scams, managers);
 
       expect(Object.keys(result.scams)).toHaveLength(3);
-      expect(result.scams['bot-farms'].level).toBe(10);
+      expect(result.scams['nigerian-prince-emails'].level).toBe(10);
       expect(result.scams['phishing'].level).toBe(3);
       expect(result.scams['crypto-pump'].isUnlocked).toBe(false);
     });
@@ -168,7 +169,7 @@ describe('SaveManager', () => {
   });
 
   describe('applySaveData', () => {
-    it('should return resources, scams, and managers from SaveData', () => {
+    it('should return resources, scams, managers, and botAssignments from SaveData', () => {
       const saveData: SaveData = {
         version: SAVE_VERSION,
         savedAt: Date.now(),
@@ -183,8 +184,8 @@ describe('SaveManager', () => {
           snitchCount: 0,
         },
         scams: {
-          'bot-farms': {
-            scamId: 'bot-farms',
+          'nigerian-prince-emails': {
+            scamId: 'nigerian-prince-emails',
             level: 5,
             isUnlocked: true,
             timesCompleted: 100,
@@ -197,13 +198,15 @@ describe('SaveManager', () => {
           },
         },
         employees: {},
+        botAssignments: {},
       };
 
-      const { resources, scams, managers } = applySaveData(saveData);
+      const { resources, scams, managers, botAssignments } = applySaveData(saveData);
 
       expect(resources).toEqual(saveData.resources);
       expect(scams).toEqual(saveData.scams);
       expect(managers).toEqual(saveData.managers);
+      expect(botAssignments).toEqual({});
     });
 
     it('should handle empty scams and managers in save data', () => {
@@ -223,13 +226,15 @@ describe('SaveManager', () => {
         scams: {},
         managers: {},
         employees: {},
+        botAssignments: {},
       };
 
-      const { resources, scams, managers } = applySaveData(saveData);
+      const { resources, scams, managers, botAssignments } = applySaveData(saveData);
 
       expect(resources.trust).toBe(1);
       expect(Object.keys(scams)).toHaveLength(0);
       expect(Object.keys(managers)).toHaveLength(0);
+      expect(botAssignments).toEqual({});
     });
 
     it('should preserve decimal values', () => {
@@ -249,6 +254,7 @@ describe('SaveManager', () => {
         scams: {},
         managers: {},
         employees: {},
+        botAssignments: {},
       };
 
       const { resources } = applySaveData(saveData);
@@ -275,8 +281,8 @@ describe('SaveManager', () => {
           snitchCount: 0,
         },
         scams: {
-          'bot-farms': {
-            scamId: 'bot-farms',
+          'nigerian-prince-emails': {
+            scamId: 'nigerian-prince-emails',
             level: 5,
             isUnlocked: true,
             timesCompleted: 100,
@@ -289,6 +295,7 @@ describe('SaveManager', () => {
           },
         },
         employees: {},
+        botAssignments: {},
       };
 
       const result = migrateIfNeeded(saveData);
@@ -337,8 +344,8 @@ describe('SaveManager', () => {
           snitchCount: 0,
         },
         scams: {
-          'bot-farms': {
-            scamId: 'bot-farms',
+          'nigerian-prince-emails': {
+            scamId: 'nigerian-prince-emails',
             level: 5,
             isUnlocked: true,
             timesCompleted: 100,
@@ -351,9 +358,49 @@ describe('SaveManager', () => {
       expect(result.version).toBe(SAVE_VERSION);
       expect(result.managers).toEqual({});
       expect(result.employees).toEqual({});
+      expect(result.botAssignments).toEqual({});
       // Existing data preserved
       expect(result.resources.money).toBe(1000);
-      expect(result.scams['bot-farms'].level).toBe(5);
+      expect(result.scams['nigerian-prince-emails'].level).toBe(5);
+    });
+
+    it('should migrate v4 data to v5 by adding empty botAssignments', () => {
+      const v4SaveData = {
+        version: 4,
+        savedAt: Date.now(),
+        resources: {
+          money: 2000,
+          reputation: 100,
+          heat: 30,
+          bots: 10,
+          skillPoints: 5,
+          crypto: 1.5,
+          trust: 4,
+          snitchCount: 1,
+        },
+        scams: {
+          'nigerian-prince-emails': {
+            scamId: 'nigerian-prince-emails',
+            level: 3,
+            isUnlocked: true,
+            timesCompleted: 20,
+          },
+        },
+        managers: {
+          'prince-okonkwo': { managerId: 'prince-okonkwo', isHired: true },
+        },
+        employees: {},
+      } as unknown as SaveData;
+
+      const result = migrateIfNeeded(v4SaveData);
+
+      expect(result.version).toBe(5);
+      expect(result.botAssignments).toEqual({});
+      // Existing data preserved
+      expect(result.resources.money).toBe(2000);
+      expect(result.resources.snitchCount).toBe(1);
+      expect(result.scams['nigerian-prince-emails'].level).toBe(3);
+      expect(result.managers['prince-okonkwo'].isHired).toBe(true);
     });
 
     it('should handle sequential migrations v0 -> v1 -> v2', () => {

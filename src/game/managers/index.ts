@@ -6,7 +6,6 @@ export type { ManagerDefinition, ManagerState } from './types';
 
 // Definitions
 export {
-  BOT_3000,
   PRINCE_OKONKWO,
   LUCKY_LARRY,
   POPUP_PETE,

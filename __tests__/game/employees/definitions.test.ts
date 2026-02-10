@@ -3,7 +3,6 @@
 
 import {
   TIER_1_EMPLOYEES,
-  BOT_WRANGLER,
   EMAIL_COPYWRITER,
   LOTTERY_ANNOUNCER,
   POPUP_DESIGNER,
@@ -21,8 +20,8 @@ import type { EmployeeDefinition } from '../../../src/game/employees/types';
 
 describe('Employee Definitions', () => {
   describe('TIER_1_EMPLOYEES collection', () => {
-    it('should have exactly 10 employees (one per Tier 1 scam)', () => {
-      expect(TIER_1_EMPLOYEES.length).toBe(10);
+    it('should have exactly 9 employees (one per Tier 1 scam)', () => {
+      expect(TIER_1_EMPLOYEES.length).toBe(9);
     });
 
     it('should have unique IDs for all employees', () => {
@@ -39,7 +38,7 @@ describe('Employee Definitions', () => {
       expect(uniqueNames.size).toBe(TIER_1_EMPLOYEES.length);
     });
 
-    it('should cover all Tier 1 scams (plus Bot Farms which is separate)', () => {
+    it('should cover all Tier 1 scams', () => {
       const scamIdsCovered = new Set(TIER_1_EMPLOYEES.map((e) => e.scamId));
       const tier1ScamIds = new Set(TIER_1_SCAMS.map((s) => s.id));
 
@@ -48,11 +47,7 @@ describe('Employee Definitions', () => {
         expect(scamIdsCovered.has(scamId)).toBe(true);
       });
 
-      // Bot Farms is separate but should also have an employee
-      expect(scamIdsCovered.has('bot-farms')).toBe(true);
-
-      // Total employees = 9 tier 1 scams + 1 bot farms = 10
-      expect(scamIdsCovered.size).toBe(10);
+      expect(scamIdsCovered.size).toBe(9);
     });
 
     it('should have positive base costs for all employees', () => {
@@ -95,10 +90,6 @@ describe('Employee Definitions', () => {
       expect(employee.baseCost).toBeGreaterThan(0);
     };
 
-    it('should define BOT_WRANGLER for bot-farms', () => {
-      validateEmployee(BOT_WRANGLER, 'bot-wrangler', 'bot-farms');
-    });
-
     it('should define EMAIL_COPYWRITER for nigerian-prince-emails', () => {
       validateEmployee(EMAIL_COPYWRITER, 'email-copywriter', 'nigerian-prince-emails');
     });
@@ -138,10 +129,10 @@ describe('Employee Definitions', () => {
 
   describe('getEmployeesByScamId', () => {
     it('should return employees for a scam with employees', () => {
-      const employees = getEmployeesByScamId('bot-farms');
+      const employees = getEmployeesByScamId('nigerian-prince-emails');
 
       expect(employees.length).toBe(1);
-      expect(employees[0].id).toBe('bot-wrangler');
+      expect(employees[0].id).toBe('email-copywriter');
     });
 
     it('should return empty array for non-existent scam', () => {
@@ -160,10 +151,10 @@ describe('Employee Definitions', () => {
 
   describe('getEmployeeById', () => {
     it('should return employee by ID', () => {
-      const employee = getEmployeeById('bot-wrangler');
+      const employee = getEmployeeById('email-copywriter');
 
       expect(employee).toBeDefined();
-      expect(employee?.id).toBe('bot-wrangler');
+      expect(employee?.id).toBe('email-copywriter');
     });
 
     it('should return undefined for non-existent employee', () => {

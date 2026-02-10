@@ -40,6 +40,8 @@ import { formatNumber } from '../utils/formatters';
 import type { ScamTimer } from '../game/engine/types';
 import type { ScamDefinition, ScamTier } from '../game/scams/types';
 import type { PrestigeResult } from '../game/prestige/types';
+import { useBotStore } from '../game/bots/botStore';
+import { BOT_GENERATION_RATES, IDLE_BOT_HEAT_REDUCTION } from '../game/bots/constants';
 
 /**
  * Tier display names shown as section headers
@@ -79,6 +81,7 @@ export function GameScreen(): React.ReactElement {
   const resources = useGameStore((state) => state.resources);
   const addMoney = useGameStore((state) => state.addMoney);
   const addHeat = useGameStore((state) => state.addHeat);
+  const addBots = useGameStore((state) => state.addBots);
 
   // Get scam states and actions from scam store
   const scams = useScamStore((state) => state.scams);
@@ -121,22 +124,31 @@ export function GameScreen(): React.ReactElement {
       const scamState = scams[timer.scamId];
       if (!scamState) return;
 
-      // Calculate reward based on level, trust, and employee bonuses
+      // Get bot bonuses for this scam
+      const botBonuses = useBotStore.getState().getScamBotBonuses(timer.scamId);
+
+      // Calculate reward based on level, trust, employee bonuses, and bot profit bonus
       const { rewardBonus } = useEmployeeStore.getState().getScamBonuses(timer.scamId);
       const reward = calculateScamReward(
         definition,
         scamState.level,
         resources.trust,
-        0,
+        botBonuses.profitBonus,
         rewardBonus
       );
 
       // Award money
       addMoney(reward);
 
-      // Add heat from the scam
-      const heat = calculateHeatFromScam(definition);
+      // Add heat from the scam, reduced by unassigned idle bots
+      const totalBots = useGameStore.getState().resources.bots;
+      const unassignedBots = useBotStore.getState().getAvailableBots(totalBots);
+      const heatMultiplier = 1 / (1 + IDLE_BOT_HEAT_REDUCTION * unassignedBots);
+      const heat = calculateHeatFromScam(definition) * heatMultiplier;
       addHeat(heat);
+
+      // Generate fractional bots from scam completion
+      addBots(BOT_GENERATION_RATES[definition.tier]);
 
       // Increment completion counter
       incrementCompletion(timer.scamId);
@@ -164,7 +176,8 @@ export function GameScreen(): React.ReactElement {
       if (manager && isManagerHired(manager.id) && addTimerRef.current) {
         // Schedule auto-restart on next tick to avoid state conflicts
         const { speedBonus } = useEmployeeStore.getState().getScamBonuses(timer.scamId);
-        const duration = calculateScamDuration(definition, scamState.level, speedBonus);
+        const botSpeedBonus = useBotStore.getState().getScamBotBonuses(timer.scamId).speedBonus;
+        const duration = calculateScamDuration(definition, scamState.level, speedBonus, botSpeedBonus);
         setTimeout(() => {
           if (addTimerRef.current) {
             addTimerRef.current(timer.scamId, duration);
@@ -172,7 +185,7 @@ export function GameScreen(): React.ReactElement {
         }, 0);
       }
     },
-    [scams, resources.trust, addMoney, addHeat, incrementCompletion, isManagerHired]
+    [scams, resources.trust, addMoney, addHeat, addBots, incrementCompletion, isManagerHired]
   );
 
   /**
@@ -227,9 +240,6 @@ export function GameScreen(): React.ReactElement {
   // so we can safely read manager/scam state here.
   useEffect(() => {
     for (const managerDef of ALL_MANAGERS) {
-      // Skip bot farms since they're handled separately
-      if (managerDef.scamId === 'bot-farms') continue;
-
       const managerHired = useManagerStore.getState().isManagerHired(managerDef.id);
       if (!managerHired) continue;
 
@@ -240,7 +250,8 @@ export function GameScreen(): React.ReactElement {
       if (!definition) continue;
 
       const { speedBonus } = useEmployeeStore.getState().getScamBonuses(managerDef.scamId);
-      const duration = calculateScamDuration(definition, scamState.level, speedBonus);
+      const botSpeedBonus = useBotStore.getState().getScamBotBonuses(managerDef.scamId).speedBonus;
+      const duration = calculateScamDuration(definition, scamState.level, speedBonus, botSpeedBonus);
       addTimer(managerDef.scamId, duration);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -286,9 +297,10 @@ export function GameScreen(): React.ReactElement {
       // Check if already running
       if (timerMap[scamId]) return;
 
-      // Calculate duration with employee speed bonus
+      // Calculate duration with employee and bot speed bonuses
       const { speedBonus } = useEmployeeStore.getState().getScamBonuses(scamId);
-      const duration = calculateScamDuration(definition, scamState.level, speedBonus);
+      const botSpeedBonus = useBotStore.getState().getScamBotBonuses(scamId).speedBonus;
+      const duration = calculateScamDuration(definition, scamState.level, speedBonus, botSpeedBonus);
       addTimer(scamId, duration);
     },
     [scams, timerMap, addTimer]
@@ -368,7 +380,8 @@ export function GameScreen(): React.ReactElement {
       const scamState = scams[scamId];
       if (definition && scamState?.isUnlocked && !timerMap[scamId]) {
         const { speedBonus } = useEmployeeStore.getState().getScamBonuses(scamId);
-        const duration = calculateScamDuration(definition, scamState.level, speedBonus);
+        const botSpeedBonus = useBotStore.getState().getScamBotBonuses(scamId).speedBonus;
+        const duration = calculateScamDuration(definition, scamState.level, speedBonus, botSpeedBonus);
         addTimer(scamId, duration);
       }
     },
@@ -492,9 +505,8 @@ export function GameScreen(): React.ReactElement {
           const accessible = isTierAccessible(tier, resources.trust);
           if (!accessible) return null;
 
-          // Filter managers for this tier (exclude bot-farms manager)
+          // Filter managers for this tier
           const tierManagers = ALL_MANAGERS.filter((mgr) => {
-            if (mgr.scamId === 'bot-farms') return false;
             return tierScams.some((s) => s.id === mgr.scamId);
           });
 

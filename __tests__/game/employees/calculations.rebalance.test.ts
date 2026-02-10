@@ -107,11 +107,6 @@ describe('Employee Rebalance Calculations', () => {
       expect(MINIMUM_EMPLOYEE_COST).toBe(10);
     });
 
-    it('should return minimum cost for bot-farms (no prior money income)', () => {
-      // Bot Farms produces bots, not money. Cumulative money income at this point is $0/s.
-      expect(getEmployeeBaseCost('bot-farms')).toBe(10);
-    });
-
     it('should return 120 for nigerian-prince-emails (floor(60 × $2/s))', () => {
       // Nigerian Prince: $10 reward / 5s duration = $2/s. Cumulative = $2/s.
       expect(getEmployeeBaseCost('nigerian-prince-emails')).toBe(120);
@@ -123,24 +118,21 @@ describe('Employee Rebalance Calculations', () => {
     });
 
     it('should return baseCost for first hire via getEmployeeCostForScam', () => {
-      expect(getEmployeeCostForScam('bot-farms', 0)).toBe(10);
       expect(getEmployeeCostForScam('nigerian-prince-emails', 0)).toBe(120);
     });
 
     it('should apply 1.15x growth for subsequent hires', () => {
-      // floor(10 * 1.15^1) = floor(11.5) = 11
-      expect(getEmployeeCostForScam('bot-farms', 1)).toBe(11);
       // floor(120 * 1.15^1) = floor(138) = 138
       expect(getEmployeeCostForScam('nigerian-prince-emails', 1)).toBe(138);
     });
 
     it('should clear the memoized cache', () => {
       // Populate cache
-      getEmployeeBaseCost('bot-farms');
+      getEmployeeBaseCost('nigerian-prince-emails');
       // Clear it
       clearEmployeeCostCache();
       // Should still work after clearing (rebuilds on next call)
-      expect(getEmployeeBaseCost('bot-farms')).toBe(10);
+      expect(getEmployeeBaseCost('nigerian-prince-emails')).toBe(120);
     });
 
     it('should return minimum cost for unknown scam IDs', () => {
@@ -165,10 +157,6 @@ describe('Employee Rebalance Calculations', () => {
     it('should export unlock cost formula constants', () => {
       expect(UNLOCK_TARGET_SECONDS).toBe(30);
       expect(MINIMUM_UNLOCK_COST).toBe(10);
-    });
-
-    it('should return undefined for bot-farms (free scam stays free)', () => {
-      expect(getUnlockCostForScam('bot-farms')).toBeUndefined();
     });
 
     it('should return undefined for nigerian-prince-emails (free scam stays free)', () => {
@@ -212,12 +200,6 @@ describe('Employee Rebalance Calculations', () => {
     it('should export manager cost formula constants', () => {
       expect(MANAGER_TARGET_SECONDS).toBe(120);
       expect(MINIMUM_MANAGER_COST).toBe(50);
-    });
-
-    it('should return static cost for bot-farms manager (static dominates)', () => {
-      // Static manager cost = $50. Dynamic floor = floor(120 × 0) = 0.
-      // max(50, 0) = 50
-      expect(getManagerCostForScam('bot-farms')).toBe(50);
     });
 
     it('should return static cost for nigerian-prince-emails manager (static dominates)', () => {

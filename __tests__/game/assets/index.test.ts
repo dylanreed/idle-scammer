@@ -7,7 +7,7 @@ import {
   getScamIcon,
   getManagerPortrait,
 } from '../../../src/game/assets';
-import { TIER_1_SCAMS, BOT_FARMS } from '../../../src/game/scams/definitions';
+import { TIER_1_SCAMS } from '../../../src/game/scams/definitions';
 import { TIER_1_MANAGERS } from '../../../src/game/managers/definitions';
 
 describe('Asset Mapping', () => {
@@ -18,13 +18,9 @@ describe('Asset Mapping', () => {
       });
     });
 
-    it('should have an icon for Bot Farms', () => {
-      expect(SCAM_ICONS[BOT_FARMS.id]).toBeDefined();
-    });
-
-    it('should have exactly 10 scam icons (9 Tier 1 + Bot Farms)', () => {
+    it('should have exactly 9 scam icons (Tier 1)', () => {
       const iconCount = Object.keys(SCAM_ICONS).length;
-      expect(iconCount).toBe(10);
+      expect(iconCount).toBe(9);
     });
 
     it('should have valid image sources (not undefined)', () => {
@@ -42,9 +38,9 @@ describe('Asset Mapping', () => {
       });
     });
 
-    it('should have exactly 10 manager portraits', () => {
+    it('should have exactly 9 manager portraits', () => {
       const portraitCount = Object.keys(MANAGER_PORTRAITS).length;
-      expect(portraitCount).toBe(10);
+      expect(portraitCount).toBe(9);
     });
 
     it('should have valid image sources (not undefined)', () => {
@@ -57,7 +53,7 @@ describe('Asset Mapping', () => {
 
   describe('getScamIcon', () => {
     it('should return icon for existing scam', () => {
-      const icon = getScamIcon('bot-farms');
+      const icon = getScamIcon('nigerian-prince-emails');
       expect(icon).toBeDefined();
     });
 
@@ -76,7 +72,7 @@ describe('Asset Mapping', () => {
 
   describe('getManagerPortrait', () => {
     it('should return portrait for existing manager', () => {
-      const portrait = getManagerPortrait('bot-3000');
+      const portrait = getManagerPortrait('prince-okonkwo');
       expect(portrait).toBeDefined();
     });
 
@@ -95,7 +91,7 @@ describe('Asset Mapping', () => {
 
   describe('Asset coverage', () => {
     it('should have matching coverage between scams and icons', () => {
-      const scamIds = [BOT_FARMS.id, ...TIER_1_SCAMS.map((s) => s.id)];
+      const scamIds = TIER_1_SCAMS.map((s) => s.id);
       const iconIds = Object.keys(SCAM_ICONS);
 
       // Every scam should have an icon

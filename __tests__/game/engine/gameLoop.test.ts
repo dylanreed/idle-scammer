@@ -12,7 +12,6 @@ import type { EngineState, ScamTimer } from '../../../src/game/engine/types';
 import { MAX_OFFLINE_MS, OFFLINE_EFFICIENCY } from '../../../src/game/engine/types';
 import {
   NIGERIAN_PRINCE_EMAILS,
-  BOT_FARMS,
   IPHONE_POPUP,
 } from '../../../src/game/scams/definitions';
 import type { ScamStateMap } from '../../../src/game/scams/scamStore';
@@ -351,35 +350,6 @@ describe('Game Loop', () => {
       // 2 cycles × $10 base × OFFLINE_EFFICIENCY(0.5) = $10
       expect(progress.earnings.money).toBe(10);
       expect(progress.completedScams).toBe(2);
-    });
-
-    it('should calculate real bot earnings for bot farms', () => {
-      const timer: ScamTimer = {
-        scamId: 'bot-farms',
-        startTime: 0,
-        duration: 1000,
-        isComplete: false,
-      };
-      const state: EngineState = {
-        lastTickTime: 0,
-        activeTimers: [timer],
-        isPaused: false,
-      };
-
-      const scamStates: ScamStateMap = {
-        'bot-farms': {
-          scamId: 'bot-farms',
-          level: 1,
-          isUnlocked: true,
-          timesCompleted: 0,
-        },
-      };
-
-      // 5 seconds = 5 cycles of 1000ms
-      const progress = calculateOfflineProgress(0, 5000, state, scamStates, 1);
-
-      // 5 cycles × 0.5 bots × OFFLINE_EFFICIENCY(0.5) = 1.25 bots
-      expect(progress.earnings.bots).toBeCloseTo(1.25);
     });
 
     it('should apply trust multiplier to earnings', () => {

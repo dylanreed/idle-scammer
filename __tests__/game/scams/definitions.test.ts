@@ -2,7 +2,6 @@
 // ABOUTME: Validates all scams are correctly configured with proper types and values
 
 import {
-  BOT_FARMS,
   NIGERIAN_PRINCE_EMAILS,
   FAKE_LOTTERY_WINNINGS,
   IPHONE_POPUP,
@@ -17,63 +16,6 @@ import {
 import type { ScamDefinition } from '../../../src/game/scams/types';
 
 describe('Scam Definitions', () => {
-  describe('BOT_FARMS', () => {
-    it('should be a valid ScamDefinition', () => {
-      const definition: ScamDefinition = BOT_FARMS;
-
-      expect(definition).toBeDefined();
-      expect(typeof definition.id).toBe('string');
-      expect(typeof definition.name).toBe('string');
-      expect(typeof definition.tier).toBe('number');
-      expect(typeof definition.baseDuration).toBe('number');
-      expect(typeof definition.baseReward).toBe('number');
-      expect(typeof definition.resourceType).toBe('string');
-      expect(typeof definition.description).toBe('string');
-    });
-
-    it('should have correct id', () => {
-      expect(BOT_FARMS.id).toBe('bot-farms');
-    });
-
-    it('should have correct display name', () => {
-      expect(BOT_FARMS.name).toBe('Bot Farms');
-    });
-
-    it('should be tier 1 (first scam in the game)', () => {
-      expect(BOT_FARMS.tier).toBe(1);
-    });
-
-    it('should have 1 second base duration (fast for early game feel-good)', () => {
-      expect(BOT_FARMS.baseDuration).toBe(1000);
-    });
-
-    it('should reward 0.5 bots per completion (accumulates fractionally)', () => {
-      expect(BOT_FARMS.baseReward).toBe(0.5);
-    });
-
-    it('should produce bots (NOT money - this is special)', () => {
-      expect(BOT_FARMS.resourceType).toBe('bots');
-    });
-
-    it('should have a thematic description', () => {
-      expect(BOT_FARMS.description).toBeTruthy();
-      expect(BOT_FARMS.description.length).toBeGreaterThan(0);
-    });
-
-    it('should be free to unlock (first scam, no unlock cost)', () => {
-      expect(BOT_FARMS.unlockCost).toBeUndefined();
-    });
-
-    it('should be the foundational scam that other scams depend on', () => {
-      // Bot Farms is special - it generates bots, not money
-      // Bots are spent to upgrade other scams
-      // This verifies the scam is set up for this purpose
-      expect(BOT_FARMS.resourceType).toBe('bots');
-      expect(BOT_FARMS.tier).toBe(1);
-      expect(BOT_FARMS.unlockCost).toBeUndefined();
-    });
-  });
-
   describe('NIGERIAN_PRINCE_EMAILS', () => {
     it('should be a valid ScamDefinition', () => {
       const definition: ScamDefinition = NIGERIAN_PRINCE_EMAILS;
@@ -266,13 +208,11 @@ describe('Scam Definitions', () => {
   });
 
   describe('TIER_1_SCAMS array', () => {
-    it('should contain exactly 9 money-generating scams (Bot Farms is separate)', () => {
+    it('should contain exactly 9 money-generating scams', () => {
       expect(TIER_1_SCAMS).toHaveLength(9);
     });
 
-    it('should contain all Tier 1 scam definitions (excluding Bot Farms)', () => {
-      // Bot Farms is NOT in TIER_1_SCAMS - it's a separate mechanic
-      expect(TIER_1_SCAMS).not.toContain(BOT_FARMS);
+    it('should contain all Tier 1 scam definitions', () => {
       expect(TIER_1_SCAMS).toContain(NIGERIAN_PRINCE_EMAILS);
       expect(TIER_1_SCAMS).toContain(FAKE_LOTTERY_WINNINGS);
       expect(TIER_1_SCAMS).toContain(IPHONE_POPUP);
@@ -300,13 +240,6 @@ describe('Scam Definitions', () => {
       const names = TIER_1_SCAMS.map((scam) => scam.name);
       const uniqueNames = new Set(names);
       expect(uniqueNames.size).toBe(TIER_1_SCAMS.length);
-    });
-
-    it('should not contain Bot Farms (it is a separate mechanic)', () => {
-      const botProducers = TIER_1_SCAMS.filter(
-        (scam) => scam.resourceType === 'bots'
-      );
-      expect(botProducers).toHaveLength(0);
     });
 
     it('should have Nigerian Prince free and all others require unlock cost', () => {

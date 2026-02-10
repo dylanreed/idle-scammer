@@ -6,7 +6,7 @@ import {
   calculateSpeedBonus,
   calculateRewardBonus,
 } from '../../../src/game/employees/calculations';
-import { BOT_WRANGLER, TIER_1_EMPLOYEES } from '../../../src/game/employees/definitions';
+import { EMAIL_COPYWRITER, TIER_1_EMPLOYEES } from '../../../src/game/employees/definitions';
 import type { EmployeeDefinition, EmployeeState } from '../../../src/game/employees/types';
 
 describe('Employee Calculations', () => {
@@ -57,10 +57,10 @@ describe('Employee Calculations', () => {
       expect(Number.isInteger(cost)).toBe(true);
     });
 
-    it('should work with Bot Wrangler definition', () => {
-      const cost = calculateEmployeeCost(BOT_WRANGLER, 0);
+    it('should work with Email Copywriter definition', () => {
+      const cost = calculateEmployeeCost(EMAIL_COPYWRITER, 0);
 
-      expect(cost).toBe(BOT_WRANGLER.baseCost);
+      expect(cost).toBe(EMAIL_COPYWRITER.baseCost);
     });
 
     it('should handle large counts for late game', () => {

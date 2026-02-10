@@ -8,6 +8,7 @@ import { useGameStore } from '../../src/game/store';
 import { useScamStore } from '../../src/game/scams/scamStore';
 import { useManagerStore } from '../../src/game/managers/managerStore';
 import { useEmployeeStore } from '../../src/game/employees/employeeStore';
+import { useBotStore } from '../../src/game/bots/botStore';
 import { MAX_HEAT } from '../../src/game/prestige/constants';
 import { calculatePerformanceTrustGain } from '../../src/game/prestige/calculations';
 
@@ -28,6 +29,7 @@ describe('Prestige Flow E2E', () => {
     if (typeof useEmployeeStore.getInitialState === 'function') {
       useEmployeeStore.setState(useEmployeeStore.getInitialState());
     }
+    useBotStore.getState().resetAssignments();
     jest.clearAllMocks();
   });
 
@@ -107,7 +109,8 @@ describe('Prestige Flow E2E', () => {
     expect(postResources.trust).toBeGreaterThan(1);
     expect(postResources.money).toBe(0);
     expect(postResources.heat).toBe(0);
-    expect(postResources.bots).toBe(0);
+    // Bots persist across prestiges; 50 added + 0.0001 from scam completion + 1 first-prestige bot award
+    expect(postResources.bots).toBeCloseTo(51.0001, 4);
     expect(postResources.reputation).toBe(0);
   });
 

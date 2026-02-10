@@ -47,11 +47,6 @@ const SPEED_BRACKETS: { maxLevel: number; multiplier: number }[] = [
 const MIN_DURATION_PERCENTAGE = 0.1;
 
 /**
- * Bot compound bonus rate (1% per bot owned).
- */
-const BOT_COMPOUND_RATE = 0.01;
-
-/**
  * Graduated cost rate parameters.
  * Cheap scams scale slowly (1.07), expensive scams scale faster (1.10).
  * Rate is interpolated linearly based on log10(baseCost).
@@ -121,14 +116,12 @@ export function getAllMilestones(): { level: number; multiplier: number }[] {
  * @param definition - The scam definition
  * @param level - The level being upgraded TO (must be a milestone)
  * @param trust - Player's trust multiplier
- * @param currentBots - Current bot count (for bot-type rewards)
  * @returns One-time cash bonus (0 if not a milestone level)
  */
 export function calculateMilestoneBonus(
   definition: ScamDefinition,
   level: number,
-  trust: number = 1,
-  currentBots: number = 0
+  trust: number = 1
 ): number {
   const milestoneMultiplier = getMilestoneMultiplier(level);
   if (milestoneMultiplier === 0) {
@@ -136,7 +129,7 @@ export function calculateMilestoneBonus(
   }
 
   // Get the current reward at this level (includes linear growth, bracket bonus, trust)
-  const currentReward = calculateScamReward(definition, level, trust, currentBots);
+  const currentReward = calculateScamReward(definition, level, trust);
 
   return currentReward * milestoneMultiplier;
 }
@@ -160,7 +153,8 @@ export function getSpeedMultiplier(level: number): number {
 export function calculateScamDuration(
   definition: ScamDefinition,
   level: number,
-  employeeSpeedBonus: number = 0
+  employeeSpeedBonus: number = 0,
+  botSpeedBonus: number = 0
 ): number {
   const { baseDuration } = definition;
   const speedMultiplier = getSpeedMultiplier(level);
@@ -169,20 +163,19 @@ export function calculateScamDuration(
   // Employee speed bonus reduces duration further (e.g., 0.5 = 50% faster)
   const withEmployeeBoost = calculatedDuration / (1 + employeeSpeedBonus);
 
+  // Bot speed bonus reduces duration further (e.g., 0.3 = 30% faster from 3 speed bots)
+  const withBotBoost = withEmployeeBoost / (1 + botSpeedBonus);
+
   const minimumDuration = baseDuration * MIN_DURATION_PERCENTAGE;
 
-  return Math.max(Math.round(withEmployeeBoost), Math.round(minimumDuration));
+  return Math.max(Math.round(withBotBoost), Math.round(minimumDuration));
 }
 
 /**
  * Calculates the reward for completing a scam.
  *
- * For money scams (Kongregate-style):
- * reward = baseReward × (1 + level × profitGrowth) × bracketBonus × trust
+ * reward = baseReward × (1 + level × profitGrowth) × bracketBonus × trust × botProfitMultiplier × employeeMultiplier
  * Where baseReward = unlockCost (or tier baseCost for free scams)
- *
- * For bot-generating scams:
- * Uses definition's baseReward directly (fractional accumulation)
  *
  * Note: Milestone bonuses are separate one-time payouts (see calculateMilestoneBonus)
  */
@@ -190,19 +183,14 @@ export function calculateScamReward(
   definition: ScamDefinition,
   level: number,
   trust: number,
-  currentBots: number = 0,
+  botProfitBonus: number = 0,
   employeeRewardBonus: number = 0
 ): number {
-  const { unlockCost, tier, resourceType, baseReward: definitionBaseReward } = definition;
+  const { unlockCost, tier } = definition;
   const tierBase = getTierBase(tier);
 
-  // Bot-generating scams use their definition's baseReward directly
-  // (allows fractional rewards like 0.5 bots per completion)
-  // Money scams use Kongregate economy: unlockCost = baseReward at L1
-  const baseReward =
-    resourceType === 'bots'
-      ? definitionBaseReward
-      : (unlockCost ?? tierBase.baseCost);
+  // Kongregate economy: unlockCost = baseReward at L1
+  const baseReward = unlockCost ?? tierBase.baseCost;
 
   // Linear growth: 10% more per level
   const linearMultiplier = 1 + (level - 1) * tierBase.profitGrowth;
@@ -210,9 +198,8 @@ export function calculateScamReward(
   // Bracket bonus (ongoing multiplier based on level range)
   const bracketBonus = getProfitBonusMultiplier(level);
 
-  // Bot compound bonus only for bot-type rewards
-  const botMultiplier =
-    resourceType === 'bots' ? calculateBotMultiplier(currentBots) : 1;
+  // Bot profit bonus from assigned profit bots
+  const botProfitMultiplier = 1 + botProfitBonus;
 
   // Trust uses diminishing returns: trust^0.3 to prevent runaway scaling
   const trustMultiplier = Math.pow(trust, 0.3);
@@ -220,7 +207,7 @@ export function calculateScamReward(
   // Employee reward bonus (e.g., 0.5 = +50% reward from hired employees)
   const employeeMultiplier = 1 + employeeRewardBonus;
 
-  return baseReward * linearMultiplier * bracketBonus * trustMultiplier * botMultiplier * employeeMultiplier;
+  return baseReward * linearMultiplier * bracketBonus * trustMultiplier * botProfitMultiplier * employeeMultiplier;
 }
 
 /**
@@ -247,25 +234,6 @@ export function calculateUpgradeCost(
   const costMultiplier = Math.pow(costRate, level - 1);
 
   return Math.max(1, Math.floor(baseCost * costMultiplier));
-}
-
-/**
- * Calculates the bot compound multiplier.
- * Each bot gives +1% bonus to bot-type rewards.
- */
-export function calculateBotMultiplier(currentBots: number): number {
-  return 1 + currentBots * BOT_COMPOUND_RATE;
-}
-
-/**
- * Calculates the price to purchase the next bot.
- * Uses quadratic scaling: $100 × (currentBots + 1)²
- *
- * This makes bots expensive at scale, encouraging investment
- * in Bot Farms for passive generation instead.
- */
-export function calculateBotPurchasePrice(currentBots: number): number {
-  return 100 * Math.pow(currentBots + 1, 2);
 }
 
 /**

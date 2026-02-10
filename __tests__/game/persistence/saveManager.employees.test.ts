@@ -57,14 +57,15 @@ describe('Employee Persistence', () => {
         scams: {},
         managers: {},
         employees: {
-          'bot-wrangler': { employeeId: 'bot-wrangler', count: 5 },
+          'email-copywriter': { employeeId: 'email-copywriter', count: 5 },
         },
+        botAssignments: {},
       };
 
       const { employees } = applySaveData(saveData);
 
       expect(employees).toEqual({
-        'bot-wrangler': { employeeId: 'bot-wrangler', count: 5 },
+        'email-copywriter': { employeeId: 'email-copywriter', count: 5 },
       });
     });
 
@@ -75,6 +76,7 @@ describe('Employee Persistence', () => {
         resources: defaultResources,
         scams: {},
         managers: {},
+        botAssignments: {},
       } as SaveData;
 
       const { employees } = applySaveData(oldSaveData);
@@ -105,8 +107,8 @@ describe('Employee Persistence', () => {
         savedAt: Date.now(),
         resources: { ...defaultResources, money: 5000 },
         scams: {
-          'bot-farms': {
-            scamId: 'bot-farms',
+          'nigerian-prince-emails': {
+            scamId: 'nigerian-prince-emails',
             level: 10,
             isUnlocked: true,
             timesCompleted: 100,
@@ -120,7 +122,7 @@ describe('Employee Persistence', () => {
       const result = migrateIfNeeded(v2SaveData);
 
       expect(result.resources.money).toBe(5000);
-      expect(result.scams['bot-farms'].level).toBe(10);
+      expect(result.scams['nigerian-prince-emails'].level).toBe(10);
       expect(result.managers['prince-okonkwo'].isHired).toBe(true);
       expect(result.employees).toEqual({});
     });
@@ -145,13 +147,13 @@ describe('Employee Persistence', () => {
     it('should restore employee state via hydrate', () => {
       const savedEmployees: EmployeeStateMap = {
         'email-copywriter': { employeeId: 'email-copywriter', count: 3 },
-        'bot-wrangler': { employeeId: 'bot-wrangler', count: 7 },
+        'popup-clicker': { employeeId: 'popup-clicker', count: 7 },
       };
 
       useEmployeeStore.getState().hydrate(savedEmployees);
 
       expect(useEmployeeStore.getState().getEmployeeCount('email-copywriter')).toBe(3);
-      expect(useEmployeeStore.getState().getEmployeeCount('bot-wrangler')).toBe(7);
+      expect(useEmployeeStore.getState().getEmployeeCount('popup-clicker')).toBe(7);
     });
 
     it('should overwrite existing employee state on hydrate', () => {
@@ -168,11 +170,11 @@ describe('Employee Persistence', () => {
     });
 
     it('should handle empty hydrate (clears all employees)', () => {
-      useEmployeeStore.getState().hireEmployee('bot-wrangler', 5);
+      useEmployeeStore.getState().hireEmployee('email-copywriter', 5);
 
       useEmployeeStore.getState().hydrate({});
 
-      expect(useEmployeeStore.getState().getEmployeeCount('bot-wrangler')).toBe(0);
+      expect(useEmployeeStore.getState().getEmployeeCount('email-copywriter')).toBe(0);
     });
   });
 });

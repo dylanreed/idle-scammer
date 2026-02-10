@@ -6,7 +6,7 @@ import {
   getInitialScamState,
   createScamState,
 } from '../../../src/game/scams/scamStore';
-import { BOT_FARMS, NIGERIAN_PRINCE_EMAILS, TIER_1_SCAMS } from '../../../src/game/scams/definitions';
+import { NIGERIAN_PRINCE_EMAILS, TIER_1_SCAMS } from '../../../src/game/scams/definitions';
 import type { ScamState } from '../../../src/game/scams/types';
 
 describe('ScamStore', () => {
@@ -16,38 +16,38 @@ describe('ScamStore', () => {
   });
 
   describe('initial state', () => {
-    it('should have Bot Farms unlocked by default (first scam)', () => {
+    it('should have Nigerian Prince Emails unlocked by default (first scam)', () => {
       const state = useScamStore.getState();
-      const botFarmsState = state.scams[BOT_FARMS.id];
+      const nigerianPrinceState = state.scams[NIGERIAN_PRINCE_EMAILS.id];
 
-      expect(botFarmsState).toBeDefined();
-      expect(botFarmsState.isUnlocked).toBe(true);
+      expect(nigerianPrinceState).toBeDefined();
+      expect(nigerianPrinceState.isUnlocked).toBe(true);
     });
 
-    it('should have Bot Farms at level 1 initially', () => {
+    it('should have Nigerian Prince Emails at level 1 initially', () => {
       const state = useScamStore.getState();
-      const botFarmsState = state.scams[BOT_FARMS.id];
+      const nigerianPrinceState = state.scams[NIGERIAN_PRINCE_EMAILS.id];
 
-      expect(botFarmsState.level).toBe(1);
+      expect(nigerianPrinceState.level).toBe(1);
     });
 
     it('should have zero completions initially', () => {
       const state = useScamStore.getState();
-      const botFarmsState = state.scams[BOT_FARMS.id];
+      const nigerianPrinceState = state.scams[NIGERIAN_PRINCE_EMAILS.id];
 
-      expect(botFarmsState.timesCompleted).toBe(0);
+      expect(nigerianPrinceState.timesCompleted).toBe(0);
     });
   });
 
   describe('getInitialScamState', () => {
-    it('should return default state for Bot Farms', () => {
+    it('should return default state for Nigerian Prince Emails', () => {
       const state = getInitialScamState();
 
-      expect(state[BOT_FARMS.id]).toBeDefined();
-      expect(state[BOT_FARMS.id].scamId).toBe(BOT_FARMS.id);
-      expect(state[BOT_FARMS.id].isUnlocked).toBe(true);
-      expect(state[BOT_FARMS.id].level).toBe(1);
-      expect(state[BOT_FARMS.id].timesCompleted).toBe(0);
+      expect(state[NIGERIAN_PRINCE_EMAILS.id]).toBeDefined();
+      expect(state[NIGERIAN_PRINCE_EMAILS.id].scamId).toBe(NIGERIAN_PRINCE_EMAILS.id);
+      expect(state[NIGERIAN_PRINCE_EMAILS.id].isUnlocked).toBe(true);
+      expect(state[NIGERIAN_PRINCE_EMAILS.id].level).toBe(1);
+      expect(state[NIGERIAN_PRINCE_EMAILS.id].timesCompleted).toBe(0);
     });
 
     it('should initialize all Tier 1 scams', () => {
@@ -61,11 +61,11 @@ describe('ScamStore', () => {
       });
     });
 
-    it('should have Bot Farms and Nigerian Prince unlocked, all other Tier 1 scams locked', () => {
+    it('should have Nigerian Prince unlocked, all other Tier 1 scams locked', () => {
       const state = getInitialScamState();
 
       TIER_1_SCAMS.forEach((scam) => {
-        if (scam.id === BOT_FARMS.id || scam.id === NIGERIAN_PRINCE_EMAILS.id) {
+        if (scam.id === NIGERIAN_PRINCE_EMAILS.id) {
           expect(state[scam.id].isUnlocked).toBe(true);
         } else {
           expect(state[scam.id].isUnlocked).toBe(false);
@@ -111,10 +111,10 @@ describe('ScamStore', () => {
     it('should not change already unlocked scam', () => {
       const { unlockScam } = useScamStore.getState();
 
-      // Bot Farms is already unlocked
-      unlockScam(BOT_FARMS.id);
+      // Nigerian Prince is already unlocked
+      unlockScam(NIGERIAN_PRINCE_EMAILS.id);
 
-      const scamState = useScamStore.getState().scams[BOT_FARMS.id];
+      const scamState = useScamStore.getState().scams[NIGERIAN_PRINCE_EMAILS.id];
       expect(scamState.isUnlocked).toBe(true);
       expect(scamState.level).toBe(1);
     });
@@ -131,20 +131,20 @@ describe('ScamStore', () => {
     it('should increase scam level by 1', () => {
       const { upgradeScam } = useScamStore.getState();
 
-      upgradeScam(BOT_FARMS.id);
+      upgradeScam(NIGERIAN_PRINCE_EMAILS.id);
 
-      const scamState = useScamStore.getState().scams[BOT_FARMS.id];
+      const scamState = useScamStore.getState().scams[NIGERIAN_PRINCE_EMAILS.id];
       expect(scamState.level).toBe(2);
     });
 
     it('should accumulate upgrades', () => {
       const { upgradeScam } = useScamStore.getState();
 
-      upgradeScam(BOT_FARMS.id);
-      upgradeScam(BOT_FARMS.id);
-      upgradeScam(BOT_FARMS.id);
+      upgradeScam(NIGERIAN_PRINCE_EMAILS.id);
+      upgradeScam(NIGERIAN_PRINCE_EMAILS.id);
+      upgradeScam(NIGERIAN_PRINCE_EMAILS.id);
 
-      const scamState = useScamStore.getState().scams[BOT_FARMS.id];
+      const scamState = useScamStore.getState().scams[NIGERIAN_PRINCE_EMAILS.id];
       expect(scamState.level).toBe(4);
     });
 
@@ -175,9 +175,9 @@ describe('ScamStore', () => {
     it('should increment completion count by 1', () => {
       const { incrementCompletion } = useScamStore.getState();
 
-      incrementCompletion(BOT_FARMS.id);
+      incrementCompletion(NIGERIAN_PRINCE_EMAILS.id);
 
-      const scamState = useScamStore.getState().scams[BOT_FARMS.id];
+      const scamState = useScamStore.getState().scams[NIGERIAN_PRINCE_EMAILS.id];
       expect(scamState.timesCompleted).toBe(1);
     });
 
@@ -185,10 +185,10 @@ describe('ScamStore', () => {
       const { incrementCompletion } = useScamStore.getState();
 
       for (let i = 0; i < 100; i++) {
-        incrementCompletion(BOT_FARMS.id);
+        incrementCompletion(NIGERIAN_PRINCE_EMAILS.id);
       }
 
-      const scamState = useScamStore.getState().scams[BOT_FARMS.id];
+      const scamState = useScamStore.getState().scams[NIGERIAN_PRINCE_EMAILS.id];
       expect(scamState.timesCompleted).toBe(100);
     });
 
@@ -219,10 +219,10 @@ describe('ScamStore', () => {
     it('should return scam state by id', () => {
       const { getScamState } = useScamStore.getState();
 
-      const state = getScamState(BOT_FARMS.id);
+      const state = getScamState(NIGERIAN_PRINCE_EMAILS.id);
 
       expect(state).toBeDefined();
-      expect(state?.scamId).toBe(BOT_FARMS.id);
+      expect(state?.scamId).toBe(NIGERIAN_PRINCE_EMAILS.id);
     });
 
     it('should return undefined for non-existent scam', () => {
@@ -240,14 +240,14 @@ describe('ScamStore', () => {
         useScamStore.getState();
 
       // Make some progress
-      upgradeScam(BOT_FARMS.id);
-      upgradeScam(BOT_FARMS.id);
-      incrementCompletion(BOT_FARMS.id);
-      incrementCompletion(BOT_FARMS.id);
-      incrementCompletion(BOT_FARMS.id);
+      upgradeScam(NIGERIAN_PRINCE_EMAILS.id);
+      upgradeScam(NIGERIAN_PRINCE_EMAILS.id);
+      incrementCompletion(NIGERIAN_PRINCE_EMAILS.id);
+      incrementCompletion(NIGERIAN_PRINCE_EMAILS.id);
+      incrementCompletion(NIGERIAN_PRINCE_EMAILS.id);
 
       // Verify progress
-      let state = useScamStore.getState().scams[BOT_FARMS.id];
+      let state = useScamStore.getState().scams[NIGERIAN_PRINCE_EMAILS.id];
       expect(state.level).toBe(3);
       expect(state.timesCompleted).toBe(3);
 
@@ -255,16 +255,16 @@ describe('ScamStore', () => {
       resetScams();
 
       // Verify reset
-      state = useScamStore.getState().scams[BOT_FARMS.id];
+      state = useScamStore.getState().scams[NIGERIAN_PRINCE_EMAILS.id];
       expect(state.level).toBe(1);
       expect(state.timesCompleted).toBe(0);
-      expect(state.isUnlocked).toBe(true); // Bot Farms stays unlocked
+      expect(state.isUnlocked).toBe(true); // Nigerian Prince stays unlocked
     });
   });
 
   describe('type safety', () => {
     it('should have proper typing for ScamState', () => {
-      const state: ScamState = useScamStore.getState().scams[BOT_FARMS.id];
+      const state: ScamState = useScamStore.getState().scams[NIGERIAN_PRINCE_EMAILS.id];
 
       expect(typeof state.scamId).toBe('string');
       expect(typeof state.level).toBe('number');
@@ -278,14 +278,14 @@ describe('ScamStore', () => {
       const { hydrate } = useScamStore.getState();
 
       const savedScams = {
-        'bot-farms': {
-          scamId: 'bot-farms',
+        'nigerian-prince-emails': {
+          scamId: 'nigerian-prince-emails',
           level: 15,
           isUnlocked: true,
           timesCompleted: 500,
         },
-        'nigerian-prince-emails': {
-          scamId: 'nigerian-prince-emails',
+        'fake-lottery-winnings': {
+          scamId: 'fake-lottery-winnings',
           level: 10,
           isUnlocked: true,
           timesCompleted: 200,
@@ -296,38 +296,38 @@ describe('ScamStore', () => {
 
       const scams = useScamStore.getState().scams;
       expect(scams).toEqual(savedScams);
-      expect(scams['bot-farms'].level).toBe(15);
-      expect(scams['nigerian-prince-emails'].timesCompleted).toBe(200);
+      expect(scams['nigerian-prince-emails'].level).toBe(15);
+      expect(scams['fake-lottery-winnings'].timesCompleted).toBe(200);
     });
 
     it('should overwrite existing state completely', () => {
       const { upgradeScam, hydrate } = useScamStore.getState();
 
       // Build up some state
-      upgradeScam(BOT_FARMS.id);
-      upgradeScam(BOT_FARMS.id);
+      upgradeScam(NIGERIAN_PRINCE_EMAILS.id);
+      upgradeScam(NIGERIAN_PRINCE_EMAILS.id);
 
       // Hydrate should replace it all
       hydrate({
-        'bot-farms': {
-          scamId: 'bot-farms',
+        'nigerian-prince-emails': {
+          scamId: 'nigerian-prince-emails',
           level: 42,
           isUnlocked: true,
           timesCompleted: 0,
         },
       });
 
-      expect(useScamStore.getState().scams['bot-farms'].level).toBe(42);
+      expect(useScamStore.getState().scams['nigerian-prince-emails'].level).toBe(42);
       // Original Tier 1 scams should be gone since hydrate replaces entirely
-      expect(useScamStore.getState().scams['nigerian-prince-emails']).toBeUndefined();
+      expect(useScamStore.getState().scams['fake-lottery-winnings']).toBeUndefined();
     });
 
     it('should preserve action functions after hydration', () => {
       const { hydrate } = useScamStore.getState();
 
       hydrate({
-        'bot-farms': {
-          scamId: 'bot-farms',
+        'nigerian-prince-emails': {
+          scamId: 'nigerian-prince-emails',
           level: 1,
           isUnlocked: true,
           timesCompleted: 0,
@@ -335,16 +335,16 @@ describe('ScamStore', () => {
       });
 
       // Actions should still work
-      useScamStore.getState().upgradeScam('bot-farms');
-      expect(useScamStore.getState().scams['bot-farms'].level).toBe(2);
+      useScamStore.getState().upgradeScam('nigerian-prince-emails');
+      expect(useScamStore.getState().scams['nigerian-prince-emails'].level).toBe(2);
     });
   });
 
   describe('getTotalTier1Levels', () => {
-    it('should return 9 initially (9 Tier 1 scams at level 1, Bot Farms is separate)', () => {
+    it('should return 9 initially (9 Tier 1 scams at level 1)', () => {
       const { getTotalTier1Levels } = useScamStore.getState();
 
-      // 9 tier 1 scams × level 1 = 9 total levels (Bot Farms not counted)
+      // 9 tier 1 scams x level 1 = 9 total levels
       expect(getTotalTier1Levels()).toBe(9);
     });
 
@@ -359,7 +359,7 @@ describe('ScamStore', () => {
       expect(getTotalTier1Levels()).toBe(11);
     });
 
-    it('should sum levels from all Tier 1 scams (not Bot Farms)', () => {
+    it('should sum levels from all Tier 1 scams', () => {
       const { getTotalTier1Levels, upgradeScam, unlockScam } = useScamStore.getState();
 
       // Upgrade Nigerian Prince to level 30 (starts unlocked)
@@ -378,54 +378,4 @@ describe('ScamStore', () => {
     });
   });
 
-  describe('getMilestoneBots', () => {
-    it('should return 0 with initial levels (9 total)', () => {
-      const { getMilestoneBots } = useScamStore.getState();
-
-      // 9 total levels / 100 = 0 bots
-      expect(getMilestoneBots()).toBe(0);
-    });
-
-    it('should return 1 bot at 100 total levels', () => {
-      const { getMilestoneBots, upgradeScam } = useScamStore.getState();
-
-      // Upgrade Nigerian Prince to level 92 (9 base + 91 more = 100 total)
-      for (let i = 0; i < 91; i++) {
-        upgradeScam('nigerian-prince-emails');
-      }
-
-      expect(getMilestoneBots()).toBe(1);
-    });
-
-    it('should return 2 bots at 200 total levels', () => {
-      const { getMilestoneBots, upgradeScam, unlockScam } = useScamStore.getState();
-
-      // Upgrade Nigerian Prince to level 100
-      for (let i = 0; i < 99; i++) {
-        upgradeScam('nigerian-prince-emails');
-      }
-
-      // Unlock and upgrade Fake Lottery to level 93 (100 + 7 others at 1 + 93 = 200)
-      unlockScam('fake-lottery-winnings');
-      for (let i = 0; i < 92; i++) {
-        upgradeScam('fake-lottery-winnings');
-      }
-
-      // 100 + 93 + 7 = 200
-      expect(getMilestoneBots()).toBe(2);
-    });
-
-    it('should floor the result (no fractional bots)', () => {
-      const { getMilestoneBots, upgradeScam } = useScamStore.getState();
-
-      // Get to 150 total levels (should still be 1 bot)
-      // Need 141 more levels from Nigerian Prince (9 base + 141 = 150)
-      for (let i = 0; i < 141; i++) {
-        upgradeScam('nigerian-prince-emails');
-      }
-
-      // 142 + 8 others at 1 = 150
-      expect(getMilestoneBots()).toBe(1);
-    });
-  });
 });

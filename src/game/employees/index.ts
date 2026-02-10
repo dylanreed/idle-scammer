@@ -6,7 +6,6 @@ export type { EmployeeDefinition, EmployeeState } from './types';
 
 // Definitions
 export {
-  BOT_WRANGLER,
   EMAIL_COPYWRITER,
   LOTTERY_ANNOUNCER,
   POPUP_DESIGNER,

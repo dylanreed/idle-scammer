@@ -1,9 +1,8 @@
 // ABOUTME: Tests for the ALL_SCAMS barrel export and cross-tier properties
-// ABOUTME: Validates completeness, uniqueness, and economic balance across all 50 scams
+// ABOUTME: Validates completeness, uniqueness, and economic balance across all 49 scams
 
 import {
   ALL_SCAMS,
-  BOT_FARMS,
   TIER_1_SCAMS,
 } from '../../../src/game/scams/definitions';
 import { TIER_2_SCAMS } from '../../../src/game/scams/tier2';
@@ -13,13 +12,12 @@ import { TIER_5_SCAMS } from '../../../src/game/scams/tier5';
 
 describe('ALL_SCAMS barrel export', () => {
   describe('total scam count', () => {
-    it('should have exactly 50 scams (1 Bot Farms + 9 T1 + 10 T2 + 10 T3 + 10 T4 + 10 T5)', () => {
-      expect(ALL_SCAMS).toHaveLength(50);
+    it('should have exactly 49 scams (9 T1 + 10 T2 + 10 T3 + 10 T4 + 10 T5)', () => {
+      expect(ALL_SCAMS).toHaveLength(49);
     });
 
     it('should match sum of all tier arrays', () => {
       const expectedTotal =
-        1 + // Bot Farms (not in any tier array)
         TIER_1_SCAMS.length +
         TIER_2_SCAMS.length +
         TIER_3_SCAMS.length +
@@ -69,10 +67,6 @@ describe('ALL_SCAMS barrel export', () => {
   });
 
   describe('tier assignments', () => {
-    it('Bot Farms should be tier 1', () => {
-      expect(BOT_FARMS.tier).toBe(1);
-    });
-
     it('all Tier 1 scams should have tier = 1', () => {
       TIER_1_SCAMS.forEach((scam) => {
         expect(scam.tier).toBe(1);
@@ -105,10 +99,6 @@ describe('ALL_SCAMS barrel export', () => {
   });
 
   describe('free scam unlock costs', () => {
-    it('Bot Farms should be free (first scam)', () => {
-      expect(BOT_FARMS.unlockCost).toBeUndefined();
-    });
-
     it('first scam of Tier 1 should be free', () => {
       const firstScam = TIER_1_SCAMS[0];
       expect(firstScam.unlockCost).toBeUndefined();
@@ -272,10 +262,6 @@ describe('ALL_SCAMS barrel export', () => {
   });
 
   describe('resource types', () => {
-    it('Bot Farms should generate bots', () => {
-      expect(BOT_FARMS.resourceType).toBe('bots');
-    });
-
     it('all Tier 1 scams should generate money', () => {
       TIER_1_SCAMS.forEach((scam) => {
         expect(scam.resourceType).toBe('money');
@@ -306,10 +292,9 @@ describe('ALL_SCAMS barrel export', () => {
       });
     });
 
-    it('only Bot Farms should generate bots', () => {
-      const botGenerators = ALL_SCAMS.filter((s) => s.resourceType === 'bots');
-      expect(botGenerators).toHaveLength(1);
-      expect(botGenerators[0].id).toBe(BOT_FARMS.id);
+    it('all scams should generate money', () => {
+      const moneyGenerators = ALL_SCAMS.filter((s) => s.resourceType === 'money');
+      expect(moneyGenerators).toHaveLength(ALL_SCAMS.length);
     });
   });
 

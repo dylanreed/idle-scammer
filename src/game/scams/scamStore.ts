@@ -3,7 +3,7 @@
 
 import { create } from 'zustand';
 import type { ScamState } from './types';
-import { BOT_FARMS, NIGERIAN_PRINCE_EMAILS, TIER_1_SCAMS, ALL_SCAMS } from './definitions';
+import { NIGERIAN_PRINCE_EMAILS, TIER_1_SCAMS, ALL_SCAMS } from './definitions';
 import { TIER_2_SCAMS } from './tier2';
 import { TIER_3_SCAMS } from './tier3';
 import { TIER_4_SCAMS } from './tier4';
@@ -13,11 +13,6 @@ import { TIER_5_SCAMS } from './tier5';
  * Map of scam IDs to their runtime state
  */
 export type ScamStateMap = Record<string, ScamState>;
-
-/**
- * Levels required for each milestone bot (Tier 1 only)
- */
-const MILESTONE_BOT_LEVELS = 100;
 
 /**
  * Actions available on the scam store
@@ -43,9 +38,6 @@ export interface ScamStoreActions {
 
   /** Get total combined levels of all Tier 1 scams */
   getTotalTier1Levels: () => number;
-
-  /** Get number of free milestone bots earned from Tier 1 levels */
-  getMilestoneBots: () => number;
 }
 
 /**
@@ -74,16 +66,13 @@ export function createScamState(scamId: string, isUnlocked = false): ScamState {
 
 /**
  * Returns the initial scam state with all tiers initialized.
- * Bot Farms and Nigerian Prince Emails start unlocked; all other scams start locked.
+ * Nigerian Prince Emails starts unlocked; all other scams start locked.
  * T2-T5 scams are initialized but locked (require trust to access their tier).
  *
  * @returns Initial scam state map
  */
 export function getInitialScamState(): ScamStateMap {
   const initialState: ScamStateMap = {};
-
-  // Bot Farms is separate from tiers - always initialized and unlocked
-  initialState[BOT_FARMS.id] = createScamState(BOT_FARMS.id, true);
 
   // Initialize all Tier 1 scams
   TIER_1_SCAMS.forEach((scam) => {
@@ -212,10 +201,5 @@ export const useScamStore = create<ScamStoreState>()((set, get) => ({
     }
 
     return totalLevels;
-  },
-
-  getMilestoneBots: () => {
-    const totalLevels = get().getTotalTier1Levels();
-    return Math.floor(totalLevels / MILESTONE_BOT_LEVELS);
   },
 }));

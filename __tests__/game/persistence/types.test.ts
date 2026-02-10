@@ -10,8 +10,8 @@ import {
 
 describe('Persistence Types', () => {
   describe('constants', () => {
-    it('should export SAVE_VERSION at 4', () => {
-      expect(SAVE_VERSION).toBe(4);
+    it('should export SAVE_VERSION at 5', () => {
+      expect(SAVE_VERSION).toBe(5);
     });
 
     it('should export correct STORAGE_KEY', () => {
@@ -24,9 +24,9 @@ describe('Persistence Types', () => {
   });
 
   describe('SaveData interface', () => {
-    it('should accept valid SaveData structure with managers and employees', () => {
+    it('should accept valid SaveData structure with managers, employees, and botAssignments', () => {
       const validSaveData: SaveData = {
-        version: 3,
+        version: 5,
         savedAt: Date.now(),
         resources: {
           money: 100,
@@ -39,8 +39,8 @@ describe('Persistence Types', () => {
           snitchCount: 0,
         },
         scams: {
-          'bot-farms': {
-            scamId: 'bot-farms',
+          'nigerian-prince-emails': {
+            scamId: 'nigerian-prince-emails',
             level: 5,
             isUnlocked: true,
             timesCompleted: 100,
@@ -58,18 +58,20 @@ describe('Persistence Types', () => {
             count: 3,
           },
         },
+        botAssignments: {},
       };
 
       // TypeScript compilation is the main test - this verifies runtime shape
-      expect(validSaveData.version).toBe(3);
+      expect(validSaveData.version).toBe(5);
       expect(validSaveData.savedAt).toBeGreaterThan(0);
       expect(validSaveData.resources).toBeDefined();
       expect(validSaveData.scams).toBeDefined();
       expect(validSaveData.managers).toBeDefined();
       expect(validSaveData.employees).toBeDefined();
+      expect(validSaveData.botAssignments).toBeDefined();
     });
 
-    it('should require all SaveData fields including managers and employees', () => {
+    it('should require all SaveData fields including managers, employees, and botAssignments', () => {
       // This test documents the expected structure
       const saveData: SaveData = {
         version: SAVE_VERSION,
@@ -87,6 +89,7 @@ describe('Persistence Types', () => {
         scams: {},
         managers: {},
         employees: {},
+        botAssignments: {},
       };
 
       expect(saveData).toHaveProperty('version');
@@ -95,6 +98,7 @@ describe('Persistence Types', () => {
       expect(saveData).toHaveProperty('scams');
       expect(saveData).toHaveProperty('managers');
       expect(saveData).toHaveProperty('employees');
+      expect(saveData).toHaveProperty('botAssignments');
     });
   });
 });

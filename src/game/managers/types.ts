@@ -7,10 +7,10 @@
  * Each manager has a unique personality expressed through name and flavor text.
  */
 export interface ManagerDefinition {
-  /** Unique identifier (kebab-case, e.g., 'bot-3000') */
+  /** Unique identifier (kebab-case, e.g., 'prince-okonkwo') */
   id: string;
 
-  /** Display name - unique character name (e.g., 'B0T-3000') */
+  /** Display name - unique character name (e.g., 'Prince Okonkwo') */
   name: string;
 
   /** ID of the scam this manager automates */

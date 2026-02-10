@@ -15,7 +15,9 @@ export interface GameResources {
   /** Police attention - triggers prestige at max */
   heat: number;
 
-  /** Core resource from Bot Farms - spent on upgrades and offline capability */
+  /** Strategic allocation resource - persists across prestiges.
+   *  Earned fractionally from every scam completion.
+   *  Assign to scams for speed/profit bonuses, or leave idle to reduce heat. */
   bots: number;
 
   /** Unlock passive tree nodes and active abilities */
@@ -68,17 +70,10 @@ export interface GameActions {
   setResource: (key: ResourceKey, value: number) => void;
 
   /**
-   * Reset all resources except trust for prestige.
+   * Reset all resources except trust, bots, and snitchCount for prestige.
    * Optionally modify trust during the reset (positive for clean escape, negative for snitching).
    */
   prestigeReset: (trustModifier?: number) => void;
-
-  /**
-   * Purchase a bot directly with money.
-   * Price scales quadratically: $100 × (currentBots + 1)²
-   * @returns true if purchase succeeded, false if not enough money
-   */
-  buyBot: () => boolean;
 
   /** Bulk-restore all resources from save data */
   hydrate: (resources: GameResources) => void;

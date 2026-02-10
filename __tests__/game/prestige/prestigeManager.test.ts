@@ -6,6 +6,7 @@ import { useGameStore, getInitialResources, STARTING_MONEY } from '../../../src/
 import { useScamStore, getInitialScamState } from '../../../src/game/scams/scamStore';
 import { useEmployeeStore, getInitialEmployeeState } from '../../../src/game/employees/employeeStore';
 import { useManagerStore, getInitialManagerState } from '../../../src/game/managers/managerStore';
+import { useBotStore } from '../../../src/game/bots/botStore';
 import { SNITCH_TRUST_PERCENT } from '../../../src/game/prestige/constants';
 import { calculatePerformanceTrustGain } from '../../../src/game/prestige/calculations';
 import type { GameResources } from '../../../src/game/types';
@@ -18,6 +19,7 @@ describe('Prestige Manager', () => {
     useScamStore.setState(useScamStore.getInitialState());
     useEmployeeStore.setState(useEmployeeStore.getInitialState());
     useManagerStore.setState(useManagerStore.getInitialState());
+    useBotStore.setState(useBotStore.getInitialState());
   });
 
   /**
@@ -41,30 +43,31 @@ describe('Prestige Manager', () => {
 
     // Unlock and level up some scams
     useScamStore.getState().unlockScam('nigerian-prince-emails');
-    useScamStore.getState().upgradeScam('bot-farms');
-    useScamStore.getState().upgradeScam('bot-farms');
-    useScamStore.getState().incrementCompletion('bot-farms');
-    useScamStore.getState().incrementCompletion('bot-farms');
+    useScamStore.getState().unlockScam('iphone-popup');
+    useScamStore.getState().upgradeScam('iphone-popup');
+    useScamStore.getState().upgradeScam('iphone-popup');
+    useScamStore.getState().incrementCompletion('iphone-popup');
+    useScamStore.getState().incrementCompletion('iphone-popup');
 
     // Hire some employees
-    useEmployeeStore.getState().hireEmployee('bot-wrangler', 5);
+    useEmployeeStore.getState().hireEmployee('popup-designer', 5);
     useEmployeeStore.getState().hireEmployee('email-copywriter', 3);
 
     // Hire some managers
-    useManagerStore.getState().hireManager('botty-mcbotface');
-    useManagerStore.getState().hireManager('prince-ali');
+    useManagerStore.getState().hireManager('popup-pete');
+    useManagerStore.getState().hireManager('prince-okonkwo');
   }
 
   /**
    * Computes the expected performance metrics for the mid-game state.
-   * bot-farms: level 3, timesCompleted 2, unlocked
+   * iphone-popup: level 3, timesCompleted 2, unlocked
    * nigerian-prince-emails: level 1, timesCompleted 0, unlocked
    */
   function getMidGameMetrics(): PerformanceMetrics {
     return {
       money: 10000,
-      totalCompletions: 2, // bot-farms completed 2x
-      totalLevels: 3 + 1,  // bot-farms level 3 + nigerian-prince level 1
+      totalCompletions: 2, // iphone-popup completed 2x
+      totalLevels: 3 + 1,  // iphone-popup level 3 + nigerian-prince level 1
     };
   }
 
@@ -96,7 +99,8 @@ describe('Prestige Manager', () => {
       expect(resources.money).toBe(STARTING_MONEY);
       expect(resources.reputation).toBe(0);
       expect(resources.heat).toBe(0);
-      expect(resources.bots).toBe(0);
+      // Bots persist across prestige
+      expect(resources.bots).toBe(5000);
       // Starting skill points = floor(trust - 1)
       expect(resources.skillPoints).toBe(Math.floor(newTrust - 1));
       expect(resources.crypto).toBe(0);
@@ -108,31 +112,30 @@ describe('Prestige Manager', () => {
 
       // Verify pre-conditions
       expect(useScamStore.getState().getScamState('nigerian-prince-emails')?.isUnlocked).toBe(true);
-      expect(useScamStore.getState().getScamState('bot-farms')?.level).toBe(3);
-      expect(useScamStore.getState().getScamState('bot-farms')?.timesCompleted).toBe(2);
+      expect(useScamStore.getState().getScamState('iphone-popup')?.level).toBe(3);
+      expect(useScamStore.getState().getScamState('iphone-popup')?.timesCompleted).toBe(2);
 
       executePrestige('clean-escape');
 
       // After prestige, scams should be reset to initial state
-      // Bot Farms and Nigerian Prince start unlocked
-      expect(useScamStore.getState().getScamState('bot-farms')?.isUnlocked).toBe(true);
-      expect(useScamStore.getState().getScamState('bot-farms')?.level).toBe(1);
-      expect(useScamStore.getState().getScamState('bot-farms')?.timesCompleted).toBe(0);
+      // Nigerian Prince starts unlocked, iPhone Popup starts locked
       expect(useScamStore.getState().getScamState('nigerian-prince-emails')?.isUnlocked).toBe(true);
       expect(useScamStore.getState().getScamState('nigerian-prince-emails')?.level).toBe(1);
+      expect(useScamStore.getState().getScamState('iphone-popup')?.level).toBe(1);
+      expect(useScamStore.getState().getScamState('iphone-popup')?.timesCompleted).toBe(0);
     });
 
     it('should reset employee state to initial (empty)', () => {
       setupMidGameState();
 
       // Verify pre-conditions
-      expect(useEmployeeStore.getState().getEmployeeCount('bot-wrangler')).toBe(5);
+      expect(useEmployeeStore.getState().getEmployeeCount('popup-designer')).toBe(5);
       expect(useEmployeeStore.getState().getEmployeeCount('email-copywriter')).toBe(3);
 
       executePrestige('clean-escape');
 
       // After prestige, employees should be empty
-      expect(useEmployeeStore.getState().getEmployeeCount('bot-wrangler')).toBe(0);
+      expect(useEmployeeStore.getState().getEmployeeCount('popup-designer')).toBe(0);
       expect(useEmployeeStore.getState().getEmployeeCount('email-copywriter')).toBe(0);
       expect(useEmployeeStore.getState().getAllEmployeeStates()).toHaveLength(0);
     });
@@ -141,14 +144,14 @@ describe('Prestige Manager', () => {
       setupMidGameState();
 
       // Verify pre-conditions
-      expect(useManagerStore.getState().isManagerHired('botty-mcbotface')).toBe(true);
-      expect(useManagerStore.getState().isManagerHired('prince-ali')).toBe(true);
+      expect(useManagerStore.getState().isManagerHired('popup-pete')).toBe(true);
+      expect(useManagerStore.getState().isManagerHired('prince-okonkwo')).toBe(true);
 
       executePrestige('clean-escape');
 
       // After prestige, managers should be empty
-      expect(useManagerStore.getState().isManagerHired('botty-mcbotface')).toBe(false);
-      expect(useManagerStore.getState().isManagerHired('prince-ali')).toBe(false);
+      expect(useManagerStore.getState().isManagerHired('popup-pete')).toBe(false);
+      expect(useManagerStore.getState().isManagerHired('prince-okonkwo')).toBe(false);
       expect(useManagerStore.getState().getAllManagerStates()).toHaveLength(0);
     });
   });
@@ -188,8 +191,8 @@ describe('Prestige Manager', () => {
       const newTrust = 37; // max(1, floor(75 * 0.5)) = 37
       // Money: STARTING_MONEY + 10000 * 0.1 = STARTING_MONEY + 1000
       expect(resources.money).toBe(STARTING_MONEY + 1000);
-      // Bots: 5000 * 0.1 = 500
-      expect(resources.bots).toBe(500);
+      // Bots persist across prestige (5000) + snitch bonus (5000 * 0.1 = 500)
+      expect(resources.bots).toBe(5000 + 500);
       // Reputation: 500 * 0.1 = 50
       expect(resources.reputation).toBe(50);
       // Crypto: 25 * 0.1 = 2.5
@@ -229,8 +232,8 @@ describe('Prestige Manager', () => {
 
       executePrestige('snitch');
 
-      // Scams reset to initial (Bot Farms and Nigerian Prince start unlocked)
-      expect(useScamStore.getState().getScamState('bot-farms')?.level).toBe(1);
+      // Scams reset to initial (Nigerian Prince starts unlocked)
+      expect(useScamStore.getState().getScamState('iphone-popup')?.level).toBe(1);
       expect(useScamStore.getState().getScamState('nigerian-prince-emails')?.isUnlocked).toBe(true);
       expect(useScamStore.getState().getScamState('nigerian-prince-emails')?.level).toBe(1);
 
@@ -251,7 +254,7 @@ describe('Prestige Manager', () => {
 
       expect(useGameStore.getState().resources.trust).toBe(previousTrust);
       expect(useGameStore.getState().resources.money).toBe(STARTING_MONEY);
-      expect(useScamStore.getState().getScamState('bot-farms')?.level).toBe(1);
+      expect(useScamStore.getState().getScamState('nigerian-prince-emails')?.level).toBe(1);
       expect(useEmployeeStore.getState().getAllEmployeeStates()).toHaveLength(0);
       expect(useManagerStore.getState().getAllManagerStates()).toHaveLength(0);
     });
@@ -260,7 +263,7 @@ describe('Prestige Manager', () => {
   describe('edge cases', () => {
     it('should handle prestige with no resources accumulated (fresh start gives trust >= 1)', () => {
       // Fresh start - only trust at 1, no money, no completions, no levels
-      // The only unlocked scams are defaults (bot-farms level 1, nigerian-prince level 1)
+      // The only unlocked scam is nigerian-prince-emails at level 1
       const result = executePrestige('clean-escape');
 
       expect(result.previousTrust).toBe(1);
@@ -275,6 +278,32 @@ describe('Prestige Manager', () => {
       expect(result.bonuses).toBeDefined();
       // With $0 starting money, there's no money bonus
       expect(result.bonuses!.length).toBe(0);
+    });
+
+    it('should award 1 bot on first prestige (trust was 1)', () => {
+      // Fresh start: trust = 1 (the default)
+      // Execute a clean-escape prestige
+      const result = executePrestige('clean-escape');
+
+      // After first prestige, player should receive 1 bot as introduction
+      expect(useGameStore.getState().resources.bots).toBe(1);
+    });
+
+    it('should reset bot assignments on prestige', () => {
+      setupMidGameState();
+
+      // Assign some bots to scams
+      useBotStore.getState().assignBot('nigerian-prince-emails', 'speed');
+      useBotStore.getState().assignBot('nigerian-prince-emails', 'profit');
+
+      // Verify pre-conditions
+      expect(useBotStore.getState().getTotalAssigned()).toBe(2);
+
+      executePrestige('clean-escape');
+
+      // After prestige, bot assignments should be cleared
+      expect(useBotStore.getState().assignments).toEqual({});
+      expect(useBotStore.getState().getTotalAssigned()).toBe(0);
     });
 
     it('should handle multiple consecutive prestiges with varying trust gains', () => {

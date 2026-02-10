@@ -5,6 +5,7 @@ import { useGameStore } from '../store';
 import { useScamStore } from '../scams/scamStore';
 import { useEmployeeStore } from '../employees/employeeStore';
 import { useManagerStore } from '../managers/managerStore';
+import { useBotStore } from '../bots/botStore';
 import type { PrestigeResult, PrestigeBonus, PerformanceMetrics } from './types';
 import { calculateCleanEscapeResult, calculateSnitchResult } from './calculations';
 
@@ -16,7 +17,7 @@ export function resetAllStores(): void {
   // Reset game resources (trust is preserved via prestigeReset with no modifier)
   useGameStore.getState().prestigeReset();
 
-  // Reset scams to initial state (Bot Farms unlocked, others locked, all level 1)
+  // Reset scams to initial state (Nigerian Prince unlocked, others locked, all level 1)
   useScamStore.getState().resetScams();
 
   // Reset employees (empty - must rehire)
@@ -24,6 +25,9 @@ export function resetAllStores(): void {
 
   // Reset managers (empty - must rehire)
   useManagerStore.getState().resetManagers();
+
+  // Reset bot assignments (bots return to pool, total count persists via resources)
+  useBotStore.getState().resetAssignments();
 }
 
 /**
@@ -51,6 +55,9 @@ export function fullReset(): void {
 
   // Reset managers
   useManagerStore.getState().resetManagers();
+
+  // Reset bot assignments
+  useBotStore.getState().resetAssignments();
 }
 
 /**
@@ -130,6 +137,7 @@ export function executePrestige(choice: 'clean-escape' | 'snitch'): PrestigeResu
     useScamStore.getState().resetScams();
     useEmployeeStore.getState().resetEmployees();
     useManagerStore.getState().resetManagers();
+    useBotStore.getState().resetAssignments();
   } else {
     result = calculateSnitchResult(currentTrust, currentResources);
 
@@ -138,6 +146,7 @@ export function executePrestige(choice: 'clean-escape' | 'snitch'): PrestigeResu
     useScamStore.getState().resetScams();
     useEmployeeStore.getState().resetEmployees();
     useManagerStore.getState().resetManagers();
+    useBotStore.getState().resetAssignments();
 
     // Increment lifetime snitch count (after reset, since prestigeReset preserves it)
     const gameStore = useGameStore.getState();
@@ -147,6 +156,11 @@ export function executePrestige(choice: 'clean-escape' | 'snitch'): PrestigeResu
     if (result.bonuses && result.bonuses.length > 0) {
       applySnitchBonuses(result.bonuses);
     }
+  }
+
+  // Award 1 bot on first prestige (trust was 1 before prestige) as introduction
+  if (currentTrust === 1) {
+    useGameStore.getState().addBots(1);
   }
 
   return result;

@@ -35,8 +35,8 @@ describe('Storage', () => {
       snitchCount: 0,
     },
     scams: {
-      'bot-farms': {
-        scamId: 'bot-farms',
+      'nigerian-prince-emails': {
+        scamId: 'nigerian-prince-emails',
         level: 5,
         isUnlocked: true,
         timesCompleted: 100,
@@ -50,6 +50,7 @@ describe('Storage', () => {
     },
     managers: {},
     employees: {},
+    botAssignments: {},
   };
 
   beforeEach(() => {
@@ -150,7 +151,7 @@ describe('Storage', () => {
       expect(typeof result!.savedAt).toBe('number');
       expect(typeof result!.resources.money).toBe('number');
       expect(typeof result!.resources.crypto).toBe('number');
-      expect(typeof result!.scams['bot-farms'].isUnlocked).toBe('boolean');
+      expect(typeof result!.scams['nigerian-prince-emails'].isUnlocked).toBe('boolean');
     });
   });
 

@@ -9,9 +9,6 @@ export type {
   ResourceType,
 } from './types';
 
-// Definitions
-export { BOT_FARMS } from './definitions';
-
 // Calculations
 export {
   calculateScamDuration,

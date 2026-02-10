@@ -6,7 +6,7 @@ import {
   getInitialManagerState,
   createManagerState,
 } from '../../../src/game/managers/managerStore';
-import { TIER_1_MANAGERS, BOT_3000 } from '../../../src/game/managers/definitions';
+import { TIER_1_MANAGERS } from '../../../src/game/managers/definitions';
 import type { ManagerState } from '../../../src/game/managers/types';
 
 describe('ManagerStore', () => {
@@ -33,14 +33,14 @@ describe('ManagerStore', () => {
 
   describe('createManagerState', () => {
     it('should create state with isHired false by default', () => {
-      const state = createManagerState('bot-3000');
+      const state = createManagerState('prince-okonkwo');
 
-      expect(state.managerId).toBe('bot-3000');
+      expect(state.managerId).toBe('prince-okonkwo');
       expect(state.isHired).toBe(false);
     });
 
     it('should create state with specified hired status', () => {
-      const state = createManagerState('bot-3000', true);
+      const state = createManagerState('prince-okonkwo', true);
 
       expect(state.isHired).toBe(true);
     });
@@ -50,9 +50,9 @@ describe('ManagerStore', () => {
     it('should hire a manager successfully', () => {
       const { hireManager } = useManagerStore.getState();
 
-      hireManager('bot-3000');
+      hireManager('prince-okonkwo');
 
-      const state = useManagerStore.getState().managers['bot-3000'];
+      const state = useManagerStore.getState().managers['prince-okonkwo'];
       expect(state).toBeDefined();
       expect(state.isHired).toBe(true);
     });
@@ -60,25 +60,25 @@ describe('ManagerStore', () => {
     it('should do nothing if manager already hired', () => {
       const { hireManager } = useManagerStore.getState();
 
-      hireManager('bot-3000');
-      hireManager('bot-3000'); // Hire again
+      hireManager('prince-okonkwo');
+      hireManager('prince-okonkwo'); // Hire again
 
       // Should still just be hired (no error, idempotent)
-      const state = useManagerStore.getState().managers['bot-3000'];
+      const state = useManagerStore.getState().managers['prince-okonkwo'];
       expect(state.isHired).toBe(true);
     });
 
     it('should track multiple managers independently', () => {
       const { hireManager } = useManagerStore.getState();
 
-      hireManager('bot-3000');
       hireManager('prince-okonkwo');
+      hireManager('lucky-larry');
 
-      const bot = useManagerStore.getState().managers['bot-3000'];
       const prince = useManagerStore.getState().managers['prince-okonkwo'];
+      const larry = useManagerStore.getState().managers['lucky-larry'];
 
-      expect(bot.isHired).toBe(true);
       expect(prince.isHired).toBe(true);
+      expect(larry.isHired).toBe(true);
     });
   });
 
@@ -86,7 +86,7 @@ describe('ManagerStore', () => {
     it('should return false for manager not yet hired', () => {
       const { isManagerHired } = useManagerStore.getState();
 
-      const hired = isManagerHired('bot-3000');
+      const hired = isManagerHired('prince-okonkwo');
 
       expect(hired).toBe(false);
     });
@@ -94,9 +94,9 @@ describe('ManagerStore', () => {
     it('should return true for hired manager', () => {
       const { hireManager, isManagerHired } = useManagerStore.getState();
 
-      hireManager('bot-3000');
+      hireManager('prince-okonkwo');
 
-      const hired = useManagerStore.getState().isManagerHired('bot-3000');
+      const hired = useManagerStore.getState().isManagerHired('prince-okonkwo');
       expect(hired).toBe(true);
     });
 
@@ -121,27 +121,27 @@ describe('ManagerStore', () => {
     it('should return array of hired manager IDs', () => {
       const { hireManager } = useManagerStore.getState();
 
-      hireManager('bot-3000');
       hireManager('prince-okonkwo');
+      hireManager('lucky-larry');
 
       const hired = useManagerStore.getState().getHiredManagers();
 
       expect(hired.length).toBe(2);
-      expect(hired).toContain('bot-3000');
       expect(hired).toContain('prince-okonkwo');
+      expect(hired).toContain('lucky-larry');
     });
 
     it('should not include non-hired managers', () => {
       const { hireManager } = useManagerStore.getState();
 
-      hireManager('bot-3000');
-      // Don't hire prince-okonkwo
+      hireManager('prince-okonkwo');
+      // Don't hire lucky-larry
 
       const hired = useManagerStore.getState().getHiredManagers();
 
       expect(hired.length).toBe(1);
-      expect(hired).toContain('bot-3000');
-      expect(hired).not.toContain('prince-okonkwo');
+      expect(hired).toContain('prince-okonkwo');
+      expect(hired).not.toContain('lucky-larry');
     });
   });
 
@@ -149,7 +149,7 @@ describe('ManagerStore', () => {
     it('should return false when scam has no manager hired', () => {
       const { isScamManaged } = useManagerStore.getState();
 
-      const managed = isScamManaged('bot-farms');
+      const managed = isScamManaged('nigerian-prince-emails');
 
       expect(managed).toBe(false);
     });
@@ -157,9 +157,9 @@ describe('ManagerStore', () => {
     it('should return true when scams manager is hired', () => {
       const { hireManager, isScamManaged } = useManagerStore.getState();
 
-      hireManager('bot-3000'); // Manager for bot-farms
+      hireManager('prince-okonkwo'); // Manager for nigerian-prince-emails
 
-      const managed = useManagerStore.getState().isScamManaged('bot-farms');
+      const managed = useManagerStore.getState().isScamManaged('nigerian-prince-emails');
       expect(managed).toBe(true);
     });
 
@@ -177,9 +177,9 @@ describe('ManagerStore', () => {
       const { hireManager, resetManagers } = useManagerStore.getState();
 
       // Hire some managers
-      hireManager('bot-3000');
       hireManager('prince-okonkwo');
       hireManager('lucky-larry');
+      hireManager('popup-pete');
 
       // Verify they were hired
       let state = useManagerStore.getState();
@@ -196,23 +196,23 @@ describe('ManagerStore', () => {
     it('should return false for isManagerHired after reset', () => {
       const { hireManager, resetManagers, isManagerHired } = useManagerStore.getState();
 
-      hireManager('bot-3000');
+      hireManager('prince-okonkwo');
 
       // Verify hired before reset
-      expect(useManagerStore.getState().isManagerHired('bot-3000')).toBe(true);
+      expect(useManagerStore.getState().isManagerHired('prince-okonkwo')).toBe(true);
 
       // Reset
       resetManagers();
 
       // Verify not hired after reset
-      expect(useManagerStore.getState().isManagerHired('bot-3000')).toBe(false);
+      expect(useManagerStore.getState().isManagerHired('prince-okonkwo')).toBe(false);
     });
 
     it('should return empty array for getHiredManagers after reset', () => {
       const { hireManager, resetManagers, getHiredManagers } = useManagerStore.getState();
 
-      hireManager('bot-3000');
       hireManager('prince-okonkwo');
+      hireManager('lucky-larry');
 
       // Verify hired before reset
       expect(useManagerStore.getState().getHiredManagers().length).toBe(2);
@@ -237,23 +237,23 @@ describe('ManagerStore', () => {
     it('should return all tracked manager states', () => {
       const { hireManager, getAllManagerStates } = useManagerStore.getState();
 
-      hireManager('bot-3000');
       hireManager('prince-okonkwo');
+      hireManager('lucky-larry');
 
       const states = useManagerStore.getState().getAllManagerStates();
 
       expect(states.length).toBe(2);
-      expect(states.some((s) => s.managerId === 'bot-3000' && s.isHired)).toBe(true);
       expect(states.some((s) => s.managerId === 'prince-okonkwo' && s.isHired)).toBe(true);
+      expect(states.some((s) => s.managerId === 'lucky-larry' && s.isHired)).toBe(true);
     });
   });
 
   describe('type safety', () => {
     it('should have proper typing for ManagerState', () => {
       const { hireManager } = useManagerStore.getState();
-      hireManager('bot-3000');
+      hireManager('prince-okonkwo');
 
-      const state: ManagerState = useManagerStore.getState().managers['bot-3000'];
+      const state: ManagerState = useManagerStore.getState().managers['prince-okonkwo'];
 
       expect(typeof state.managerId).toBe('string');
       expect(typeof state.isHired).toBe('boolean');
@@ -282,18 +282,18 @@ describe('ManagerStore', () => {
       const { hireManager, hydrate } = useManagerStore.getState();
 
       // Build up some state
-      hireManager('bot-3000');
       hireManager('prince-okonkwo');
+      hireManager('lucky-larry');
 
       // Hydrate should replace it all
       hydrate({
-        'lucky-larry': { managerId: 'lucky-larry', isHired: true },
+        'popup-pete': { managerId: 'popup-pete', isHired: true },
       });
 
       const managers = useManagerStore.getState().managers;
-      expect(managers['lucky-larry']?.isHired).toBe(true);
-      expect(managers['bot-3000']).toBeUndefined();
+      expect(managers['popup-pete']?.isHired).toBe(true);
       expect(managers['prince-okonkwo']).toBeUndefined();
+      expect(managers['lucky-larry']).toBeUndefined();
     });
 
     it('should preserve action functions after hydration', () => {
@@ -302,8 +302,8 @@ describe('ManagerStore', () => {
       hydrate({});
 
       // Actions should still work
-      useManagerStore.getState().hireManager('bot-3000');
-      expect(useManagerStore.getState().isManagerHired('bot-3000')).toBe(true);
+      useManagerStore.getState().hireManager('prince-okonkwo');
+      expect(useManagerStore.getState().isManagerHired('prince-okonkwo')).toBe(true);
     });
   });
 
@@ -312,8 +312,8 @@ describe('ManagerStore', () => {
       const store = useManagerStore.getState();
 
       // Run 1: Hire managers
-      store.hireManager('bot-3000');
       store.hireManager('prince-okonkwo');
+      store.hireManager('lucky-larry');
       expect(useManagerStore.getState().getHiredManagers().length).toBe(2);
 
       // Prestige: Reset
@@ -321,11 +321,11 @@ describe('ManagerStore', () => {
       expect(useManagerStore.getState().getHiredManagers().length).toBe(0);
 
       // Run 2: Rehire managers (maybe different ones)
-      useManagerStore.getState().hireManager('lucky-larry');
       useManagerStore.getState().hireManager('popup-pete');
+      useManagerStore.getState().hireManager('survey-susan');
       expect(useManagerStore.getState().getHiredManagers().length).toBe(2);
-      expect(useManagerStore.getState().isManagerHired('lucky-larry')).toBe(true);
-      expect(useManagerStore.getState().isManagerHired('bot-3000')).toBe(false);
+      expect(useManagerStore.getState().isManagerHired('popup-pete')).toBe(true);
+      expect(useManagerStore.getState().isManagerHired('prince-okonkwo')).toBe(false);
     });
   });
 });

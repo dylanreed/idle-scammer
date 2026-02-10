@@ -13,6 +13,7 @@ import { useGameStore } from '../store';
 import { useScamStore } from '../scams/scamStore';
 import { useManagerStore } from '../managers/managerStore';
 import { useEmployeeStore } from '../employees/employeeStore';
+import { useBotStore } from '../bots/botStore';
 import { COLORS } from '../../components/theme';
 
 interface GameProviderProps {
@@ -40,13 +41,14 @@ export function GameProvider({ children }: GameProviderProps): React.ReactElemen
           const migrated = migrateIfNeeded(rawSave);
 
           // Extract state from save
-          const { resources, scams, managers, employees } = applySaveData(migrated);
+          const { resources, scams, managers, employees, botAssignments } = applySaveData(migrated);
 
           // Hydrate all stores
           useGameStore.getState().hydrate(resources);
           useScamStore.getState().hydrate(scams);
           useManagerStore.getState().hydrate(managers);
           useEmployeeStore.getState().hydrate(employees);
+          useBotStore.getState().hydrate(botAssignments);
 
           // Calculate offline earnings
           const timers = reconstructActiveTimers(scams, managers);
@@ -63,7 +65,8 @@ export function GameProvider({ children }: GameProviderProps): React.ReactElemen
               now,
               offlineState,
               scams,
-              resources.trust
+              resources.trust,
+              resources.bots
             );
 
             // Apply heat decay for offline duration before adding new heat
@@ -165,8 +168,9 @@ function performSave() {
   const scams = useScamStore.getState().scams;
   const managers = useManagerStore.getState().managers;
   const employees = useEmployeeStore.getState().employees;
+  const botAssignments = useBotStore.getState().assignments;
 
-  const saveData = createSaveData(resources, scams, managers, employees);
+  const saveData = createSaveData(resources, scams, managers, employees, botAssignments);
   saveGame(saveData).catch((error) => {
     console.warn('[GameProvider] Auto-save failed:', error);
   });

@@ -8,19 +8,6 @@ import { TIER_4_EMPLOYEES } from './tier4';
 import { TIER_5_EMPLOYEES } from './tier5';
 
 /**
- * Bot Wrangler - Manages bot farms more efficiently.
- * Works on: Bot Farms (the foundational resource generator)
- */
-export const BOT_WRANGLER: EmployeeDefinition = {
-  id: 'bot-wrangler',
-  name: 'Bot Wrangler',
-  scamId: 'bot-farms',
-  baseCost: 25,
-  speedBoost: 0.03, // 3% faster per employee
-  rewardBoost: 0.05, // 5% more bots per employee
-};
-
-/**
  * Email Copywriter - Crafts more compelling prince stories.
  * Works on: Nigerian Prince Emails
  */
@@ -142,7 +129,6 @@ export const RESUME_FAKER: EmployeeDefinition = {
  * One employee type per scam for MVP.
  */
 export const TIER_1_EMPLOYEES: EmployeeDefinition[] = [
-  BOT_WRANGLER,
   EMAIL_COPYWRITER,
   LOTTERY_ANNOUNCER,
   POPUP_DESIGNER,

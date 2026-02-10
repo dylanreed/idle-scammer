@@ -7,18 +7,18 @@ describe('Manager Types', () => {
   describe('ManagerDefinition', () => {
     it('should have all required fields for a manager definition', () => {
       const testManager: ManagerDefinition = {
-        id: 'bot-3000',
-        name: 'B0T-3000',
-        scamId: 'bot-farms',
+        id: 'prince-okonkwo',
+        name: 'Prince Okonkwo III',
+        scamId: 'nigerian-prince-emails',
         cost: 1000,
-        flavorText: 'BEEP BOOP. AUTOMATION PROTOCOL ENGAGED.',
+        flavorText: 'I am the REAL prince, unlike those other imposters.',
       };
 
-      expect(testManager.id).toBe('bot-3000');
-      expect(testManager.name).toBe('B0T-3000');
-      expect(testManager.scamId).toBe('bot-farms');
+      expect(testManager.id).toBe('prince-okonkwo');
+      expect(testManager.name).toBe('Prince Okonkwo III');
+      expect(testManager.scamId).toBe('nigerian-prince-emails');
       expect(testManager.cost).toBe(1000);
-      expect(testManager.flavorText).toBe('BEEP BOOP. AUTOMATION PROTOCOL ENGAGED.');
+      expect(testManager.flavorText).toBe('I am the REAL prince, unlike those other imposters.');
     });
 
     it('should allow different cost values', () => {
@@ -71,11 +71,11 @@ describe('Manager Types', () => {
   describe('ManagerState', () => {
     it('should have all required fields for manager state', () => {
       const testState: ManagerState = {
-        managerId: 'bot-3000',
+        managerId: 'prince-okonkwo',
         isHired: false,
       };
 
-      expect(testState.managerId).toBe('bot-3000');
+      expect(testState.managerId).toBe('prince-okonkwo');
       expect(testState.isHired).toBe(false);
     });
 

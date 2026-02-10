@@ -7,12 +7,14 @@ import type { GameResources } from '../types';
 import type { ScamStateMap } from '../scams/scamStore';
 import type { ManagerStateMap } from '../managers/managerStore';
 import type { EmployeeStateMap } from '../employees/employeeStore';
+import type { BotAssignmentMap } from '../bots/types';
 import type { ScamTimer } from '../engine/types';
 import { ALL_MANAGERS } from '../managers/definitions';
 import { ALL_SCAMS } from '../scams/definitions';
 import { calculateScamDuration } from '../scams/calculations';
 import { createTimer } from '../engine/timer';
 import { useEmployeeStore } from '../employees/employeeStore';
+import { useBotStore } from '../bots/botStore';
 
 /**
  * Creates a SaveData snapshot from current game state.
@@ -28,7 +30,8 @@ export function createSaveData(
   resources: GameResources,
   scams: ScamStateMap,
   managers: ManagerStateMap,
-  employees: EmployeeStateMap = {}
+  employees: EmployeeStateMap = {},
+  botAssignments: BotAssignmentMap = {}
 ): SaveData {
   return {
     version: SAVE_VERSION,
@@ -37,6 +40,7 @@ export function createSaveData(
     scams,
     managers,
     employees,
+    botAssignments,
   };
 }
 
@@ -52,12 +56,14 @@ export function applySaveData(saveData: SaveData): {
   scams: ScamStateMap;
   managers: ManagerStateMap;
   employees: EmployeeStateMap;
+  botAssignments: BotAssignmentMap;
 } {
   return {
     resources: saveData.resources,
     scams: saveData.scams,
     managers: saveData.managers,
     employees: saveData.employees ?? {},
+    botAssignments: saveData.botAssignments ?? {},
   };
 }
 
@@ -110,6 +116,15 @@ export function migrateIfNeeded(saveData: SaveData): SaveData {
     };
   }
 
+  // Migration from version 4 to version 5: add botAssignments field
+  if (migrated.version < 5) {
+    migrated = {
+      ...migrated,
+      version: 5,
+      botAssignments: (migrated as SaveData).botAssignments ?? {},
+    };
+  }
+
   return migrated;
 }
 
@@ -152,9 +167,10 @@ export function reconstructActiveTimers(
       continue;
     }
 
-    // Calculate duration based on current level and employee bonuses
+    // Calculate duration based on current level, employee bonuses, and bot bonuses
     const { speedBonus } = useEmployeeStore.getState().getScamBonuses(managerDef.scamId);
-    const duration = calculateScamDuration(scamDef, scamState.level, speedBonus);
+    const botSpeedBonus = useBotStore.getState().getScamBotBonuses(managerDef.scamId).speedBonus;
+    const duration = calculateScamDuration(scamDef, scamState.level, speedBonus, botSpeedBonus);
 
     timers.push(createTimer(managerDef.scamId, duration, now));
   }

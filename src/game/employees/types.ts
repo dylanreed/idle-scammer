@@ -6,10 +6,10 @@
  * Employees boost specific scams by reducing duration and/or increasing rewards.
  */
 export interface EmployeeDefinition {
-  /** Unique identifier (kebab-case, e.g., 'bot-wrangler') */
+  /** Unique identifier (kebab-case, e.g., 'email-copywriter') */
   id: string;
 
-  /** Display name (e.g., 'Bot Wrangler') */
+  /** Display name (e.g., 'Email Copywriter') */
   name: string;
 
   /** ID of the scam this employee works on */

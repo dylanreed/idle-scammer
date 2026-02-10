@@ -3,7 +3,6 @@
 
 import {
   TIER_1_MANAGERS,
-  BOT_3000,
   PRINCE_OKONKWO,
   LUCKY_LARRY,
   POPUP_PETE,
@@ -21,8 +20,8 @@ import type { ManagerDefinition } from '../../../src/game/managers/types';
 
 describe('Manager Definitions', () => {
   describe('TIER_1_MANAGERS collection', () => {
-    it('should have exactly 10 managers (one per Tier 1 scam)', () => {
-      expect(TIER_1_MANAGERS.length).toBe(10);
+    it('should have exactly 9 managers (one per Tier 1 scam)', () => {
+      expect(TIER_1_MANAGERS.length).toBe(9);
     });
 
     it('should have unique IDs for all managers', () => {
@@ -39,7 +38,7 @@ describe('Manager Definitions', () => {
       expect(uniqueNames.size).toBe(TIER_1_MANAGERS.length);
     });
 
-    it('should cover all Tier 1 scams (plus Bot Farms which is separate)', () => {
+    it('should cover all Tier 1 scams', () => {
       const scamIdsCovered = new Set(TIER_1_MANAGERS.map((m) => m.scamId));
       const tier1ScamIds = new Set(TIER_1_SCAMS.map((s) => s.id));
 
@@ -48,11 +47,7 @@ describe('Manager Definitions', () => {
         expect(scamIdsCovered.has(scamId)).toBe(true);
       });
 
-      // Bot Farms is separate but should also have a manager
-      expect(scamIdsCovered.has('bot-farms')).toBe(true);
-
-      // Total managers = 9 tier 1 scams + 1 bot farms = 10
-      expect(scamIdsCovered.size).toBe(10);
+      expect(scamIdsCovered.size).toBe(9);
     });
 
     it('should have positive costs for all managers', () => {
@@ -68,14 +63,14 @@ describe('Manager Definitions', () => {
     });
 
     it('should have costs that scale with scam complexity', () => {
-      // Bot Farms manager should be cheapest (first scam)
+      // Nigerian Prince manager should be cheapest (first scam)
       // Fake Job Postings manager should be most expensive (last scam)
-      const botFarmsManager = getManagerByScamId('bot-farms');
+      const nigerianPrinceManager = getManagerByScamId('nigerian-prince-emails');
       const fakeJobsManager = getManagerByScamId('fake-job-postings');
 
-      expect(botFarmsManager).toBeDefined();
+      expect(nigerianPrinceManager).toBeDefined();
       expect(fakeJobsManager).toBeDefined();
-      expect(fakeJobsManager!.cost).toBeGreaterThan(botFarmsManager!.cost);
+      expect(fakeJobsManager!.cost).toBeGreaterThan(nigerianPrinceManager!.cost);
     });
   });
 
@@ -91,11 +86,6 @@ describe('Manager Definitions', () => {
       expect(manager.cost).toBeGreaterThan(0);
       expect(manager.flavorText.length).toBeGreaterThan(0);
     };
-
-    it('should define BOT_3000 for bot-farms', () => {
-      validateManager(BOT_3000, 'bot-3000', 'bot-farms');
-      expect(BOT_3000.name).toBe('B0T-3000');
-    });
 
     it('should define PRINCE_OKONKWO for nigerian-prince-emails', () => {
       validateManager(PRINCE_OKONKWO, 'prince-okonkwo', 'nigerian-prince-emails');
@@ -136,10 +126,10 @@ describe('Manager Definitions', () => {
 
   describe('getManagerByScamId', () => {
     it('should return manager for a scam with a manager', () => {
-      const manager = getManagerByScamId('bot-farms');
+      const manager = getManagerByScamId('nigerian-prince-emails');
 
       expect(manager).toBeDefined();
-      expect(manager?.id).toBe('bot-3000');
+      expect(manager?.id).toBe('prince-okonkwo');
     });
 
     it('should return undefined for non-existent scam', () => {
@@ -159,10 +149,10 @@ describe('Manager Definitions', () => {
 
   describe('getManagerById', () => {
     it('should return manager by ID', () => {
-      const manager = getManagerById('bot-3000');
+      const manager = getManagerById('prince-okonkwo');
 
       expect(manager).toBeDefined();
-      expect(manager?.id).toBe('bot-3000');
+      expect(manager?.id).toBe('prince-okonkwo');
     });
 
     it('should return undefined for non-existent manager', () => {
@@ -182,9 +172,6 @@ describe('Manager Definitions', () => {
 
   describe('Manager personality and flavor', () => {
     it('should have flavor text that fits the scam theme', () => {
-      // Bot manager should have robotic flavor
-      expect(BOT_3000.flavorText.toUpperCase()).toContain('BEEP');
-
       // Prince should sound royal
       expect(PRINCE_OKONKWO.flavorText.toLowerCase()).toContain('prince');
     });

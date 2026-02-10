@@ -16,6 +16,8 @@ import { calculateHeatFromScam } from '../prestige/calculations';
 import type { ScamStateMap } from '../scams/scamStore';
 import { useEmployeeStore } from '../employees/employeeStore';
 import { calculateEmployeeHeat } from '../employees/calculations';
+import { useBotStore } from '../bots/botStore';
+import { BOT_GENERATION_RATES, IDLE_BOT_HEAT_REDUCTION } from '../bots/constants';
 
 /**
  * Result of a single game tick
@@ -110,7 +112,8 @@ export function calculateOfflineProgress(
   currentTime: number,
   state: EngineState,
   scamStates?: ScamStateMap,
-  trust: number = 1
+  trust: number = 1,
+  totalBots: number = 0
 ): OfflineProgress {
   // Use pausedAt time if the game was paused
   const effectiveEndTime = state.isPaused && state.pausedAt !== undefined
@@ -145,21 +148,26 @@ export function calculateOfflineProgress(
 
         if (scamState && scamDef) {
           const { rewardBonus } = useEmployeeStore.getState().getScamBonuses(timer.scamId);
-          const rewardPerCycle = calculateScamReward(scamDef, scamState.level, trust, 0, rewardBonus);
+          const botBonuses = useBotStore.getState().getScamBotBonuses(timer.scamId);
+          const rewardPerCycle = calculateScamReward(scamDef, scamState.level, trust, botBonuses.profitBonus, rewardBonus);
           const totalReward = rewardPerCycle * cycles * OFFLINE_EFFICIENCY;
           const heatPerCycle = calculateHeatFromScam(scamDef);
 
           if (scamDef.resourceType === 'money') {
             earnings.money += totalReward;
-          } else if (scamDef.resourceType === 'bots') {
-            earnings.bots += totalReward;
           } else if (scamDef.resourceType === 'reputation') {
             earnings.reputation += totalReward;
           } else if (scamDef.resourceType === 'crypto') {
             earnings.crypto += totalReward;
           }
 
-          earnings.heat += heatPerCycle * cycles * OFFLINE_EFFICIENCY;
+          // Apply idle bot heat reduction to offline heat
+          const unassignedBots = useBotStore.getState().getAvailableBots(totalBots);
+          const heatMultiplier = 1 / (1 + IDLE_BOT_HEAT_REDUCTION * unassignedBots);
+          earnings.heat += heatPerCycle * cycles * OFFLINE_EFFICIENCY * heatMultiplier;
+
+          // Generate fractional bots per cycle
+          earnings.bots += BOT_GENERATION_RATES[scamDef.tier] * cycles * OFFLINE_EFFICIENCY;
         }
       }
     }

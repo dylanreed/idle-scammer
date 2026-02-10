@@ -1,34 +1,11 @@
 // ABOUTME: Scam definitions for all tiers, plus barrel exports for cross-tier access
-// ABOUTME: Bot Farms generates bots; all other scams generate money
+// ABOUTME: All scams generate money; bots are earned passively per completion
 
 import type { ScamDefinition } from './types';
 import { TIER_2_SCAMS } from './tier2';
 import { TIER_3_SCAMS } from './tier3';
 import { TIER_4_SCAMS } from './tier4';
 import { TIER_5_SCAMS } from './tier5';
-
-/**
- * Bot Farms - The first and foundational scam in the game.
- *
- * This scam is unique because:
- * - It generates BOTS instead of money
- * - Bots are spent to upgrade other scams
- * - It's free to unlock (no unlockCost)
- * - Fast 1-second timer for early game satisfaction
- *
- * This is the entry point to all gameplay. Players must run Bot Farms
- * to accumulate bots before they can upgrade and unlock other scams.
- */
-export const BOT_FARMS: ScamDefinition = {
-  id: 'bot-farms',
-  name: 'Bot Farms',
-  tier: 1,
-  baseDuration: 1000, // 1 second - fast for early game feel-good
-  baseReward: 0.5, // 0.5 bots per completion
-  resourceType: 'bots', // This scam gives bots, not money!
-  description: 'Deploy autonomous bots to do your bidding',
-  unlockCost: undefined, // Free to start - this is the first scam
-};
 
 /**
  * Nigerian Prince Emails - The classic advance-fee scam.
@@ -204,11 +181,10 @@ export const TIER_1_SCAMS: ScamDefinition[] = [
 ];
 
 /**
- * All scam definitions across all tiers, including Bot Farms.
+ * All scam definitions across all tiers.
  * Consumers that need to look up any scam by ID should use this array.
  */
 export const ALL_SCAMS: ScamDefinition[] = [
-  BOT_FARMS,
   ...TIER_1_SCAMS,
   ...TIER_2_SCAMS,
   ...TIER_3_SCAMS,

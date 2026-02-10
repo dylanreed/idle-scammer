@@ -81,7 +81,7 @@ export function getMaxUsefulSpeedBots(
 const MIN_COST_RATE = 1.07;
 const MAX_COST_RATE = 1.10;
 const MIN_LOG_COST = 1;  // log10(10) - cheapest scam ($10)
-const MAX_LOG_COST = 25; // log10(~10^25) - most expensive scam (Central Bank Heists)
+const MAX_LOG_COST = 36; // log10(~10^36) - most expensive scam with ratio 5 progression
 
 /**
  * Returns the graduated cost rate for a scam based on its effective baseCost.

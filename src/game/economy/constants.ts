@@ -88,7 +88,7 @@ export const SCAM_TIER_BASES: ScamTierBase[] = [
  * Ratio between consecutive scam unlock costs in the global progression.
  * All 49 scams form one continuous geometric series with this ratio.
  */
-export const PROGRESSION_RATIO = 3;
+export const PROGRESSION_RATIO = 5;
 
 /**
  * Anchor cost: the unlock cost of the 2nd scam (position 1) in the progression.

@@ -24,10 +24,10 @@ jest.mock('../../src/game/scams/definitions', () => ({
 
 // Mock bot constants for predictable bonus calculations
 jest.mock('../../src/game/bots/constants', () => ({
-  IDLE_BOT_HEAT_REDUCTION: 0.05,
-  SPEED_BOT_BONUS: 0.1,
-  PROFIT_BOT_BONUS: 0.1,
-  BOT_GENERATION_RATES: { 1: 0.0001, 2: 0.001, 3: 0.005, 4: 0.02, 5: 0.1 },
+  IDLE_BOT_HEAT_REDUCTION: 0.01,
+  SPEED_BOT_BONUS: 0.03,
+  PROFIT_BOT_BONUS: 0.03,
+  BOT_GENERATION_RATES: { 1: 0.00001, 2: 0.0001, 3: 0.0005, 4: 0.002, 5: 0.01 },
 }));
 
 // Stub ManagerPanel to avoid importing manager/employee/prestige/asset dependencies
@@ -185,8 +185,8 @@ describe('Bot Assignment Flow E2E', () => {
     // Summary should show all 3 idle
     expect(screen.getByTestId('bot-summary')).toHaveTextContent(/Idle: 3/);
 
-    // Heat reduction text should appear: 0.05 * 3 * 100 = 15%
+    // Heat reduction text should appear: 0.01 * 3 * 100 = 3%
     const heatInfo = screen.getByTestId('bot-heat-info');
-    expect(heatInfo).toHaveTextContent('Idle bots reduce heat by 15%');
+    expect(heatInfo).toHaveTextContent('Idle bots reduce heat by 3%');
   });
 });

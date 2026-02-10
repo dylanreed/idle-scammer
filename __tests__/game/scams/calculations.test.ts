@@ -126,16 +126,17 @@ describe('Scam Calculations', () => {
       expect(rate).toBeCloseTo(1.07, 4);
     });
 
-    it('should return maximum rate (1.10) for most expensive scam (~$10^25)', () => {
-      const rate = getScamCostRate(Math.pow(10, 25));
+    it('should return maximum rate (1.10) for most expensive scam (~$10^36)', () => {
+      const rate = getScamCostRate(Math.pow(10, 36));
       expect(rate).toBeCloseTo(1.10, 4);
     });
 
     it('should return intermediate rate for $10Qi scam (10^19)', () => {
       const rate = getScamCostRate(10_000_000_000_000_000_000);
-      // log10(10^19) = 19, interpolated across range [1, 25]: t = 18/24 = 0.75
-      // rate = 1.07 + 0.75 * 0.03 = 1.0925
-      expect(rate).toBeCloseTo(1.0925, 4);
+      // With MAX_LOG_COST=36, log10(10^19)=19, t = (19-1)/(36-1) = 18/35 ≈ 0.5143
+      // interpolated across range [1, 36]: t = 18/35
+      // rate = 1.07 + 0.5143 * 0.03 ≈ 1.08543
+      expect(rate).toBeCloseTo(1.08543, 4);
     });
 
     it('should return a rate between min and max for mid-range scams', () => {
@@ -364,21 +365,21 @@ describe('Scam Calculations', () => {
       unlockCost: 1000,
     };
 
-    it('should return 90 for a level 1 scam with no employee bonus (speedMult=1.0)', () => {
-      // floor((1 / (1.0 * 1 * 0.1) - 1) / 0.1) = floor((10 - 1) / 0.1) = floor(90) = 90
-      expect(getMaxUsefulSpeedBots(longScam, 1, 0)).toBe(90);
+    it('should return 300 for a level 1 scam with no employee bonus (speedMult=1.0)', () => {
+      // floor((1 / (1.0 * 1 * 0.1) - 1) / 0.03) = floor((10 - 1) / 0.03) = floor(300) = 300
+      expect(getMaxUsefulSpeedBots(longScam, 1, 0)).toBe(300);
     });
 
     it('should return 0 when speed multiplier alone reaches the duration floor', () => {
       // At level 100+, speedMult = 10.0
-      // 1 / (10 * 1 * 0.1) = 1, so (1 - 1) / 0.1 = 0
+      // 1 / (10 * 1 * 0.1) = 1, so (1 - 1) / 0.03 = 0
       expect(getMaxUsefulSpeedBots(longScam, 100, 0)).toBe(0);
     });
 
     it('should account for employee speed bonus', () => {
       // Level 1 (speedMult=1.0), empBonus=0.5
-      // floor((1 / (1.0 * 1.5 * 0.1) - 1) / 0.1) = floor((6.667 - 1) / 0.1) = floor(56.67) = 56
-      expect(getMaxUsefulSpeedBots(longScam, 1, 0.5)).toBe(56);
+      // floor((1 / (1.0 * 1.5 * 0.1) - 1) / 0.03) = floor((6.667 - 1) / 0.03) = floor(188.89) = 188
+      expect(getMaxUsefulSpeedBots(longScam, 1, 0.5)).toBe(188);
     });
 
     it('should return fewer bots at higher levels', () => {
@@ -395,17 +396,17 @@ describe('Scam Calculations', () => {
     });
 
     it('should return specific values for known speed brackets', () => {
-      // Level 10 (speedMult=1.5): floor((1/(1.5*0.1) - 1)/0.1) = floor((6.667-1)/0.1) = floor(56.67) = 56
-      expect(getMaxUsefulSpeedBots(longScam, 10, 0)).toBe(56);
+      // Level 10 (speedMult=1.5): floor((1/(1.5*0.1) - 1)/0.03) = floor((6.667-1)/0.03) = floor(188.89) = 188
+      expect(getMaxUsefulSpeedBots(longScam, 10, 0)).toBe(188);
 
-      // Level 25 (speedMult=2.0): floor((1/(2*0.1) - 1)/0.1) = floor((5-1)/0.1) = floor(40) = 40
-      expect(getMaxUsefulSpeedBots(longScam, 25, 0)).toBe(40);
+      // Level 25 (speedMult=2.0): floor((1/(2*0.1) - 1)/0.03) = floor((5-1)/0.03) = floor(133.33) = 133
+      expect(getMaxUsefulSpeedBots(longScam, 25, 0)).toBe(133);
 
-      // Level 50 (speedMult=3.0): floor((1/(3*0.1) - 1)/0.1) = floor((3.333-1)/0.1) = floor(23.33) = 23
-      expect(getMaxUsefulSpeedBots(longScam, 50, 0)).toBe(23);
+      // Level 50 (speedMult=3.0): floor((1/(3*0.1) - 1)/0.03) = floor((3.333-1)/0.03) = floor(77.78) = 77
+      expect(getMaxUsefulSpeedBots(longScam, 50, 0)).toBe(77);
 
-      // Level 75 (speedMult=5.0): floor((1/(5*0.1) - 1)/0.1) = floor((2-1)/0.1) = floor(10) = 10
-      expect(getMaxUsefulSpeedBots(longScam, 75, 0)).toBe(10);
+      // Level 75 (speedMult=5.0): floor((1/(5*0.1) - 1)/0.03) = floor((2-1)/0.03) = floor(33.33) = 33
+      expect(getMaxUsefulSpeedBots(longScam, 75, 0)).toBe(33);
     });
 
     it('should never return negative', () => {
@@ -415,8 +416,8 @@ describe('Scam Calculations', () => {
 
     it('should work with the test scam definition', () => {
       // testScam: baseDuration 1000, level 1, speedMult 1.0
-      // Same formula: floor((10 - 1) / 0.1) = 90
-      expect(getMaxUsefulSpeedBots(testScam, 1, 0)).toBe(90);
+      // Same formula: floor((10 - 1) / 0.03) = 300
+      expect(getMaxUsefulSpeedBots(testScam, 1, 0)).toBe(300);
     });
   });
 });

@@ -17,7 +17,7 @@ export const MAX_HEAT = 100;
 export const MIN_HEAT_PER_COMPLETION = 0.005;
 export const MAX_HEAT_PER_COMPLETION = 0.5;
 export const MIN_HEAT_LOG_COST = 1;  // log10(10) - cheapest scam
-export const MAX_HEAT_LOG_COST = 19; // log10(10^19) - most expensive scam
+export const MAX_HEAT_LOG_COST = 36; // log10(~10^36) - most expensive scam with ratio 5
 
 /**
  * Tier discount multipliers for heat generation.
@@ -63,9 +63,9 @@ export const TRUST_DECAY_BOOST = 1.0;
  *
  * Diminishing returns on money (log), sqrt on completions, linear on levels.
  */
-export const TRUST_MONEY_WEIGHT = 1.5;
-export const TRUST_COMPLETION_WEIGHT = 0.3;
-export const TRUST_LEVEL_WEIGHT = 0.1;
+export const TRUST_MONEY_WEIGHT = 0.5;
+export const TRUST_COMPLETION_WEIGHT = 0.1;
+export const TRUST_LEVEL_WEIGHT = 0.03;
 export const MIN_TRUST_GAIN = 1;
 
 /**
@@ -103,15 +103,15 @@ export const SKILL_POINTS_PER_TRUST = 1;
  * Players must build trust through clean escapes to unlock higher tiers.
  *
  * Tier 1: Trust 1 (default - everyone starts here)
- * Tier 2: Trust 11 (one clean escape)
- * Tier 3: Trust 21 (two clean escapes)
- * Tier 4: Trust 31 (three clean escapes)
- * Tier 5: Trust 41 (four clean escapes)
+ * Tier 2: Trust 50 (several clean escapes)
+ * Tier 3: Trust 150 (many clean escapes)
+ * Tier 4: Trust 350 (dedicated grind)
+ * Tier 5: Trust 700 (endgame mastery)
  */
 export const TIER_TRUST_REQUIREMENTS: Record<ScamTier, number> = {
   1: 1,
-  2: 11,
-  3: 21,
-  4: 31,
-  5: 41,
+  2: 50,
+  3: 150,
+  4: 350,
+  5: 700,
 };

@@ -150,7 +150,7 @@ describe('Employee Rebalance Calculations', () => {
     });
   });
 
-  describe('Unlock cost: static value from scam definition (3x progression)', () => {
+  describe('Unlock cost: static value from scam definition (5x progression)', () => {
     beforeEach(() => {
       clearEmployeeCostCache();
     });
@@ -170,13 +170,13 @@ describe('Employee Rebalance Calculations', () => {
     });
 
     it('should return static definition value for tech-support-scams', () => {
-      // tech-support-scams is at position 9: unlockCost = getProgressionCost(9) = $6,561,000
+      // tech-support-scams is at position 9: unlockCost = getProgressionCost(9)
       const cost = getUnlockCostForScam('tech-support-scams')!;
       expect(cost).toBe(getProgressionCost(9));
     });
 
     it('should return the definition unlockCost for every paid scam', () => {
-      // Unlock costs come directly from the scam definition (3x continuous progression).
+      // Unlock costs come directly from the scam definition (5x continuous progression).
       // getUnlockCostForScam should return exactly the scam's unlockCost for paid scams
       // and undefined for free scams.
       for (const scam of ALL_SCAMS) {

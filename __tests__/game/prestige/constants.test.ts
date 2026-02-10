@@ -41,7 +41,7 @@ describe('Prestige Constants', () => {
 
     it('should define log cost range for interpolation', () => {
       expect(MIN_HEAT_LOG_COST).toBe(1);  // log10(10)
-      expect(MAX_HEAT_LOG_COST).toBe(19); // log10(10^19)
+      expect(MAX_HEAT_LOG_COST).toBe(36); // log10(~10^36)
     });
   });
 
@@ -94,16 +94,16 @@ describe('Prestige Constants', () => {
   });
 
   describe('Performance trust constants', () => {
-    it('should have TRUST_MONEY_WEIGHT = 1.5', () => {
-      expect(TRUST_MONEY_WEIGHT).toBe(1.5);
+    it('should have TRUST_MONEY_WEIGHT = 0.5', () => {
+      expect(TRUST_MONEY_WEIGHT).toBe(0.5);
     });
 
-    it('should have TRUST_COMPLETION_WEIGHT = 0.3', () => {
-      expect(TRUST_COMPLETION_WEIGHT).toBe(0.3);
+    it('should have TRUST_COMPLETION_WEIGHT = 0.1', () => {
+      expect(TRUST_COMPLETION_WEIGHT).toBe(0.1);
     });
 
-    it('should have TRUST_LEVEL_WEIGHT = 0.1', () => {
-      expect(TRUST_LEVEL_WEIGHT).toBe(0.1);
+    it('should have TRUST_LEVEL_WEIGHT = 0.03', () => {
+      expect(TRUST_LEVEL_WEIGHT).toBe(0.03);
     });
 
     it('should have MIN_TRUST_GAIN = 1', () => {

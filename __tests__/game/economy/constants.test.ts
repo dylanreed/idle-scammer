@@ -136,16 +136,16 @@ describe('Economy Constants', () => {
       expect(getProgressionCost(1)).toBe(1000);
     });
 
-    it('should return 3000 for position 2 (1000 * 3)', () => {
-      expect(getProgressionCost(2)).toBe(3000);
+    it('should return 5000 for position 2 (1000 * 5)', () => {
+      expect(getProgressionCost(2)).toBe(5000);
     });
 
-    it('should return 6561000 for position 9 (1000 * 3^8)', () => {
-      // 3^8 = 6561, so 1000 * 6561 = 6561000
-      expect(getProgressionCost(9)).toBe(6561000);
+    it('should return 390625000 for position 9 (1000 * 5^8)', () => {
+      // 5^8 = 390625, so 1000 * 390625 = 390625000
+      expect(getProgressionCost(9)).toBe(390625000);
     });
 
-    it('should maintain 3x ratio between adjacent positions', () => {
+    it('should maintain 5x ratio between adjacent positions', () => {
       for (let n = 1; n < 10; n++) {
         const costN = getProgressionCost(n);
         const costNext = getProgressionCost(n + 1);
@@ -160,9 +160,9 @@ describe('Economy Constants', () => {
       expect(getManagerCostAtPosition(0)).toBe(750);
     });
 
-    it('should return 2250 for position 1 (75% of position 2 cost)', () => {
-      // Next scam is position 2 = $3000, so 75% = $2250
-      expect(getManagerCostAtPosition(1)).toBe(2250);
+    it('should return 3750 for position 1 (75% of position 2 cost)', () => {
+      // Next scam is position 2 = $5000, so 75% = $3750
+      expect(getManagerCostAtPosition(1)).toBe(3750);
     });
 
     it('should be 75% of the next position unlock cost', () => {

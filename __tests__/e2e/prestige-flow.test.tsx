@@ -109,8 +109,8 @@ describe('Prestige Flow E2E', () => {
     expect(postResources.trust).toBeGreaterThan(1);
     expect(postResources.money).toBe(0);
     expect(postResources.heat).toBe(0);
-    // Bots persist across prestiges; 50 added + 0.0001 from scam completion + 1 first-prestige bot award
-    expect(postResources.bots).toBeCloseTo(51.0001, 4);
+    // Bots persist across prestiges; 50 added + 0.00001 from scam completion + 1 first-prestige bot award
+    expect(postResources.bots).toBeCloseTo(51.00001, 4);
     expect(postResources.reputation).toBe(0);
   });
 

@@ -98,7 +98,7 @@ describe('Prestige Calculations', () => {
     });
 
     it('should scale heat between MIN and MAX based on log10(baseCost)', () => {
-      // At max log cost (10^19), heat should approach MAX_HEAT_PER_COMPLETION * tier discount
+      // At max log cost (10^36), heat should approach MAX_HEAT_PER_COMPLETION * tier discount
       const maxCostScam: ScamDefinition = {
         id: 'max-cost',
         name: 'Max Cost',
@@ -107,7 +107,7 @@ describe('Prestige Calculations', () => {
         baseReward: 10,
         resourceType: 'money',
         description: 'Max',
-        unlockCost: 1e19,
+        unlockCost: 1e36,
       };
 
       const heat = calculateHeatFromScam(maxCostScam);

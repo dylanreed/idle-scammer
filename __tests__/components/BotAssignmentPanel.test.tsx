@@ -60,10 +60,10 @@ jest.mock('../../src/game/scams/definitions', () => ({
 }));
 
 jest.mock('../../src/game/bots/constants', () => ({
-  IDLE_BOT_HEAT_REDUCTION: 0.05,
-  SPEED_BOT_BONUS: 0.1,
-  PROFIT_BOT_BONUS: 0.1,
-  BOT_GENERATION_RATES: { 1: 0.0001, 2: 0.001, 3: 0.005, 4: 0.02, 5: 0.1 },
+  IDLE_BOT_HEAT_REDUCTION: 0.01,
+  SPEED_BOT_BONUS: 0.03,
+  PROFIT_BOT_BONUS: 0.03,
+  BOT_GENERATION_RATES: { 1: 0.00001, 2: 0.0001, 3: 0.0005, 4: 0.002, 5: 0.01 },
 }));
 
 // Mock employee store for speed bonus lookups
@@ -142,8 +142,8 @@ describe('BotAssignmentPanel', () => {
 
       const heatInfo = screen.getByTestId('bot-heat-info');
       expect(heatInfo).toBeTruthy();
-      // 0.05 * 2 * 100 = 10%
-      expect(heatInfo.props.children).toContain('10%');
+      // 0.01 * 2 * 100 = 2%
+      expect(heatInfo.props.children).toContain('2%');
     });
 
     it('does not show heat reduction info when idle bots is 0', () => {

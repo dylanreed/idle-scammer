@@ -1,7 +1,11 @@
-// ABOUTME: Manager definitions for all Tier 1 "Small Time" scams
+// ABOUTME: Manager definitions for all tiers, plus barrel exports for cross-tier access
 // ABOUTME: Each manager has a unique personality and automates their scam's employees
 
 import type { ManagerDefinition } from './types';
+import { TIER_2_MANAGERS } from './tier2';
+import { TIER_3_MANAGERS } from './tier3';
+import { TIER_4_MANAGERS } from './tier4';
+import { TIER_5_MANAGERS } from './tier5';
 
 /**
  * B0T-3000 - The Bot Farms Manager
@@ -180,13 +184,31 @@ export const TIER_1_MANAGERS: ManagerDefinition[] = [
 ];
 
 /**
+ * All manager definitions across all tiers.
+ * Consumers that need to look up any manager by ID should use this array.
+ */
+export const ALL_MANAGERS: ManagerDefinition[] = [
+  ...TIER_1_MANAGERS,
+  ...TIER_2_MANAGERS,
+  ...TIER_3_MANAGERS,
+  ...TIER_4_MANAGERS,
+  ...TIER_5_MANAGERS,
+];
+
+// Re-export tier arrays for consumers that need them individually
+export { TIER_2_MANAGERS } from './tier2';
+export { TIER_3_MANAGERS } from './tier3';
+export { TIER_4_MANAGERS } from './tier4';
+export { TIER_5_MANAGERS } from './tier5';
+
+/**
  * Find the manager for a specific scam.
  *
  * @param scamId - The scam ID to find a manager for
  * @returns The manager definition, or undefined if none exists
  */
 export function getManagerByScamId(scamId: string): ManagerDefinition | undefined {
-  return TIER_1_MANAGERS.find((manager) => manager.scamId === scamId);
+  return ALL_MANAGERS.find((manager) => manager.scamId === scamId);
 }
 
 /**
@@ -196,5 +218,5 @@ export function getManagerByScamId(scamId: string): ManagerDefinition | undefine
  * @returns The manager definition, or undefined if not found
  */
 export function getManagerById(managerId: string): ManagerDefinition | undefined {
-  return TIER_1_MANAGERS.find((manager) => manager.id === managerId);
+  return ALL_MANAGERS.find((manager) => manager.id === managerId);
 }

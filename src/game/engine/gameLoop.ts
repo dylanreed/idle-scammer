@@ -10,7 +10,7 @@ import type {
 } from './types';
 import { MAX_OFFLINE_MS, OFFLINE_EFFICIENCY, TICK_INTERVAL_MS } from './types';
 import { createTimer, updateTimer } from './timer';
-import { TIER_1_SCAMS, BOT_FARMS } from '../scams/definitions';
+import { ALL_SCAMS } from '../scams/definitions';
 import { calculateScamReward } from '../scams/calculations';
 import { calculateHeatFromScam } from '../prestige/calculations';
 import type { ScamStateMap } from '../scams/scamStore';
@@ -89,7 +89,7 @@ export function tick(state: EngineState, currentTime: number): TickResult {
 /**
  * All scam definitions for offline earnings lookup.
  */
-const ALL_SCAM_DEFS = [BOT_FARMS, ...TIER_1_SCAMS];
+const ALL_SCAM_DEFS = ALL_SCAMS;
 
 /**
  * Calculates what progress was made while the game was closed.

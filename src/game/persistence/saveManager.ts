@@ -7,8 +7,8 @@ import type { GameResources } from '../types';
 import type { ScamStateMap } from '../scams/scamStore';
 import type { ManagerStateMap } from '../managers/managerStore';
 import type { ScamTimer } from '../engine/types';
-import { TIER_1_MANAGERS } from '../managers/definitions';
-import { TIER_1_SCAMS, BOT_FARMS } from '../scams/definitions';
+import { ALL_MANAGERS } from '../managers/definitions';
+import { ALL_SCAMS } from '../scams/definitions';
 import { calculateScamDuration } from '../scams/calculations';
 import { createTimer } from '../engine/timer';
 
@@ -102,9 +102,9 @@ export function reconstructActiveTimers(
   const now = Date.now();
 
   // All scam definitions for lookup
-  const allScamDefs = [BOT_FARMS, ...TIER_1_SCAMS];
+  const allScamDefs = ALL_SCAMS;
 
-  for (const managerDef of TIER_1_MANAGERS) {
+  for (const managerDef of ALL_MANAGERS) {
     const managerState = managers[managerDef.id];
 
     // Skip if manager not hired

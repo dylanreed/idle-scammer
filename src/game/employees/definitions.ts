@@ -1,7 +1,11 @@
-// ABOUTME: Employee definitions for all Tier 1 scams
+// ABOUTME: Employee definitions for all tiers, plus barrel exports for cross-tier access
 // ABOUTME: Each scam has one specialized employee type that boosts output
 
 import type { EmployeeDefinition } from './types';
+import { TIER_2_EMPLOYEES } from './tier2';
+import { TIER_3_EMPLOYEES } from './tier3';
+import { TIER_4_EMPLOYEES } from './tier4';
+import { TIER_5_EMPLOYEES } from './tier5';
 
 /**
  * Bot Wrangler - Manages bot farms more efficiently.
@@ -151,13 +155,31 @@ export const TIER_1_EMPLOYEES: EmployeeDefinition[] = [
 ];
 
 /**
+ * All employee definitions across all tiers.
+ * Consumers that need to look up any employee by ID should use this array.
+ */
+export const ALL_EMPLOYEES: EmployeeDefinition[] = [
+  ...TIER_1_EMPLOYEES,
+  ...TIER_2_EMPLOYEES,
+  ...TIER_3_EMPLOYEES,
+  ...TIER_4_EMPLOYEES,
+  ...TIER_5_EMPLOYEES,
+];
+
+// Re-export tier arrays for consumers that need them individually
+export { TIER_2_EMPLOYEES } from './tier2';
+export { TIER_3_EMPLOYEES } from './tier3';
+export { TIER_4_EMPLOYEES } from './tier4';
+export { TIER_5_EMPLOYEES } from './tier5';
+
+/**
  * Returns all employees that work on a specific scam.
  *
  * @param scamId - The scam ID to look up
  * @returns Array of employees for that scam (may be empty)
  */
 export function getEmployeesByScamId(scamId: string): EmployeeDefinition[] {
-  return TIER_1_EMPLOYEES.filter((employee) => employee.scamId === scamId);
+  return ALL_EMPLOYEES.filter((employee) => employee.scamId === scamId);
 }
 
 /**
@@ -167,5 +189,5 @@ export function getEmployeesByScamId(scamId: string): EmployeeDefinition[] {
  * @returns The employee definition or undefined if not found
  */
 export function getEmployeeById(employeeId: string): EmployeeDefinition | undefined {
-  return TIER_1_EMPLOYEES.find((employee) => employee.id === employeeId);
+  return ALL_EMPLOYEES.find((employee) => employee.id === employeeId);
 }

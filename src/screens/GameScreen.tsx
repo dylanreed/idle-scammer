@@ -14,8 +14,12 @@ import { COLORS, SPACING } from '../components/theme';
 import { useGameStore } from '../game/store';
 import { useScamStore } from '../game/scams/scamStore';
 import { useManagerStore } from '../game/managers/managerStore';
-import { TIER_1_SCAMS } from '../game/scams/definitions';
-import { getManagerByScamId, TIER_1_MANAGERS } from '../game/managers/definitions';
+import { ALL_SCAMS, TIER_1_SCAMS } from '../game/scams/definitions';
+import { TIER_2_SCAMS } from '../game/scams/tier2';
+import { TIER_3_SCAMS } from '../game/scams/tier3';
+import { TIER_4_SCAMS } from '../game/scams/tier4';
+import { TIER_5_SCAMS } from '../game/scams/tier5';
+import { getManagerByScamId, ALL_MANAGERS } from '../game/managers/definitions';
 import { getManagerPortrait } from '../game/assets';
 import {
   calculateScamDuration,
@@ -28,13 +32,35 @@ import { calculateHeatFromScam, isTierAccessible } from '../game/prestige/calcul
 import { useGameLoop } from '../game/engine/gameLoop';
 import { formatNumber } from '../utils/formatters';
 import type { ScamTimer } from '../game/engine/types';
-import type { ScamDefinition } from '../game/scams/types';
+import type { ScamDefinition, ScamTier } from '../game/scams/types';
 
 /**
- * Look up a scam definition by ID
+ * Tier display names shown as section headers
+ */
+const TIER_NAMES: Record<ScamTier, string> = {
+  1: 'SMALL TIME',
+  2: 'GETTING SERIOUS',
+  3: 'BIG LEAGUES',
+  4: 'ORGANIZED CRIME',
+  5: 'MASTERMIND',
+};
+
+/**
+ * Scam arrays grouped by tier for iteration
+ */
+const SCAMS_BY_TIER: { tier: ScamTier; scams: ScamDefinition[] }[] = [
+  { tier: 1, scams: TIER_1_SCAMS },
+  { tier: 2, scams: TIER_2_SCAMS },
+  { tier: 3, scams: TIER_3_SCAMS },
+  { tier: 4, scams: TIER_4_SCAMS },
+  { tier: 5, scams: TIER_5_SCAMS },
+];
+
+/**
+ * Look up a scam definition by ID across all tiers
  */
 function getScamDefinition(scamId: string): ScamDefinition | undefined {
-  return TIER_1_SCAMS.find((scam) => scam.id === scamId);
+  return ALL_SCAMS.find((scam) => scam.id === scamId);
 }
 
 /**
@@ -127,7 +153,7 @@ export function GameScreen(): React.ReactElement {
   // GameProvider guarantees stores are hydrated before this component mounts,
   // so we can safely read manager/scam state here.
   useEffect(() => {
-    for (const managerDef of TIER_1_MANAGERS) {
+    for (const managerDef of ALL_MANAGERS) {
       // Skip bot farms since they're handled separately
       if (managerDef.scamId === 'bot-farms') continue;
 
@@ -137,7 +163,7 @@ export function GameScreen(): React.ReactElement {
       const scamState = useScamStore.getState().scams[managerDef.scamId];
       if (!scamState?.isUnlocked) continue;
 
-      const definition = TIER_1_SCAMS.find((s) => s.id === managerDef.scamId);
+      const definition = ALL_SCAMS.find((s) => s.id === managerDef.scamId);
       if (!definition) continue;
 
       const duration = calculateScamDuration(definition, scamState.level);
@@ -156,16 +182,19 @@ export function GameScreen(): React.ReactElement {
   }, [engineState.activeTimers]);
 
   // Find the cheapest locked, unaffordable scam to show as the "save toward" goal.
-  // TIER_1_SCAMS is sorted by ascending unlock cost, so the first match is the cheapest.
+  // Each tier's scams are sorted by ascending unlock cost; we check all accessible tiers.
   const nextGoalScamId = useMemo(() => {
-    const goal = TIER_1_SCAMS.find((scamDef) => {
-      if (!isTierAccessible(scamDef.tier, resources.trust)) return false;
-      const scamState = scams[scamDef.id];
-      if (scamState?.isUnlocked) return false;
-      if (scamDef.unlockCost === undefined) return false;
-      return resources.money < scamDef.unlockCost;
-    });
-    return goal?.id;
+    for (const { tier, scams: tierScams } of SCAMS_BY_TIER) {
+      if (!isTierAccessible(tier, resources.trust)) continue;
+      const goal = tierScams.find((scamDef) => {
+        const scamState = scams[scamDef.id];
+        if (scamState?.isUnlocked) return false;
+        if (scamDef.unlockCost === undefined) return false;
+        return resources.money < scamDef.unlockCost;
+      });
+      if (goal) return goal.id;
+    }
+    return undefined;
   }, [scams, resources.money, resources.trust]);
 
   /**
@@ -293,110 +322,119 @@ export function GameScreen(): React.ReactElement {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Tier 1 Scams Section */}
-        <TerminalText
-          size="md"
-          color={COLORS.terminalGreenDim}
-          style={styles.sectionTitle}
-        >
-          {'TIER 1: SMALL TIME'}
-        </TerminalText>
+        {/* Per-Tier Sections: scams + managers */}
+        {SCAMS_BY_TIER.map(({ tier, scams: tierScams }) => {
+          const accessible = isTierAccessible(tier, resources.trust);
+          if (!accessible) return null;
 
-        {TIER_1_SCAMS
-          .filter((scamDef) => {
-            // Only show scams from accessible tiers
-            if (!isTierAccessible(scamDef.tier, resources.trust)) {
-              return false;
-            }
-            // Show if already unlocked
+          // Filter managers for this tier (exclude bot-farms manager)
+          const tierManagers = ALL_MANAGERS.filter((mgr) => {
+            if (mgr.scamId === 'bot-farms') return false;
+            return tierScams.some((s) => s.id === mgr.scamId);
+          });
+
+          // Filter visible scams
+          const visibleScams = tierScams.filter((scamDef) => {
             const scamState = scams[scamDef.id];
-            if (scamState?.isUnlocked) {
-              return true;
-            }
-            // Show if free to unlock (no cost)
-            if (scamDef.unlockCost === undefined) {
-              return true;
-            }
-            // Show if player can afford to unlock
-            if (resources.money >= scamDef.unlockCost) {
-              return true;
-            }
-            // Show the next unaffordable scam so players know what to save toward
+            if (scamState?.isUnlocked) return true;
+            if (scamDef.unlockCost === undefined) return true;
+            if (resources.money >= scamDef.unlockCost) return true;
             return scamDef.id === nextGoalScamId;
-          })
-          .map((scamDef) => {
-            const manager = getManagerByScamId(scamDef.id);
-            const hasManager = manager ? isManagerHired(manager.id) : false;
-            return (
-              <ScamCard
-                key={scamDef.id}
-                scamDefinition={scamDef}
-                scamState={scams[scamDef.id]}
-                timer={timerMap[scamDef.id]}
-                trust={resources.trust}
-                money={resources.money}
-                hasManager={hasManager}
-                onStart={() => handleStartScam(scamDef.id)}
-                onUnlock={() => handleUnlockScam(scamDef.id)}
-                onUpgrade={() => handleUpgradeScam(scamDef.id)}
-                testID={`scam-card-${scamDef.id}`}
-              />
-            );
-          })}
+          });
 
-        {/* Managers Section */}
-        <TerminalText
-          size="md"
-          color={COLORS.terminalGreenDim}
-          style={styles.sectionTitle}
-        >
-          {'MANAGERS'}
-        </TerminalText>
+          if (visibleScams.length === 0 && tierManagers.length === 0) return null;
 
-        <CRTFrame style={styles.managersSection}>
-          <TerminalText size="sm" color={COLORS.terminalGreenDim}>
-            {'Managers automate your scams'}
-          </TerminalText>
-          <View style={styles.managersList}>
-            {TIER_1_MANAGERS.filter((mgr) => mgr.scamId !== 'bot-farms').map((manager) => {
-              const hired = isManagerHired(manager.id);
-              const canAfford = resources.money >= manager.cost;
-              const scamState = scams[manager.scamId];
-              const scamUnlocked = scamState?.isUnlocked ?? false;
+          return (
+            <View key={`tier-${tier}`}>
+              {/* Tier Header */}
+              <TerminalText
+                size="md"
+                color={COLORS.terminalGreenDim}
+                style={styles.sectionTitle}
+              >
+                {`TIER ${tier}: ${TIER_NAMES[tier]}`}
+              </TerminalText>
 
-              const portrait = getManagerPortrait(manager.id);
-              return (
-                <View key={manager.id} style={styles.managerRow}>
-                  {portrait && (
-                    <Image source={portrait} style={styles.managerPortrait} />
-                  )}
-                  <View style={styles.managerInfo}>
-                    <TerminalText size="sm" color={hired ? COLORS.terminalGreen : COLORS.terminalGreenDim}>
-                      {manager.name}
-                    </TerminalText>
+              {/* Scam Cards */}
+              {visibleScams.map((scamDef) => {
+                const manager = getManagerByScamId(scamDef.id);
+                const hasManager = manager ? isManagerHired(manager.id) : false;
+                return (
+                  <ScamCard
+                    key={scamDef.id}
+                    scamDefinition={scamDef}
+                    scamState={scams[scamDef.id]}
+                    timer={timerMap[scamDef.id]}
+                    trust={resources.trust}
+                    money={resources.money}
+                    hasManager={hasManager}
+                    onStart={() => handleStartScam(scamDef.id)}
+                    onUnlock={() => handleUnlockScam(scamDef.id)}
+                    onUpgrade={() => handleUpgradeScam(scamDef.id)}
+                    testID={`scam-card-${scamDef.id}`}
+                  />
+                );
+              })}
+
+              {/* Tier Managers */}
+              {tierManagers.length > 0 && (
+                <>
+                  <TerminalText
+                    size="sm"
+                    color={COLORS.terminalGreenDim}
+                    style={styles.managersLabel}
+                  >
+                    {`TIER ${tier} MANAGERS`}
+                  </TerminalText>
+                  <CRTFrame style={styles.managersSection}>
                     <TerminalText size="sm" color={COLORS.terminalGreenDim}>
-                      {hired ? '✓ HIRED' : `$${formatNumber(manager.cost)}`}
+                      {'Managers automate your scams'}
                     </TerminalText>
-                  </View>
-                  {!hired && scamUnlocked && (
-                    <PixelButton
-                      onPress={() => handleHireManager(manager.id, manager.cost, manager.scamId)}
-                      disabled={!canAfford}
-                      variant="primary"
-                    >
-                      HIRE
-                    </PixelButton>
-                  )}
-                  {!hired && !scamUnlocked && (
-                    <TerminalText size="sm" color={COLORS.terminalGreenDim}>
-                      {'LOCKED'}
-                    </TerminalText>
-                  )}
-                </View>
-              );
-            })}
-          </View>
-        </CRTFrame>
+                    <View style={styles.managersList}>
+                      {tierManagers.map((manager) => {
+                        const hired = isManagerHired(manager.id);
+                        const canAfford = resources.money >= manager.cost;
+                        const scamState = scams[manager.scamId];
+                        const scamUnlocked = scamState?.isUnlocked ?? false;
+
+                        const portrait = getManagerPortrait(manager.id);
+                        return (
+                          <View key={manager.id} style={styles.managerRow}>
+                            {portrait && (
+                              <Image source={portrait} style={styles.managerPortrait} />
+                            )}
+                            <View style={styles.managerInfo}>
+                              <TerminalText size="sm" color={hired ? COLORS.terminalGreen : COLORS.terminalGreenDim}>
+                                {manager.name}
+                              </TerminalText>
+                              <TerminalText size="sm" color={COLORS.terminalGreenDim}>
+                                {hired ? '✓ HIRED' : `$${formatNumber(manager.cost)}`}
+                              </TerminalText>
+                            </View>
+                            {!hired && scamUnlocked && (
+                              <PixelButton
+                                onPress={() => handleHireManager(manager.id, manager.cost, manager.scamId)}
+                                disabled={!canAfford}
+                                variant="primary"
+                              >
+                                HIRE
+                              </PixelButton>
+                            )}
+                            {!hired && !scamUnlocked && (
+                              <TerminalText size="sm" color={COLORS.terminalGreenDim}>
+                                {'LOCKED'}
+                              </TerminalText>
+                            )}
+                          </View>
+                        );
+                      })}
+                    </View>
+                  </CRTFrame>
+                </>
+              )}
+            </View>
+          );
+        })}
       </ScrollView>
     </SafeAreaView>
   );
@@ -427,6 +465,10 @@ const styles = StyleSheet.create({
   sectionTitle: {
     marginBottom: SPACING.md,
     marginTop: SPACING.lg,
+  },
+  managersLabel: {
+    marginTop: SPACING.md,
+    marginBottom: SPACING.sm,
   },
   managersSection: {
     marginBottom: SPACING.md,

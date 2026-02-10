@@ -1,7 +1,11 @@
-// ABOUTME: Scam definitions for all Tier 1 "Small Time" scams
-// ABOUTME: Bot Farms generates bots; all other Tier 1 scams generate money
+// ABOUTME: Scam definitions for all tiers, plus barrel exports for cross-tier access
+// ABOUTME: Bot Farms generates bots; all other scams generate money
 
 import type { ScamDefinition } from './types';
+import { TIER_2_SCAMS } from './tier2';
+import { TIER_3_SCAMS } from './tier3';
+import { TIER_4_SCAMS } from './tier4';
+import { TIER_5_SCAMS } from './tier5';
 
 /**
  * Bot Farms - The first and foundational scam in the game.
@@ -198,3 +202,22 @@ export const TIER_1_SCAMS: ScamDefinition[] = [
   ADVANCE_FEE_FRAUD,       // $1B
   FAKE_JOB_POSTINGS,       // $10B
 ];
+
+/**
+ * All scam definitions across all tiers, including Bot Farms.
+ * Consumers that need to look up any scam by ID should use this array.
+ */
+export const ALL_SCAMS: ScamDefinition[] = [
+  BOT_FARMS,
+  ...TIER_1_SCAMS,
+  ...TIER_2_SCAMS,
+  ...TIER_3_SCAMS,
+  ...TIER_4_SCAMS,
+  ...TIER_5_SCAMS,
+];
+
+// Re-export tier arrays for consumers that need them individually
+export { TIER_2_SCAMS } from './tier2';
+export { TIER_3_SCAMS } from './tier3';
+export { TIER_4_SCAMS } from './tier4';
+export { TIER_5_SCAMS } from './tier5';

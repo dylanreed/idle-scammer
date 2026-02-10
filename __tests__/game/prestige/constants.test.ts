@@ -9,6 +9,7 @@ import {
   MAX_HEAT_LOG_COST,
   HEAT_TIER_DISCOUNT,
   HEAT_DECAY_RATE,
+  TRUST_DECAY_BOOST,
   CLEAN_ESCAPE_TRUST_GAIN,
   SNITCH_TRUST_PENALTY,
   SNITCH_RESOURCE_KEEP_PERCENT,
@@ -75,6 +76,16 @@ describe('Prestige Constants', () => {
 
     it('should be positive', () => {
       expect(HEAT_DECAY_RATE).toBeGreaterThan(0);
+    });
+  });
+
+  describe('TRUST_DECAY_BOOST', () => {
+    it('should be 1.0 (tunable multiplier for trust-based heat decay)', () => {
+      expect(TRUST_DECAY_BOOST).toBe(1.0);
+    });
+
+    it('should be positive', () => {
+      expect(TRUST_DECAY_BOOST).toBeGreaterThan(0);
     });
   });
 

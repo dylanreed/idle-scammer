@@ -67,10 +67,12 @@ export function GameProvider({ children }: GameProviderProps): React.ReactElemen
             );
 
             // Apply heat decay for offline duration before adding new heat
+            // Trust boosts decay rate via criminal network
             const offlineSeconds = progress.elapsedMs / 1000;
             const currentHeat = useGameStore.getState().resources.heat;
             if (currentHeat > 0 && offlineSeconds > 0) {
-              const decayedHeat = calculateHeatDecay(currentHeat, offlineSeconds);
+              const offlineTrust = useGameStore.getState().resources.trust;
+              const decayedHeat = calculateHeatDecay(currentHeat, offlineSeconds, offlineTrust);
               const heatLost = currentHeat - decayedHeat;
               if (heatLost > 0) {
                 useGameStore.getState().addHeat(-heatLost);

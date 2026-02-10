@@ -12,6 +12,7 @@ import {
   MAX_HEAT_LOG_COST,
   HEAT_TIER_DISCOUNT,
   HEAT_DECAY_RATE,
+  TRUST_DECAY_BOOST,
   CLEAN_ESCAPE_TRUST_GAIN,
   SNITCH_TRUST_PENALTY,
   SNITCH_RESOURCE_KEEP_PERCENT,
@@ -45,16 +46,32 @@ export function calculateHeatFromScam(scamDefinition: ScamDefinition): number {
 }
 
 /**
+ * Calculates the effective heat decay rate based on trust level.
+ * Higher trust means your criminal network helps you cool off faster.
+ * Formula: HEAT_DECAY_RATE * (1 + ln(trust) * TRUST_DECAY_BOOST)
+ *
+ * @param trust - The player's current trust value
+ * @returns The effective decay rate per second
+ */
+export function getEffectiveDecayRate(trust: number): number {
+  const safeTrust = Math.max(1, trust);
+  return HEAT_DECAY_RATE * (1 + Math.log(safeTrust) * TRUST_DECAY_BOOST);
+}
+
+/**
  * Calculates heat decay for a time delta.
- * Heat decays exponentially: heat × (1 - HEAT_DECAY_RATE)^seconds.
+ * Heat decays exponentially: heat × exp(-effectiveRate × seconds).
+ * Trust boosts the decay rate via logarithmic scaling.
  *
  * @param currentHeat - Current heat level
  * @param deltaSeconds - Time elapsed in seconds
+ * @param trust - The player's current trust value (defaults to 1 for backward compat)
  * @returns New heat value after decay
  */
-export function calculateHeatDecay(currentHeat: number, deltaSeconds: number): number {
+export function calculateHeatDecay(currentHeat: number, deltaSeconds: number, trust: number = 1): number {
   if (currentHeat <= 0 || deltaSeconds <= 0) return currentHeat;
-  return currentHeat * Math.exp(-HEAT_DECAY_RATE * deltaSeconds);
+  const effectiveRate = getEffectiveDecayRate(trust);
+  return currentHeat * Math.exp(-effectiveRate * deltaSeconds);
 }
 
 /**

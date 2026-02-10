@@ -4,6 +4,7 @@
 import {
   calculateHeatFromScam,
   calculateHeatDecay,
+  getEffectiveDecayRate,
   isPrestigeForced,
   calculateCleanEscapeResult,
   calculateSnitchResult,
@@ -14,6 +15,7 @@ import {
   MAX_HEAT_PER_COMPLETION,
   HEAT_TIER_DISCOUNT,
   HEAT_DECAY_RATE,
+  TRUST_DECAY_BOOST,
   CLEAN_ESCAPE_TRUST_GAIN,
   SNITCH_TRUST_PENALTY,
   SNITCH_RESOURCE_KEEP_PERCENT,
@@ -187,6 +189,87 @@ describe('Prestige Calculations', () => {
       // 10,000 seconds → heat should be very low
       const decayed = calculateHeatDecay(100, 10_000);
       expect(decayed).toBeLessThan(0.01);
+    });
+
+    it('should return same result with default trust=1 as without trust param (backward compat)', () => {
+      const withoutTrust = calculateHeatDecay(50, 60);
+      const withTrust1 = calculateHeatDecay(50, 60, 1);
+      expect(withTrust1).toBe(withoutTrust);
+    });
+
+    it('should decay faster with higher trust', () => {
+      const trust1Decay = calculateHeatDecay(50, 60, 1);
+      const trust11Decay = calculateHeatDecay(50, 60, 11);
+      expect(trust11Decay).toBeLessThan(trust1Decay);
+    });
+
+    it('should follow exact formula at trust 21', () => {
+      const heat = 80;
+      const seconds = 100;
+      const effectiveRate = HEAT_DECAY_RATE * (1 + Math.log(21) * TRUST_DECAY_BOOST);
+      const expected = heat * Math.exp(-effectiveRate * seconds);
+      expect(calculateHeatDecay(heat, seconds, 21)).toBeCloseTo(expected);
+    });
+
+    it('should still handle edge cases with high trust', () => {
+      // Zero heat
+      expect(calculateHeatDecay(0, 100, 41)).toBe(0);
+      // Negative heat
+      expect(calculateHeatDecay(-5, 100, 41)).toBe(-5);
+      // Zero time
+      expect(calculateHeatDecay(50, 0, 41)).toBe(50);
+    });
+  });
+
+  describe('getEffectiveDecayRate', () => {
+    it('should return HEAT_DECAY_RATE at trust 1 (ln(1)=0)', () => {
+      expect(getEffectiveDecayRate(1)).toBe(HEAT_DECAY_RATE);
+    });
+
+    it('should return higher rate at trust > 1', () => {
+      expect(getEffectiveDecayRate(11)).toBeGreaterThan(HEAT_DECAY_RATE);
+    });
+
+    it('should follow exact formula at trust 21', () => {
+      const expected = HEAT_DECAY_RATE * (1 + Math.log(21) * TRUST_DECAY_BOOST);
+      expect(getEffectiveDecayRate(21)).toBeCloseTo(expected);
+    });
+
+    it('should increase monotonically (11 < 21 < 41)', () => {
+      const rate11 = getEffectiveDecayRate(11);
+      const rate21 = getEffectiveDecayRate(21);
+      const rate41 = getEffectiveDecayRate(41);
+      expect(rate21).toBeGreaterThan(rate11);
+      expect(rate41).toBeGreaterThan(rate21);
+    });
+
+    it('should show diminishing returns (gain 11→21 > gain 31→41)', () => {
+      const rate11 = getEffectiveDecayRate(11);
+      const rate21 = getEffectiveDecayRate(21);
+      const rate31 = getEffectiveDecayRate(31);
+      const rate41 = getEffectiveDecayRate(41);
+      const gain11to21 = rate21 - rate11;
+      const gain31to41 = rate41 - rate31;
+      expect(gain11to21).toBeGreaterThan(gain31to41);
+    });
+
+    it('should clamp trust < 1 to 1 (defensive)', () => {
+      expect(getEffectiveDecayRate(0)).toBe(HEAT_DECAY_RATE);
+      expect(getEffectiveDecayRate(-5)).toBe(HEAT_DECAY_RATE);
+    });
+
+    it('should produce expected half-life values', () => {
+      // Half-life = ln(2) / effectiveRate
+      const ln2 = Math.log(2);
+
+      // Trust 1: half-life ≈ 693s (~11.5 min)
+      const hl1 = ln2 / getEffectiveDecayRate(1);
+      expect(hl1).toBeCloseTo(693, -1);
+
+      // Trust 11: ~3.4x decay → half-life ≈ 204s (~3.4 min)
+      const hl11 = ln2 / getEffectiveDecayRate(11);
+      expect(hl11).toBeLessThan(hl1);
+      expect(hl11).toBeCloseTo(ln2 / (HEAT_DECAY_RATE * (1 + Math.log(11) * TRUST_DECAY_BOOST)));
     });
   });
 

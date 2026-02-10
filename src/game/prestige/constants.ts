@@ -46,6 +46,14 @@ export const HEAT_TIER_DISCOUNT: Record<ScamTier, number> = {
 export const HEAT_DECAY_RATE = 0.001;
 
 /**
+ * Trust-based heat decay boost multiplier.
+ * Higher trust means your criminal network helps you cool off faster.
+ * Formula: effectiveDecayRate = HEAT_DECAY_RATE * (1 + ln(trust) * TRUST_DECAY_BOOST)
+ * Logarithmic growth gives a big first-prestige reward that tapers off.
+ */
+export const TRUST_DECAY_BOOST = 1.0;
+
+/**
  * Trust gained from a clean escape.
  * Rewarding players who don't betray their criminal network.
  */

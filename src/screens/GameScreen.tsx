@@ -184,10 +184,11 @@ export function GameScreen(): React.ReactElement {
 
       const deltaSeconds = result.deltaMs / 1000;
 
-      // Apply heat decay
+      // Apply heat decay (trust boosts decay rate via criminal network)
       const currentHeat = useGameStore.getState().resources.heat;
       if (currentHeat > 0) {
-        const decayedHeat = calculateHeatDecay(currentHeat, deltaSeconds);
+        const currentTrust = useGameStore.getState().resources.trust;
+        const decayedHeat = calculateHeatDecay(currentHeat, deltaSeconds, currentTrust);
         const heatLost = currentHeat - decayedHeat;
         if (heatLost > 0) {
           addHeat(-heatLost);

@@ -2,6 +2,7 @@
 // ABOUTME: Validates structure, economy, and progression of all 10 Tier 5 scams
 
 import { TIER_5_SCAMS } from '../../../src/game/scams/tier5';
+import { getProgressionCost } from '../../../src/game/economy/constants';
 
 describe('Tier 5 Scams', () => {
   test('should have exactly 10 scams', () => {
@@ -26,11 +27,11 @@ describe('Tier 5 Scams', () => {
     expect(uniqueNames.size).toBe(TIER_5_SCAMS.length);
   });
 
-  test('first scam (government-contract-fraud) should cost $1,000,000,000', () => {
+  test('first scam (government-contract-fraud) should use position 39 progression cost', () => {
     const firstScam = TIER_5_SCAMS[0];
     expect(firstScam.id).toBe('government-contract-fraud');
-    expect(firstScam.unlockCost).toBe(1000000000);
-    expect(firstScam.baseReward).toBe(1000000000); // $1B (tier 5 baseCost)
+    expect(firstScam.unlockCost).toBe(getProgressionCost(39));
+    expect(firstScam.baseReward).toBe(getProgressionCost(39));
   });
 
   test('all 10 scams should have defined unlockCost', () => {

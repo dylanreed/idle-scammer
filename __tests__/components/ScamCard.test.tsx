@@ -228,6 +228,44 @@ describe('ScamCard', () => {
     });
   });
 
+  describe('max buy button', () => {
+    it('should show MAX button when onMaxBuy is provided and maxBuyCount > 1', () => {
+      // Give enough money to buy multiple upgrades (unlockCost=100, so 10000 buys many)
+      const onMaxBuy = jest.fn();
+      render(<ScamCard {...createDefaultProps({ onMaxBuy, money: 10000 })} />);
+      expect(screen.getByTestId('test-scam-card-max-buy')).toBeTruthy();
+    });
+
+    it('should NOT show MAX button when onMaxBuy is not provided', () => {
+      render(<ScamCard {...createDefaultProps({ money: 10000 })} />);
+      expect(screen.queryByTestId('test-scam-card-max-buy')).toBeNull();
+    });
+
+    it('should call onMaxBuy when MAX button is pressed', () => {
+      const onMaxBuy = jest.fn();
+      render(<ScamCard {...createDefaultProps({ onMaxBuy, money: 10000 })} />);
+      fireEvent.press(screen.getByTestId('test-scam-card-max-buy'));
+      expect(onMaxBuy).toHaveBeenCalledTimes(1);
+    });
+
+    it('should show correct count and cost in MAX button text', () => {
+      const onMaxBuy = jest.fn();
+      render(<ScamCard {...createDefaultProps({ onMaxBuy, money: 10000 })} />);
+      // Button text should match "MAX x{count} ($${cost})" format
+      const maxButton = screen.getByTestId('test-scam-card-max-buy');
+      expect(maxButton).toBeTruthy();
+      // The text should contain "MAX x" prefix
+      expect(screen.getByText(/MAX x\d+.*\(\$/)).toBeTruthy();
+    });
+
+    it('should NOT show MAX button when maxBuyCount is 1 or less', () => {
+      // With money = 150, can only afford 1 upgrade (cost is 100), maxBuyCount = 1
+      const onMaxBuy = jest.fn();
+      render(<ScamCard {...createDefaultProps({ onMaxBuy, money: 150 })} />);
+      expect(screen.queryByTestId('test-scam-card-max-buy')).toBeNull();
+    });
+  });
+
   describe('times completed', () => {
     it('should show times completed when greater than 0', () => {
       const scamState: ScamState = { ...mockUnlockedState, timesCompleted: 5 };

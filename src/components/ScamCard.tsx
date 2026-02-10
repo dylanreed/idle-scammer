@@ -17,6 +17,8 @@ import {
   calculateScamDuration,
   calculateScamReward,
   calculateUpgradeCost,
+  calculateMaxBuyCount,
+  calculateMaxBuyCost,
 } from '../game/scams/calculations';
 import { getScamIcon, getManagerPortrait } from '../game/assets';
 import { getManagerByScamId } from '../game/managers/definitions';
@@ -57,6 +59,9 @@ export interface ScamCardProps {
 
   /** Called when player clicks upgrade button */
   onUpgrade: () => void;
+
+  /** Called when player clicks max buy button */
+  onMaxBuy?: () => void;
 
   /** Employee definition for this scam (if available) */
   employeeDefinition?: EmployeeDefinition;
@@ -145,6 +150,7 @@ export function ScamCard({
   onStart,
   onUnlock,
   onUpgrade,
+  onMaxBuy,
   employeeDefinition,
   employeeCount = 0,
   employeeMaxCount,
@@ -171,6 +177,8 @@ export function ScamCard({
   const canAffordUnlock =
     effectiveUnlockCost !== undefined && money >= effectiveUnlockCost;
   const canAffordUpgrade = money >= upgradeCost;
+  const maxBuyCount = calculateMaxBuyCount(scamDefinition, level, money);
+  const maxBuyCost = maxBuyCount > 0 ? calculateMaxBuyCost(scamDefinition, level, maxBuyCount) : 0;
 
   // Resource type display
   const resourceLabel =
@@ -291,17 +299,31 @@ export function ScamCard({
         )}
       </View>
 
-      {/* Upgrade button - always visible when unlocked */}
+      {/* Upgrade and Max Buy buttons - always visible when unlocked */}
       {status !== 'locked' && (
         <View style={styles.upgradeContainer}>
-          <PixelButton
-            onPress={onUpgrade}
-            disabled={!canAffordUpgrade}
-            variant="secondary"
-            testID={testID ? `${testID}-upgrade` : undefined}
-          >
-            {`UPGRADE ($${formatNumber(upgradeCost)})`}
-          </PixelButton>
+          <View style={styles.upgradeRow}>
+            <PixelButton
+              onPress={onUpgrade}
+              disabled={!canAffordUpgrade}
+              variant="secondary"
+              testID={testID ? `${testID}-upgrade` : undefined}
+              style={styles.upgradeButton}
+            >
+              {`UPGRADE ($${formatNumber(upgradeCost)})`}
+            </PixelButton>
+            {onMaxBuy && maxBuyCount > 1 && (
+              <PixelButton
+                onPress={onMaxBuy}
+                disabled={maxBuyCount <= 0}
+                variant="secondary"
+                testID={testID ? `${testID}-max-buy` : undefined}
+                style={styles.maxBuyButton}
+              >
+                {`MAX x${maxBuyCount} ($${formatNumber(maxBuyCost)})`}
+              </PixelButton>
+            )}
+          </View>
         </View>
       )}
 
@@ -395,6 +417,16 @@ const styles = StyleSheet.create({
   },
   upgradeContainer: {
     marginTop: SPACING.sm,
+  },
+  upgradeRow: {
+    flexDirection: 'row',
+    gap: SPACING.sm,
+  },
+  upgradeButton: {
+    flex: 1,
+  },
+  maxBuyButton: {
+    flex: 1,
   },
   employeeSection: {
     marginTop: SPACING.sm,

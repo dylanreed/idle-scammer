@@ -24,6 +24,9 @@ export interface ScamStoreActions {
   /** Upgrade a scam to the next level (only if unlocked) */
   upgradeScam: (scamId: string) => void;
 
+  /** Upgrade a scam by multiple levels at once (only if unlocked) */
+  upgradeScamByLevels: (scamId: string, levels: number) => void;
+
   /** Increment completion count (only if unlocked) */
   incrementCompletion: (scamId: string) => void;
 
@@ -149,6 +152,27 @@ export const useScamStore = create<ScamStoreState>()((set, get) => ({
           [scamId]: {
             ...existingScam,
             level: existingScam.level + 1,
+          },
+        },
+      };
+    });
+  },
+
+  upgradeScamByLevels: (scamId: string, levels: number) => {
+    set((state) => {
+      const existingScam = state.scams[scamId];
+
+      // Can't upgrade non-existent or locked scams, or by 0 levels
+      if (!existingScam || !existingScam.isUnlocked || levels <= 0) {
+        return state;
+      }
+
+      return {
+        scams: {
+          ...state.scams,
+          [scamId]: {
+            ...existingScam,
+            level: existingScam.level + levels,
           },
         },
       };

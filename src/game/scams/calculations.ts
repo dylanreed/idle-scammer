@@ -54,7 +54,7 @@ const MIN_DURATION_PERCENTAGE = 0.1;
 const MIN_COST_RATE = 1.07;
 const MAX_COST_RATE = 1.10;
 const MIN_LOG_COST = 1;  // log10(10) - cheapest scam ($10)
-const MAX_LOG_COST = 19; // log10(10^19) - most expensive scam ($10Qi)
+const MAX_LOG_COST = 25; // log10(~10^25) - most expensive scam (Central Bank Heists)
 
 /**
  * Returns the graduated cost rate for a scam based on its effective baseCost.
@@ -308,4 +308,64 @@ const MANAGER_COST_MULTIPLIER = 0.75;
  */
 export function calculateManagerCost(nextUnlockCost: number): number {
   return Math.floor(nextUnlockCost * MANAGER_COST_MULTIPLIER);
+}
+
+/**
+ * Calculates the maximum number of upgrades a player can afford.
+ * Uses the geometric series formula for exponential costs.
+ *
+ * @param definition - The scam definition
+ * @param currentLevel - The scam's current level
+ * @param money - Player's current money
+ * @returns Maximum number of upgrades affordable (0 if none)
+ */
+export function calculateMaxBuyCount(
+  definition: ScamDefinition,
+  currentLevel: number,
+  money: number
+): number {
+  const { unlockCost, tier } = definition;
+  const tierBase = getTierBase(tier);
+  const baseCost = unlockCost ?? tierBase.baseCost;
+  const costRate = getScamCostRate(baseCost);
+
+  // Cost of first upgrade (current level to next level)
+  const firstUpgradeCost = baseCost * Math.pow(costRate, currentLevel - 1);
+  if (money < firstUpgradeCost) return 0;
+
+  // Geometric series sum: total = first × (r^N - 1) / (r - 1)
+  // Solve for N: N = floor(log(money × (r-1) / first + 1) / log(r))
+  const ratio = money * (costRate - 1) / firstUpgradeCost + 1;
+  if (ratio <= 1) return 0;
+
+  const maxCount = Math.floor(Math.log(ratio) / Math.log(costRate));
+  return Math.max(0, maxCount);
+}
+
+/**
+ * Calculates the total cost to buy N upgrades starting from currentLevel.
+ * Uses geometric series sum formula.
+ *
+ * @param definition - The scam definition
+ * @param currentLevel - The scam's current level
+ * @param count - Number of upgrades to buy
+ * @returns Total cost for all upgrades
+ */
+export function calculateMaxBuyCost(
+  definition: ScamDefinition,
+  currentLevel: number,
+  count: number
+): number {
+  if (count <= 0) return 0;
+
+  const { unlockCost, tier } = definition;
+  const tierBase = getTierBase(tier);
+  const baseCost = unlockCost ?? tierBase.baseCost;
+  const costRate = getScamCostRate(baseCost);
+
+  // Total = baseCost × r^(level-1) × (r^count - 1) / (r - 1)
+  const firstUpgradeCost = baseCost * Math.pow(costRate, currentLevel - 1);
+  const totalCost = firstUpgradeCost * (Math.pow(costRate, count) - 1) / (costRate - 1);
+
+  return Math.floor(totalCost);
 }

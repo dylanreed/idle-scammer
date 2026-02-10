@@ -22,6 +22,7 @@ import {
 import { getEmployeesByScamId } from '../../../src/game/employees/definitions';
 import { getManagerByScamId } from '../../../src/game/managers/definitions';
 import { ALL_SCAMS } from '../../../src/game/scams/definitions';
+import { getProgressionCost } from '../../../src/game/economy/constants';
 
 describe('Employee Rebalance Calculations', () => {
   describe('getMaxEmployeesPerType', () => {
@@ -149,7 +150,7 @@ describe('Employee Rebalance Calculations', () => {
     });
   });
 
-  describe('Dynamic unlock cost: max(static, floor(30 × cumulativeMoneyIncomePerSec))', () => {
+  describe('Unlock cost: static value from scam definition (3x progression)', () => {
     beforeEach(() => {
       clearEmployeeCostCache();
     });
@@ -163,36 +164,29 @@ describe('Employee Rebalance Calculations', () => {
       expect(getUnlockCostForScam('nigerian-prince-emails')).toBeUndefined();
     });
 
-    it('should return max(static, dynamic) for iphone-popup', () => {
-      // Static unlockCost = $1000. Dynamic floor = floor(30 × $102/s) = 3060.
-      // max(1000, 3060) = 3060
-      expect(getUnlockCostForScam('iphone-popup')).toBe(3060);
+    it('should return static definition value for iphone-popup', () => {
+      // iphone-popup is at position 1 in the progression: unlockCost = getProgressionCost(1) = $1000
+      expect(getUnlockCostForScam('iphone-popup')).toBe(getProgressionCost(1));
     });
 
-    it('should return dynamic floor for tech-support-scams (much higher than static $1K)', () => {
-      // Static unlockCost = $1K. Dynamic floor = floor(30 × $65,193,024.22/s) = huge.
+    it('should return static definition value for tech-support-scams', () => {
+      // tech-support-scams is at position 9: unlockCost = getProgressionCost(9) = $6,561,000
       const cost = getUnlockCostForScam('tech-support-scams')!;
-      expect(cost).toBeGreaterThan(1000000000); // Well above static $1K
+      expect(cost).toBe(getProgressionCost(9));
     });
 
-    it('should ensure every paid scam costs at least 30s of cumulative income', () => {
-      // The dynamic floor (30 × cumulativeIncome) guarantees no scam is "instantly
-      // affordable" at its progression point. The employee base cost cache gives us
-      // access to the cumulative income indirectly: employeeCost = floor(60 × cumulative),
-      // so cumulativeIncome ≈ employeeCost / 60. Unlock should be ≥ floor(30 × cumulative).
+    it('should return the definition unlockCost for every paid scam', () => {
+      // Unlock costs come directly from the scam definition (3x continuous progression).
+      // getUnlockCostForScam should return exactly the scam's unlockCost for paid scams
+      // and undefined for free scams.
       for (const scam of ALL_SCAMS) {
         const unlockCost = getUnlockCostForScam(scam.id);
-        if (unlockCost === undefined) continue;
-        const empBase = getEmployeeBaseCost(scam.id);
-        // empBase = max(10, floor(60 × cumulative)), so cumulative ≈ empBase / 60
-        // unlockCost should be ≥ floor(30 × cumulative) = floor(empBase / 2)
-        // (allow for rounding: unlock ≥ empBase/2 - 1)
-        expect(unlockCost).toBeGreaterThanOrEqual(Math.floor(empBase / 2) - 1);
+        expect(unlockCost).toBe(scam.unlockCost);
       }
     });
   });
 
-  describe('Dynamic manager cost: max(static, floor(120 × cumulativeMoneyIncomePerSec))', () => {
+  describe('Manager cost: static value from manager definition (0.75 × next progression cost)', () => {
     beforeEach(() => {
       clearEmployeeCostCache();
     });
@@ -222,16 +216,15 @@ describe('Employee Rebalance Calculations', () => {
       expect(cost).toBe(MINIMUM_MANAGER_COST);
     });
 
-    it('should ensure every scam manager costs at least 120s of cumulative income', () => {
-      // The dynamic floor (120 × cumulativeIncome) guarantees no manager is trivially
-      // cheap at its progression point. Use employee base cost to derive cumulative income.
+    it('should return the definition manager cost for every scam', () => {
+      // Manager costs come directly from the manager definition (0.75 × next scam's
+      // progression cost). getManagerCostForScam should return max(MINIMUM_MANAGER_COST,
+      // manager.cost) for scams with a manager, or MINIMUM_MANAGER_COST otherwise.
       for (const scam of ALL_SCAMS) {
         const mgrCost = getManagerCostForScam(scam.id);
-        const empBase = getEmployeeBaseCost(scam.id);
-        // empBase = max(10, floor(60 × cumulative)), so cumulative ≈ empBase / 60
-        // mgrCost should be ≥ floor(120 × cumulative) = floor(empBase × 2)
-        // (allow for rounding: mgr ≥ empBase*2 - 1, and also mgr ≥ MINIMUM_MANAGER_COST)
-        expect(mgrCost).toBeGreaterThanOrEqual(Math.max(MINIMUM_MANAGER_COST, Math.floor(empBase * 2) - 1));
+        const manager = getManagerByScamId(scam.id);
+        const expectedCost = Math.max(MINIMUM_MANAGER_COST, manager?.cost ?? 0);
+        expect(mgrCost).toBe(expectedCost);
       }
     });
   });

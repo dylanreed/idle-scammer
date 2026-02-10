@@ -30,6 +30,8 @@ import {
   calculateUpgradeCost,
   calculateMilestoneBonus,
   isMilestoneLevel,
+  calculateMaxBuyCount,
+  calculateMaxBuyCost,
 } from '../game/scams/calculations';
 import { calculateHeatFromScam, calculateHeatDecay, isTierAccessible } from '../game/prestige/calculations';
 import { executePrestige, fullReset } from '../game/prestige/prestigeManager';
@@ -74,6 +76,7 @@ export function GameScreen(): React.ReactElement {
   const scams = useScamStore((state) => state.scams);
   const unlockScam = useScamStore((state) => state.unlockScam);
   const upgradeScam = useScamStore((state) => state.upgradeScam);
+  const upgradeScamByLevels = useScamStore((state) => state.upgradeScamByLevels);
   const incrementCompletion = useScamStore((state) => state.incrementCompletion);
 
   // Get manager states and actions from manager store
@@ -347,6 +350,42 @@ export function GameScreen(): React.ReactElement {
   );
 
   /**
+   * Handle buying the maximum affordable upgrades for a scam at once
+   */
+  const handleMaxBuyScam = useCallback(
+    (scamId: string) => {
+      const definition = getScamDefinition(scamId);
+      if (!definition) return;
+
+      const scamState = scams[scamId];
+      if (!scamState || !scamState.isUnlocked) return;
+
+      const count = calculateMaxBuyCount(definition, scamState.level, resources.money);
+      if (count <= 0) return;
+
+      const totalCost = calculateMaxBuyCost(definition, scamState.level, count);
+      if (resources.money < totalCost) return;
+
+      // Deduct cost and upgrade
+      addMoney(-totalCost);
+      upgradeScamByLevels(scamId, count);
+
+      // Check for milestone bonuses within the purchased range
+      const startLevel = scamState.level;
+      for (let i = 1; i <= count; i++) {
+        const lvl = startLevel + i;
+        if (isMilestoneLevel(lvl)) {
+          const milestoneBonus = calculateMilestoneBonus(definition, lvl, resources.trust);
+          if (milestoneBonus > 0) {
+            addMoney(milestoneBonus);
+          }
+        }
+      }
+    },
+    [scams, resources.money, resources.trust, addMoney, upgradeScamByLevels]
+  );
+
+  /**
    * Handle hiring a manager - immediately starts automating the scam
    */
   const handleHireManager = useCallback(
@@ -491,6 +530,7 @@ export function GameScreen(): React.ReactElement {
             onStart={handleStartScam}
             onUnlock={handleUnlockScam}
             onUpgrade={handleUpgradeScam}
+            onMaxBuy={handleMaxBuyScam}
             onHireEmployee={handleHireEmployee}
             testID="scam-list-panel"
           />

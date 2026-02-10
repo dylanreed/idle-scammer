@@ -261,6 +261,7 @@ function createDefaultProps(overrides: Partial<ScamListPanelProps> = {}): ScamLi
     onStart: jest.fn(),
     onUnlock: jest.fn(),
     onUpgrade: jest.fn(),
+    onMaxBuy: jest.fn(),
     onHireEmployee: jest.fn(),
     testID: 'scam-list-panel',
     ...overrides,

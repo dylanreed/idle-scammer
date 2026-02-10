@@ -2,6 +2,7 @@
 // ABOUTME: Validates structure, uniqueness, progression, and balancing of tier 4 scams
 
 import { TIER_4_SCAMS } from '../../../src/game/scams/tier4';
+import { getProgressionCost } from '../../../src/game/economy/constants';
 
 describe('TIER_4_SCAMS', () => {
   it('should have exactly 10 scams', () => {
@@ -26,15 +27,15 @@ describe('TIER_4_SCAMS', () => {
     expect(uniqueNames.size).toBe(TIER_4_SCAMS.length);
   });
 
-  it('should have first scam (ponzi-schemes) cost $10,000,000', () => {
+  it('should have first scam (ponzi-schemes) cost at position 29', () => {
     const firstScam = TIER_4_SCAMS[0];
     expect(firstScam.id).toBe('ponzi-schemes');
-    expect(firstScam.unlockCost).toBe(10000000);
+    expect(firstScam.unlockCost).toBe(getProgressionCost(29));
   });
 
-  it('should have first scam with baseReward of $10,000,000', () => {
+  it('should have first scam with baseReward at position 29', () => {
     const firstScam = TIER_4_SCAMS[0];
-    expect(firstScam.baseReward).toBe(10000000);
+    expect(firstScam.baseReward).toBe(getProgressionCost(29));
   });
 
   it('should have all 10 scams with defined unlockCost', () => {

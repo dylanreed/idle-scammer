@@ -85,6 +85,41 @@ export const SCAM_TIER_BASES: ScamTierBase[] = [
 ];
 
 /**
+ * Ratio between consecutive scam unlock costs in the global progression.
+ * All 49 scams form one continuous geometric series with this ratio.
+ */
+export const PROGRESSION_RATIO = 3;
+
+/**
+ * Anchor cost: the unlock cost of the 2nd scam (position 1) in the progression.
+ * The 1st scam (position 0) is always free.
+ */
+export const PROGRESSION_ANCHOR = 1000;
+
+/**
+ * Returns the unlock cost for a scam at a given position in the 49-scam progression.
+ * Position 0 = free (returns 0). Position 1+ = anchor × ratio^(position-1).
+ *
+ * @param position - 0-indexed position in the global scam order (0-48)
+ * @returns The unlock cost (0 for the free first scam)
+ */
+export function getProgressionCost(position: number): number {
+  if (position <= 0) return 0;
+  return Math.round(PROGRESSION_ANCHOR * Math.pow(PROGRESSION_RATIO, position - 1));
+}
+
+/**
+ * Returns the manager hire cost for a scam at a given position.
+ * Manager cost = 75% of the NEXT scam's unlock cost in the progression.
+ *
+ * @param position - 0-indexed position of the scam this manager automates (0-48)
+ * @returns The manager hire cost
+ */
+export function getManagerCostAtPosition(position: number): number {
+  return Math.floor(getProgressionCost(position + 1) * 0.75);
+}
+
+/**
  * Get the tier base values for a given tier number.
  * Returns tier 1 if tier is out of range.
  */

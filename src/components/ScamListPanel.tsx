@@ -47,6 +47,9 @@ export interface ScamListPanelProps {
   /** Called when the player upgrades a scam */
   onUpgrade: (scamId: string) => void;
 
+  /** Called when the player buys max upgrades for a scam */
+  onMaxBuy: (scamId: string) => void;
+
   /** Called when the player hires an employee */
   onHireEmployee: (employeeId: string, scamId: string) => void;
 
@@ -89,6 +92,7 @@ export function ScamListPanel({
   onStart,
   onUnlock,
   onUpgrade,
+  onMaxBuy,
   onHireEmployee,
   testID,
 }: ScamListPanelProps): React.ReactElement {
@@ -162,6 +166,7 @@ export function ScamListPanel({
                   onStart={() => onStart(scamDef.id)}
                   onUnlock={() => onUnlock(scamDef.id)}
                   onUpgrade={() => onUpgrade(scamDef.id)}
+                  onMaxBuy={() => onMaxBuy(scamDef.id)}
                   employeeDefinition={empDef}
                   employeeCount={empCount}
                   employeeMaxCount={empMaxCount}

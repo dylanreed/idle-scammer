@@ -5,7 +5,7 @@
  * Suffixes for compact number notation.
  * Each entry represents 10^(index*3) threshold.
  */
-const NUMBER_SUFFIXES = ['', 'K', 'M', 'B', 'T'];
+const NUMBER_SUFFIXES = ['', 'K', 'M', 'B', 'T', 'Qa', 'Qi', 'Sx', 'Sp', 'Oc', 'No', 'Dc'];
 
 /**
  * Format a number into compact notation for display.

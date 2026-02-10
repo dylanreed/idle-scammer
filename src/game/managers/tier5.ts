@@ -2,6 +2,7 @@
 // ABOUTME: Each manager has a unique personality and automates their scam's employees
 
 import type { ManagerDefinition } from './types';
+import { getManagerCostAtPosition } from '../economy/constants';
 
 /**
  * Senator Goldpocket - The Government Contract Fraud Manager
@@ -9,13 +10,13 @@ import type { ManagerDefinition } from './types';
  * Has never met a defense budget he couldn't inflate.
  * His nephew's company always wins the bids somehow.
  *
- * Cost = 0.75 x next scam unlock ($100B) = $75B
+ * Cost = getManagerCostAtPosition(39) — 75% of position 40 unlock cost
  */
 export const SENATOR_GOLDPOCKET: ManagerDefinition = {
   id: 'senator-goldpocket',
   name: 'Senator Goldpocket',
   scamId: 'government-contract-fraud',
-  cost: 75000000000,
+  cost: getManagerCostAtPosition(39),
   flavorText: "The American people need these $90,000 hammers and $50,000 toilet seats. National security depends on it. Also, my yacht depends on it.",
 };
 
@@ -25,13 +26,13 @@ export const SENATOR_GOLDPOCKET: ManagerDefinition = {
  * Orchestrates money flows across 47 countries in under a minute.
  * The FBI has his picture on a wall, but not his name.
  *
- * Cost = 0.75 x next scam unlock ($1T) = $750B
+ * Cost = getManagerCostAtPosition(40) — 75% of position 41 unlock cost
  */
 export const THE_CONDUCTOR: ManagerDefinition = {
   id: 'the-conductor',
   name: 'The Conductor',
   scamId: 'international-wire-fraud',
-  cost: 750000000000,
+  cost: getManagerCostAtPosition(40),
   flavorText: "Money is just information traveling at the speed of trust. And trust is just another exploitable vulnerability. Watch the symphony begin.",
 };
 
@@ -41,13 +42,13 @@ export const THE_CONDUCTOR: ManagerDefinition = {
  * Runs a bank that doesn't exist in any country's records.
  * His customers include three dictators, two cartels, and one tech CEO.
  *
- * Cost = 0.75 x next scam unlock ($10T) = $7.5T
+ * Cost = getManagerCostAtPosition(41) — 75% of position 42 unlock cost
  */
 export const MR_OFFSHORE: ManagerDefinition = {
   id: 'mr-offshore',
   name: 'Mr. Offshore',
   scamId: 'shadow-banking',
-  cost: 7500000000000,
+  cost: getManagerCostAtPosition(41),
   flavorText: "We offer very competitive rates on money that, legally speaking, doesn't exist. Our branches are located everywhere and nowhere. Banking hours: always.",
 };
 
@@ -57,13 +58,13 @@ export const MR_OFFSHORE: ManagerDefinition = {
  * Has decided the outcome of 23 elections across 14 countries.
  * Democracy is just marketing with extra steps.
  *
- * Cost = 0.75 x next scam unlock ($100T) = $75T
+ * Cost = getManagerCostAtPosition(42) — 75% of position 43 unlock cost
  */
 export const MADAM_VOTE: ManagerDefinition = {
   id: 'madam-vote',
   name: 'Madam Vote',
   scamId: 'election-manipulation',
-  cost: 75000000000000,
+  cost: getManagerCostAtPosition(42),
   flavorText: "The people have spoken! Well, actually my bot farms have spoken. But who can tell the difference anymore? Democracy is just targeted advertising at scale.",
 };
 
@@ -73,13 +74,13 @@ export const MADAM_VOTE: ManagerDefinition = {
  * Has infiltrated every Fortune 500 company simultaneously.
  * Your company's secrets are already in his database.
  *
- * Cost = 0.75 x next scam unlock ($1Qa) = $750T
+ * Cost = getManagerCostAtPosition(43) — 75% of position 44 unlock cost
  */
 export const THE_CIPHER: ManagerDefinition = {
   id: 'the-cipher',
   name: 'The Cipher',
   scamId: 'corporate-espionage',
-  cost: 750000000000000,
+  cost: getManagerCostAtPosition(43),
   flavorText: "I know your R&D budget, your Q4 projections, and what your CEO had for lunch. Information wants to be free. It also wants to be extremely profitable.",
 };
 
@@ -89,13 +90,13 @@ export const THE_CIPHER: ManagerDefinition = {
  * Makes markets move with a single tweet from fake accounts.
  * The SEC has investigated him 47 times and found nothing.
  *
- * Cost = 0.75 x next scam unlock ($10Qa) = $7.5Qa
+ * Cost = getManagerCostAtPosition(44) — 75% of position 45 unlock cost
  */
 export const WARREN_BUFFETT: ManagerDefinition = {
   id: 'warren-buffett',
   name: "Warren Buffet't",
   scamId: 'stock-manipulation',
-  cost: 7500000000000000,
+  cost: getManagerCostAtPosition(44),
   flavorText: "I prefer to think of it as 'aggressive market optimization.' Insider trading is such an ugly term. I just happen to know things before they happen.",
 };
 
@@ -105,13 +106,13 @@ export const WARREN_BUFFETT: ManagerDefinition = {
  * Owns 500 buildings that don't exist and mortgages to match.
  * His real estate empire is built on vibes and forged deeds.
  *
- * Cost = 0.75 x next scam unlock ($100Qa) = $75Qa
+ * Cost = getManagerCostAtPosition(45) — 75% of position 46 unlock cost
  */
 export const DUKE_FORECLOSURE: ManagerDefinition = {
   id: 'duke-foreclosure',
   name: 'Duke Foreclosure',
   scamId: 'real-estate-fraud-empires',
-  cost: 75000000000000000,
+  cost: getManagerCostAtPosition(45),
   flavorText: "Location, location, location! This prime real estate exists in a quantum state between reality and imagination. Cash offers only. No inspection necessary.",
 };
 
@@ -121,13 +122,13 @@ export const DUKE_FORECLOSURE: ManagerDefinition = {
  * His pills cure nothing but his profit margins are excellent.
  * Has an honorary degree from a university he also made up.
  *
- * Cost = 0.75 x next scam unlock ($1Qi) = $750Qa
+ * Cost = getManagerCostAtPosition(46) — 75% of position 47 unlock cost
  */
 export const DR_PLACEBO: ManagerDefinition = {
   id: 'dr-placebo',
   name: 'Dr. Placebo',
   scamId: 'pharmaceutical-counterfeiting',
-  cost: 750000000000000000,
+  cost: getManagerCostAtPosition(46),
   flavorText: "These pills contain the finest sugar, flour, and broken dreams. Side effects may include: financial loss, disappointment, and continued illness. But hey, placebo effect!",
 };
 
@@ -137,13 +138,13 @@ export const DR_PLACEBO: ManagerDefinition = {
  * Has "discovered" 47 lost masterpieces in the past year.
  * Museum curators hate him. Money launderers love him.
  *
- * Cost = 0.75 x next scam unlock ($10Qi) = $7.5Qi
+ * Cost = getManagerCostAtPosition(47) — 75% of position 48 unlock cost
  */
 export const REMBRANDT_SCAMBRANDT: ManagerDefinition = {
   id: 'rembrandt-scambrandt',
   name: 'Rembrandt Scambrandt',
   scamId: 'art-forgery-and-laundering',
-  cost: 7500000000000000000,
+  cost: getManagerCostAtPosition(47),
   flavorText: "This is a genuine lost Van Gogh I found in my garage. Ignore the acrylic paint and 'Made in China' stamp. Art is subjective. Money is objective.",
 };
 
@@ -153,13 +154,13 @@ export const REMBRANDT_SCAMBRANDT: ManagerDefinition = {
  * Has root access to financial systems that don't officially have root access.
  * The heist of the century happens every Tuesday at 3 AM.
  *
- * Cost = 0.75 x next scam unlock ($100Qi) = $75Qi
+ * Cost = getManagerCostAtPosition(48) — 75% of position 49 unlock cost
  */
 export const ZERO_DAY: ManagerDefinition = {
   id: 'zero-day',
   name: 'Zero Day',
   scamId: 'central-bank-heists',
-  cost: 75000000000000000000,
+  cost: getManagerCostAtPosition(48),
   flavorText: "They say their systems are unhackable. So did the last seventeen central banks. The money isn't stolen if the ledger says it was always ours.",
 };
 

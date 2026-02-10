@@ -10,6 +10,8 @@ import {
   calculateMilestoneBonus,
   calculateManagerCost,
   getScamCostRate,
+  calculateMaxBuyCount,
+  calculateMaxBuyCost,
 } from '../../../src/game/scams/calculations';
 import type { ScamDefinition } from '../../../src/game/scams/types';
 
@@ -123,9 +125,16 @@ describe('Scam Calculations', () => {
       expect(rate).toBeCloseTo(1.07, 4);
     });
 
-    it('should return maximum rate (1.10) for most expensive scam ($10Qi)', () => {
-      const rate = getScamCostRate(10_000_000_000_000_000_000);
+    it('should return maximum rate (1.10) for most expensive scam (~$10^25)', () => {
+      const rate = getScamCostRate(Math.pow(10, 25));
       expect(rate).toBeCloseTo(1.10, 4);
+    });
+
+    it('should return intermediate rate for $10Qi scam (10^19)', () => {
+      const rate = getScamCostRate(10_000_000_000_000_000_000);
+      // log10(10^19) = 19, interpolated across range [1, 25]: t = 18/24 = 0.75
+      // rate = 1.07 + 0.75 * 0.03 = 1.0925
+      expect(rate).toBeCloseTo(1.0925, 4);
     });
 
     it('should return a rate between min and max for mid-range scams', () => {
@@ -217,6 +226,88 @@ describe('Scam Calculations', () => {
       expect(Number.isInteger(cost)).toBe(true);
     });
 
+  });
+
+  describe('calculateMaxBuyCount', () => {
+    it('should return 0 when money is 0', () => {
+      expect(calculateMaxBuyCount(testScam, 1, 0)).toBe(0);
+    });
+
+    it('should return 0 when money is less than first upgrade cost', () => {
+      // At level 1, first upgrade cost is baseCost (100)
+      expect(calculateMaxBuyCount(testScam, 1, 50)).toBe(0);
+    });
+
+    it('should return 1 when money equals exactly one upgrade cost', () => {
+      // At level 1, upgrade cost = 100 (baseCost * costRate^0 = 100)
+      const cost = calculateUpgradeCost(testScam, 1);
+      expect(calculateMaxBuyCount(testScam, 1, cost)).toBe(1);
+    });
+
+    it('should return correct count for affordable upgrades at level 1', () => {
+      // Give generous money to buy 3 upgrades; maxBuyCost floors so add padding
+      const costFor3 = calculateMaxBuyCost(testScam, 1, 3);
+      const costFor4 = calculateMaxBuyCost(testScam, 1, 4);
+
+      // With enough money for 3 upgrades but not 4
+      const money = costFor3 + 1; // +1 to overcome floor rounding
+      expect(calculateMaxBuyCount(testScam, 1, money)).toBe(3);
+
+      // Verify count increases with more money
+      expect(calculateMaxBuyCount(testScam, 1, costFor4 + 1)).toBe(4);
+    });
+
+    it('should return correct count at higher levels (level 10)', () => {
+      // At level 10, costs are higher so fewer upgrades for same money
+      const costFor2 = calculateMaxBuyCost(testScam, 10, 2);
+      const costFor1 = calculateMaxBuyCost(testScam, 10, 1);
+
+      // With enough money for 2 upgrades from level 10
+      expect(calculateMaxBuyCount(testScam, 10, costFor2 + 1)).toBe(2);
+
+      // With less than the first upgrade cost at level 10
+      expect(calculateMaxBuyCount(testScam, 10, costFor1 - 1)).toBe(0);
+    });
+  });
+
+  describe('calculateMaxBuyCost', () => {
+    it('should return 0 for count 0', () => {
+      expect(calculateMaxBuyCost(testScam, 1, 0)).toBe(0);
+    });
+
+    it('should return upgrade cost for count 1', () => {
+      const singleCost = calculateUpgradeCost(testScam, 1);
+      expect(calculateMaxBuyCost(testScam, 1, 1)).toBe(singleCost);
+    });
+
+    it('should equal sum of individual upgrades for count 3', () => {
+      const cost1 = calculateUpgradeCost(testScam, 1);
+      const cost2 = calculateUpgradeCost(testScam, 2);
+      const cost3 = calculateUpgradeCost(testScam, 3);
+      const expectedSum = cost1 + cost2 + cost3;
+
+      // Both use Math.floor so there may be a small rounding difference
+      // The geometric sum floors the total, individual costs floor each one
+      const maxBuyCost = calculateMaxBuyCost(testScam, 1, 3);
+
+      // Allow for rounding: geometric series floors once vs summing floors
+      expect(Math.abs(maxBuyCost - expectedSum)).toBeLessThanOrEqual(3);
+    });
+
+    it('should satisfy round trip: maxBuyCost(count) <= money when count = maxBuyCount(money)', () => {
+      const money = 5000;
+      const count = calculateMaxBuyCount(testScam, 1, money);
+      if (count > 0) {
+        const cost = calculateMaxBuyCost(testScam, 1, count);
+        expect(cost).toBeLessThanOrEqual(money);
+      }
+
+      // Also verify one more upgrade would exceed money
+      if (count > 0) {
+        const costForOneMore = calculateMaxBuyCost(testScam, 1, count + 1);
+        expect(costForOneMore).toBeGreaterThan(money);
+      }
+    });
   });
 
   describe('calculateScamReward with botProfitBonus', () => {

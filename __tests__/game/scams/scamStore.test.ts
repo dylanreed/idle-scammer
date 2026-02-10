@@ -171,6 +171,42 @@ describe('ScamStore', () => {
     });
   });
 
+  describe('upgradeScamByLevels', () => {
+    it('should increase level by the specified number', () => {
+      const { upgradeScamByLevels } = useScamStore.getState();
+
+      upgradeScamByLevels(NIGERIAN_PRINCE_EMAILS.id, 5);
+
+      const scamState = useScamStore.getState().scams[NIGERIAN_PRINCE_EMAILS.id];
+      expect(scamState.level).toBe(6); // 1 + 5
+    });
+
+    it('should not upgrade locked scams', () => {
+      // Add a locked scam
+      useScamStore.setState({
+        scams: {
+          ...useScamStore.getState().scams,
+          'locked-scam': createScamState('locked-scam'),
+        },
+      });
+
+      const { upgradeScamByLevels } = useScamStore.getState();
+      upgradeScamByLevels('locked-scam', 10);
+
+      const scamState = useScamStore.getState().scams['locked-scam'];
+      expect(scamState.level).toBe(1); // Should remain at 1
+    });
+
+    it('should not change state with 0 levels', () => {
+      const { upgradeScamByLevels } = useScamStore.getState();
+
+      upgradeScamByLevels(NIGERIAN_PRINCE_EMAILS.id, 0);
+
+      const scamState = useScamStore.getState().scams[NIGERIAN_PRINCE_EMAILS.id];
+      expect(scamState.level).toBe(1); // Should remain at 1
+    });
+  });
+
   describe('incrementCompletion', () => {
     it('should increment completion count by 1', () => {
       const { incrementCompletion } = useScamStore.getState();

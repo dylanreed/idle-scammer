@@ -102,6 +102,50 @@ describe('formatNumber', () => {
     });
   });
 
+  describe('quadrillions (Qa)', () => {
+    it('formats exactly 1 quadrillion as "1Qa"', () => {
+      expect(formatNumber(1e15)).toBe('1Qa');
+    });
+
+    it('formats 5.5 quadrillion as "5.5Qa"', () => {
+      expect(formatNumber(5.5e15)).toBe('5.5Qa');
+    });
+
+    it('formats 999 quadrillion as "999Qa"', () => {
+      expect(formatNumber(999e15)).toBe('999Qa');
+    });
+  });
+
+  describe('quintillions (Qi)', () => {
+    it('formats exactly 1 quintillion as "1Qi"', () => {
+      expect(formatNumber(1e18)).toBe('1Qi');
+    });
+
+    it('formats 2.75 quintillion as "2.75Qi"', () => {
+      expect(formatNumber(2.75e18)).toBe('2.75Qi');
+    });
+  });
+
+  describe('sextillions (Sx)', () => {
+    it('formats exactly 1 sextillion as "1Sx"', () => {
+      expect(formatNumber(1e21)).toBe('1Sx');
+    });
+
+    it('formats 10 sextillion as "10Sx"', () => {
+      expect(formatNumber(10e21)).toBe('10Sx');
+    });
+  });
+
+  describe('septillions (Sp)', () => {
+    it('formats exactly 1 septillion as "1Sp"', () => {
+      expect(formatNumber(1e24)).toBe('1Sp');
+    });
+
+    it('formats 3.33 septillion as "3.33Sp"', () => {
+      expect(formatNumber(3.33e24)).toBe('3.33Sp');
+    });
+  });
+
   describe('negative numbers', () => {
     it('formats negative small numbers', () => {
       expect(formatNumber(-50)).toBe('-50');

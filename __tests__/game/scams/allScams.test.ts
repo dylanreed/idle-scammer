@@ -9,6 +9,7 @@ import { TIER_2_SCAMS } from '../../../src/game/scams/tier2';
 import { TIER_3_SCAMS } from '../../../src/game/scams/tier3';
 import { TIER_4_SCAMS } from '../../../src/game/scams/tier4';
 import { TIER_5_SCAMS } from '../../../src/game/scams/tier5';
+import { getProgressionCost } from '../../../src/game/economy/constants';
 
 describe('ALL_SCAMS barrel export', () => {
   describe('total scam count', () => {
@@ -98,30 +99,30 @@ describe('ALL_SCAMS barrel export', () => {
     });
   });
 
-  describe('free scam unlock costs', () => {
+  describe('tier-first scam unlock costs (3x progression)', () => {
     it('first scam of Tier 1 should be free', () => {
       const firstScam = TIER_1_SCAMS[0];
       expect(firstScam.unlockCost).toBeUndefined();
     });
 
-    it('first scam of Tier 2 should have unlockCost of $1,000', () => {
+    it('first scam of Tier 2 should have unlockCost from 3x progression at position 9', () => {
       const firstScam = TIER_2_SCAMS[0];
-      expect(firstScam.unlockCost).toBe(1000);
+      expect(firstScam.unlockCost).toBe(getProgressionCost(9));
     });
 
-    it('first scam of Tier 3 should have unlockCost of $100,000', () => {
+    it('first scam of Tier 3 should have unlockCost from 3x progression at position 19', () => {
       const firstScam = TIER_3_SCAMS[0];
-      expect(firstScam.unlockCost).toBe(100000);
+      expect(firstScam.unlockCost).toBe(getProgressionCost(19));
     });
 
-    it('first scam of Tier 4 should have unlockCost of $10,000,000', () => {
+    it('first scam of Tier 4 should have unlockCost from 3x progression at position 29', () => {
       const firstScam = TIER_4_SCAMS[0];
-      expect(firstScam.unlockCost).toBe(10000000);
+      expect(firstScam.unlockCost).toBe(getProgressionCost(29));
     });
 
-    it('first scam of Tier 5 should have unlockCost of $1,000,000,000', () => {
+    it('first scam of Tier 5 should have unlockCost from 3x progression at position 39', () => {
       const firstScam = TIER_5_SCAMS[0];
-      expect(firstScam.unlockCost).toBe(1000000000);
+      expect(firstScam.unlockCost).toBe(getProgressionCost(39));
     });
   });
 
@@ -298,34 +299,35 @@ describe('ALL_SCAMS barrel export', () => {
     });
   });
 
-  describe('free scam base rewards (tier baseCost)', () => {
+  describe('tier-first scam base rewards (3x progression)', () => {
     it('Tier 1 free scam should have $10 base reward', () => {
       const freeScam = TIER_1_SCAMS[0];
       expect(freeScam.baseReward).toBe(10);
     });
 
-    it('Tier 2 free scam should have $1K base reward', () => {
-      const freeScam = TIER_2_SCAMS[0];
-      expect(freeScam.baseReward).toBe(1000);
+    it('Tier 2 first scam should have baseReward from 3x progression at position 9', () => {
+      const firstScam = TIER_2_SCAMS[0];
+      expect(firstScam.baseReward).toBe(getProgressionCost(9));
     });
 
-    it('Tier 3 free scam should have $100K base reward', () => {
-      const freeScam = TIER_3_SCAMS[0];
-      expect(freeScam.baseReward).toBe(100000);
+    it('Tier 3 first scam should have baseReward from 3x progression at position 19', () => {
+      const firstScam = TIER_3_SCAMS[0];
+      expect(firstScam.baseReward).toBe(getProgressionCost(19));
     });
 
-    it('Tier 4 free scam should have $10M base reward', () => {
-      const freeScam = TIER_4_SCAMS[0];
-      expect(freeScam.baseReward).toBe(10000000);
+    it('Tier 4 first scam should have baseReward from 3x progression at position 29', () => {
+      const firstScam = TIER_4_SCAMS[0];
+      expect(firstScam.baseReward).toBe(getProgressionCost(29));
     });
 
-    it('Tier 5 free scam should have $1B base reward', () => {
-      const freeScam = TIER_5_SCAMS[0];
-      expect(freeScam.baseReward).toBe(1000000000);
+    it('Tier 5 first scam should have baseReward from 3x progression at position 39', () => {
+      const firstScam = TIER_5_SCAMS[0];
+      expect(firstScam.baseReward).toBe(getProgressionCost(39));
     });
 
-    it('free scam base rewards should scale 100x between tiers', () => {
-      const freeScams = [
+    it('first scam of each tier should match its progression position cost', () => {
+      const tierStartPositions = [0, 9, 19, 29, 39];
+      const tierFirstScams = [
         TIER_1_SCAMS[0],
         TIER_2_SCAMS[0],
         TIER_3_SCAMS[0],
@@ -333,13 +335,17 @@ describe('ALL_SCAMS barrel export', () => {
         TIER_5_SCAMS[0],
       ];
 
-      for (let i = 1; i < freeScams.length; i++) {
-        const prevReward = freeScams[i - 1].baseReward;
-        const currReward = freeScams[i].baseReward;
+      tierFirstScams.forEach((scam, i) => {
+        const position = tierStartPositions[i];
+        const expectedCost = getProgressionCost(position);
 
-        // Current tier should be 100x previous tier
-        expect(currReward).toBe(prevReward * 100);
-      }
+        if (position === 0) {
+          // Position 0 is free (no unlockCost)
+          expect(scam.unlockCost).toBeUndefined();
+        } else {
+          expect(scam.baseReward).toBe(expectedCost);
+        }
+      });
     });
   });
 });

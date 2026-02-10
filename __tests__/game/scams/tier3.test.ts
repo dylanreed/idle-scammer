@@ -2,6 +2,7 @@
 // ABOUTME: Validates structure, uniqueness, progression, and balancing of tier 3 scams
 
 import { TIER_3_SCAMS } from '../../../src/game/scams/tier3';
+import { getProgressionCost } from '../../../src/game/economy/constants';
 
 describe('TIER_3_SCAMS', () => {
   it('should have exactly 10 scams', () => {
@@ -26,15 +27,15 @@ describe('TIER_3_SCAMS', () => {
     expect(uniqueNames.size).toBe(TIER_3_SCAMS.length);
   });
 
-  it('should have first scam (crypto-rug-pulls) cost $100,000', () => {
+  it('should have first scam (crypto-rug-pulls) cost matching position 19', () => {
     const firstScam = TIER_3_SCAMS[0];
     expect(firstScam.id).toBe('crypto-rug-pulls');
-    expect(firstScam.unlockCost).toBe(100000);
+    expect(firstScam.unlockCost).toBe(getProgressionCost(19));
   });
 
-  it('should have first scam with baseReward of $100,000', () => {
+  it('should have first scam with baseReward matching position 19', () => {
     const firstScam = TIER_3_SCAMS[0];
-    expect(firstScam.baseReward).toBe(100000);
+    expect(firstScam.baseReward).toBe(getProgressionCost(19));
   });
 
   it('should have all 10 scams with defined unlockCost', () => {

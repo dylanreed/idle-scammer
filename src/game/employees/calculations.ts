@@ -59,8 +59,8 @@ let managerCostCache: Map<string, number> | null = null;
  * Walks ALL_SCAMS in order, accumulating the base income/sec of money-producing
  * scams and computing all three cost types in a single pass:
  * - Employee baseCost = max(MINIMUM_EMPLOYEE_COST, floor(TARGET_SECONDS × cumulative))
- * - Unlock cost = undefined for free scams, otherwise max(static, floor(UNLOCK_TARGET_SECONDS × cumulative))
- * - Manager cost = max(static, floor(MANAGER_TARGET_SECONDS × cumulative))
+ * - Unlock cost = directly from scam definition (the 3x continuous progression sets correct values)
+ * - Manager cost = directly from manager definition (set to 0.75 × next scam's progression cost)
  */
 function buildAllCostCaches(): void {
   const empCache = new Map<string, number>();
@@ -74,26 +74,19 @@ function buildAllCostCaches(): void {
       cumulativeMoneyPerSec += incomePerSec;
     }
 
-    // Employee cost (existing logic)
+    // Employee cost: scales with cumulative income
     const baseCost = Math.max(
       MINIMUM_EMPLOYEE_COST,
       Math.floor(TARGET_SECONDS * cumulativeMoneyPerSec)
     );
     empCache.set(scam.id, baseCost);
 
-    // Unlock cost: free scams stay free, otherwise max(static, dynamic_floor)
-    if (scam.unlockCost === undefined) {
-      unlCache.set(scam.id, undefined);
-    } else {
-      const dynamicFloor = Math.floor(UNLOCK_TARGET_SECONDS * cumulativeMoneyPerSec);
-      unlCache.set(scam.id, Math.max(scam.unlockCost, dynamicFloor));
-    }
+    // Unlock cost: use the static definition value (3x progression provides correct pacing)
+    unlCache.set(scam.id, scam.unlockCost);
 
-    // Manager cost: max(static, dynamic_floor)
+    // Manager cost: use the static definition value (set to 0.75 × next scam's cost)
     const manager = getManagerByScamId(scam.id);
-    const staticManagerCost = manager?.cost ?? 0;
-    const dynamicManagerFloor = Math.floor(MANAGER_TARGET_SECONDS * cumulativeMoneyPerSec);
-    mgrCache.set(scam.id, Math.max(MINIMUM_MANAGER_COST, staticManagerCost, dynamicManagerFloor));
+    mgrCache.set(scam.id, Math.max(MINIMUM_MANAGER_COST, manager?.cost ?? 0));
   }
 
   employeeCostCache = empCache;

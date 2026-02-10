@@ -29,6 +29,8 @@ export {
   getEmployeeBaseCost,
   getEmployeeCostForScam,
   clearEmployeeCostCache,
+  getUnlockCostForScam,
+  getManagerCostForScam,
 } from './calculations';
 
 // Store

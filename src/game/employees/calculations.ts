@@ -3,6 +3,7 @@
 
 import type { EmployeeDefinition, EmployeeState } from './types';
 import { ALL_SCAMS } from '../scams/definitions';
+import { getManagerByScamId } from '../managers/definitions';
 
 /**
  * Exponential growth rate for employee costs.
@@ -22,15 +23,48 @@ export const TARGET_SECONDS = 60;
  */
 export const MINIMUM_EMPLOYEE_COST = 10;
 
+/**
+ * Number of seconds of cumulative income an unlock should cost.
+ * Unlock = 30s of income → a meaningful but not grindy gate.
+ */
+export const UNLOCK_TARGET_SECONDS = 30;
+
+/**
+ * Floor for unlock costs — ensures every paid scam has a non-trivial unlock cost.
+ */
+export const MINIMUM_UNLOCK_COST = 10;
+
+/**
+ * Number of seconds of cumulative income a manager should cost.
+ * Manager = 2 minutes of income → a significant investment that pays off over time.
+ */
+export const MANAGER_TARGET_SECONDS = 120;
+
+/**
+ * Floor for manager costs — ensures even the earliest manager has a non-trivial cost.
+ */
+export const MINIMUM_MANAGER_COST = 50;
+
 /** Memoized map of scamId → baseCost built from ALL_SCAMS progression order. */
 let employeeCostCache: Map<string, number> | null = null;
 
+/** Memoized map of scamId → unlockCost (undefined for free scams). */
+let unlockCostCache: Map<string, number | undefined> | null = null;
+
+/** Memoized map of scamId → managerCost. */
+let managerCostCache: Map<string, number> | null = null;
+
 /**
  * Walks ALL_SCAMS in order, accumulating the base income/sec of money-producing
- * scams and computing baseCost = max(MINIMUM, floor(TARGET_SECONDS × cumulative)).
+ * scams and computing all three cost types in a single pass:
+ * - Employee baseCost = max(MINIMUM_EMPLOYEE_COST, floor(TARGET_SECONDS × cumulative))
+ * - Unlock cost = undefined for free scams, otherwise max(static, floor(UNLOCK_TARGET_SECONDS × cumulative))
+ * - Manager cost = max(static, floor(MANAGER_TARGET_SECONDS × cumulative))
  */
-function buildEmployeeCostCache(): Map<string, number> {
-  const cache = new Map<string, number>();
+function buildAllCostCaches(): void {
+  const empCache = new Map<string, number>();
+  const unlCache = new Map<string, number | undefined>();
+  const mgrCache = new Map<string, number>();
   let cumulativeMoneyPerSec = 0;
 
   for (const scam of ALL_SCAMS) {
@@ -38,14 +72,39 @@ function buildEmployeeCostCache(): Map<string, number> {
       const incomePerSec = scam.baseReward / (scam.baseDuration / 1000);
       cumulativeMoneyPerSec += incomePerSec;
     }
+
+    // Employee cost (existing logic)
     const baseCost = Math.max(
       MINIMUM_EMPLOYEE_COST,
       Math.floor(TARGET_SECONDS * cumulativeMoneyPerSec)
     );
-    cache.set(scam.id, baseCost);
+    empCache.set(scam.id, baseCost);
+
+    // Unlock cost: free scams stay free, otherwise max(static, dynamic_floor)
+    if (scam.unlockCost === undefined) {
+      unlCache.set(scam.id, undefined);
+    } else {
+      const dynamicFloor = Math.floor(UNLOCK_TARGET_SECONDS * cumulativeMoneyPerSec);
+      unlCache.set(scam.id, Math.max(scam.unlockCost, dynamicFloor));
+    }
+
+    // Manager cost: max(static, dynamic_floor)
+    const manager = getManagerByScamId(scam.id);
+    const staticManagerCost = manager?.cost ?? 0;
+    const dynamicManagerFloor = Math.floor(MANAGER_TARGET_SECONDS * cumulativeMoneyPerSec);
+    mgrCache.set(scam.id, Math.max(MINIMUM_MANAGER_COST, staticManagerCost, dynamicManagerFloor));
   }
 
-  return cache;
+  employeeCostCache = empCache;
+  unlockCostCache = unlCache;
+  managerCostCache = mgrCache;
+}
+
+/** Ensures all cost caches are built. */
+function ensureCaches(): void {
+  if (!employeeCostCache || !unlockCostCache || !managerCostCache) {
+    buildAllCostCaches();
+  }
 }
 
 /**
@@ -53,10 +112,27 @@ function buildEmployeeCostCache(): Map<string, number> {
  * derived from cumulative money income at that scam's progression position.
  */
 export function getEmployeeBaseCost(scamId: string): number {
-  if (!employeeCostCache) {
-    employeeCostCache = buildEmployeeCostCache();
-  }
-  return employeeCostCache.get(scamId) ?? MINIMUM_EMPLOYEE_COST;
+  ensureCaches();
+  return employeeCostCache!.get(scamId) ?? MINIMUM_EMPLOYEE_COST;
+}
+
+/**
+ * Returns the effective unlock cost for a scam: max(static, dynamic_floor).
+ * Returns undefined for free scams (unlockCost === undefined in the definition).
+ */
+export function getUnlockCostForScam(scamId: string): number | undefined {
+  ensureCaches();
+  if (!unlockCostCache!.has(scamId)) return undefined;
+  return unlockCostCache!.get(scamId);
+}
+
+/**
+ * Returns the effective manager cost for a scam: max(static, dynamic_floor).
+ * Falls back to MINIMUM_MANAGER_COST for scams not in ALL_SCAMS.
+ */
+export function getManagerCostForScam(scamId: string): number {
+  ensureCaches();
+  return managerCostCache!.get(scamId) ?? MINIMUM_MANAGER_COST;
 }
 
 /**
@@ -69,11 +145,16 @@ export function getEmployeeCostForScam(scamId: string, count: number): number {
 }
 
 /**
- * Clears the memoized cost cache. Call after modifying scam definitions in tests.
+ * Clears all memoized cost caches. Call after modifying scam definitions in tests.
  */
 export function clearEmployeeCostCache(): void {
   employeeCostCache = null;
+  unlockCostCache = null;
+  managerCostCache = null;
 }
+
+/** Alias for clearEmployeeCostCache — clears all cost caches. */
+export const clearCostCaches = clearEmployeeCostCache;
 
 /**
  * Heat generated per employee per second.

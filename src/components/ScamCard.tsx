@@ -79,6 +79,9 @@ export interface ScamCardProps {
   /** Cost to hire the next employee */
   employeeHireCost?: number;
 
+  /** Dynamic unlock cost override (from cumulative income formula). Falls back to scamDefinition.unlockCost. */
+  unlockCost?: number;
+
   /** Test ID for testing */
   testID?: string;
 }
@@ -143,6 +146,7 @@ export function ScamCard({
   employeeRewardBonus = 0,
   onHireEmployee,
   employeeHireCost,
+  unlockCost: unlockCostProp,
   testID,
 }: ScamCardProps): React.ReactElement {
   const status = getScamStatus(scamState, timer);
@@ -154,8 +158,10 @@ export function ScamCard({
   const reward = calculateScamReward(scamDefinition, level, trust, 0, employeeRewardBonus);
   const progress = getTimerProgress(timer);
   const upgradeCost = calculateUpgradeCost(scamDefinition, level);
+  // Use dynamic unlock cost prop when provided, fall back to static definition
+  const effectiveUnlockCost = unlockCostProp ?? scamDefinition.unlockCost;
   const canAffordUnlock =
-    scamDefinition.unlockCost !== undefined && money >= scamDefinition.unlockCost;
+    effectiveUnlockCost !== undefined && money >= effectiveUnlockCost;
   const canAffordUpgrade = money >= upgradeCost;
 
   // Resource type display
@@ -238,8 +244,8 @@ export function ScamCard({
             variant="gold"
             testID={testID ? `${testID}-unlock` : undefined}
           >
-            {scamDefinition.unlockCost !== undefined
-              ? `UNLOCK ($${formatNumber(scamDefinition.unlockCost)})`
+            {effectiveUnlockCost !== undefined
+              ? `UNLOCK ($${formatNumber(effectiveUnlockCost)})`
               : 'UNLOCK (FREE)'}
           </PixelButton>
         )}

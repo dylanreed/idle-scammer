@@ -12,6 +12,12 @@ import {
   clearEmployeeCostCache,
   TARGET_SECONDS,
   MINIMUM_EMPLOYEE_COST,
+  getUnlockCostForScam,
+  getManagerCostForScam,
+  UNLOCK_TARGET_SECONDS,
+  MANAGER_TARGET_SECONDS,
+  MINIMUM_UNLOCK_COST,
+  MINIMUM_MANAGER_COST,
 } from '../../../src/game/employees/calculations';
 import { getEmployeesByScamId } from '../../../src/game/employees/definitions';
 import { getManagerByScamId } from '../../../src/game/managers/definitions';
@@ -147,6 +153,103 @@ describe('Employee Rebalance Calculations', () => {
         const cost = getEmployeeBaseCost(scam.id);
         expect(cost).toBeGreaterThanOrEqual(prevCost);
         prevCost = cost;
+      }
+    });
+  });
+
+  describe('Dynamic unlock cost: max(static, floor(30 × cumulativeMoneyIncomePerSec))', () => {
+    beforeEach(() => {
+      clearEmployeeCostCache();
+    });
+
+    it('should export unlock cost formula constants', () => {
+      expect(UNLOCK_TARGET_SECONDS).toBe(30);
+      expect(MINIMUM_UNLOCK_COST).toBe(10);
+    });
+
+    it('should return undefined for bot-farms (free scam stays free)', () => {
+      expect(getUnlockCostForScam('bot-farms')).toBeUndefined();
+    });
+
+    it('should return undefined for nigerian-prince-emails (free scam stays free)', () => {
+      expect(getUnlockCostForScam('nigerian-prince-emails')).toBeUndefined();
+    });
+
+    it('should return max(static, dynamic) for iphone-popup', () => {
+      // Static unlockCost = $1000. Dynamic floor = floor(30 × $102/s) = 3060.
+      // max(1000, 3060) = 3060
+      expect(getUnlockCostForScam('iphone-popup')).toBe(3060);
+    });
+
+    it('should return dynamic floor for tech-support-scams (much higher than static $1K)', () => {
+      // Static unlockCost = $1K. Dynamic floor = floor(30 × $65,193,024.22/s) = huge.
+      const cost = getUnlockCostForScam('tech-support-scams')!;
+      expect(cost).toBeGreaterThan(1000000000); // Well above static $1K
+    });
+
+    it('should ensure every paid scam costs at least 30s of cumulative income', () => {
+      // The dynamic floor (30 × cumulativeIncome) guarantees no scam is "instantly
+      // affordable" at its progression point. The employee base cost cache gives us
+      // access to the cumulative income indirectly: employeeCost = floor(60 × cumulative),
+      // so cumulativeIncome ≈ employeeCost / 60. Unlock should be ≥ floor(30 × cumulative).
+      for (const scam of ALL_SCAMS) {
+        const unlockCost = getUnlockCostForScam(scam.id);
+        if (unlockCost === undefined) continue;
+        const empBase = getEmployeeBaseCost(scam.id);
+        // empBase = max(10, floor(60 × cumulative)), so cumulative ≈ empBase / 60
+        // unlockCost should be ≥ floor(30 × cumulative) = floor(empBase / 2)
+        // (allow for rounding: unlock ≥ empBase/2 - 1)
+        expect(unlockCost).toBeGreaterThanOrEqual(Math.floor(empBase / 2) - 1);
+      }
+    });
+  });
+
+  describe('Dynamic manager cost: max(static, floor(120 × cumulativeMoneyIncomePerSec))', () => {
+    beforeEach(() => {
+      clearEmployeeCostCache();
+    });
+
+    it('should export manager cost formula constants', () => {
+      expect(MANAGER_TARGET_SECONDS).toBe(120);
+      expect(MINIMUM_MANAGER_COST).toBe(50);
+    });
+
+    it('should return static cost for bot-farms manager (static dominates)', () => {
+      // Static manager cost = $50. Dynamic floor = floor(120 × 0) = 0.
+      // max(50, 0) = 50
+      expect(getManagerCostForScam('bot-farms')).toBe(50);
+    });
+
+    it('should return static cost for nigerian-prince-emails manager (static dominates)', () => {
+      // Static manager cost = $750. Dynamic floor = floor(120 × $2/s) = 240.
+      // max(750, 240) = 750
+      expect(getManagerCostForScam('nigerian-prince-emails')).toBe(750);
+    });
+
+    it('should return dynamic floor for tech-support-scams manager (much higher than static $75K)', () => {
+      // Static manager cost = $75K. Dynamic floor = floor(120 × $65,193,024.22/s) = huge.
+      const cost = getManagerCostForScam('tech-support-scams');
+      expect(cost).toBeGreaterThan(75000); // Well above static $75K
+    });
+
+    it('should return minimum for scam with no manager definition', () => {
+      // Bot farms cumulative = 0, so max(50, 0) = 50, but that's with a manager.
+      // For a scam ID that has no manager, static cost = 0, so it should use dynamic floor.
+      // But we still cap at MINIMUM_MANAGER_COST.
+      const cost = getManagerCostForScam('nonexistent-scam');
+      expect(cost).toBe(MINIMUM_MANAGER_COST);
+    });
+
+    it('should ensure every scam manager costs at least 120s of cumulative income', () => {
+      // The dynamic floor (120 × cumulativeIncome) guarantees no manager is trivially
+      // cheap at its progression point. Use employee base cost to derive cumulative income.
+      for (const scam of ALL_SCAMS) {
+        const mgrCost = getManagerCostForScam(scam.id);
+        const empBase = getEmployeeBaseCost(scam.id);
+        // empBase = max(10, floor(60 × cumulative)), so cumulative ≈ empBase / 60
+        // mgrCost should be ≥ floor(120 × cumulative) = floor(empBase × 2)
+        // (allow for rounding: mgr ≥ empBase*2 - 1, and also mgr ≥ MINIMUM_MANAGER_COST)
+        expect(mgrCost).toBeGreaterThanOrEqual(Math.max(MINIMUM_MANAGER_COST, Math.floor(empBase * 2) - 1));
       }
     });
   });

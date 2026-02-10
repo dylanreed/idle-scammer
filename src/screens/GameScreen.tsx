@@ -17,7 +17,7 @@ import { useScamStore } from '../game/scams/scamStore';
 import { useManagerStore } from '../game/managers/managerStore';
 import { useEmployeeStore } from '../game/employees/employeeStore';
 import { getEmployeesByScamId } from '../game/employees/definitions';
-import { getEmployeeCostForScam, canHireEmployee, getMaxEmployeesPerType, calculateEmployeeHeat } from '../game/employees/calculations';
+import { getEmployeeCostForScam, canHireEmployee, getMaxEmployeesPerType, calculateEmployeeHeat, getUnlockCostForScam, getManagerCostForScam } from '../game/employees/calculations';
 import { ALL_SCAMS, TIER_1_SCAMS } from '../game/scams/definitions';
 import { TIER_2_SCAMS } from '../game/scams/tier2';
 import { TIER_3_SCAMS } from '../game/scams/tier3';
@@ -262,8 +262,9 @@ export function GameScreen(): React.ReactElement {
       const goal = tierScams.find((scamDef) => {
         const scamState = scams[scamDef.id];
         if (scamState?.isUnlocked) return false;
-        if (scamDef.unlockCost === undefined) return false;
-        return resources.money < scamDef.unlockCost;
+        const dynamicCost = getUnlockCostForScam(scamDef.id);
+        if (dynamicCost === undefined) return false;
+        return resources.money < dynamicCost;
       });
       if (goal) return goal.id;
     }
@@ -300,10 +301,11 @@ export function GameScreen(): React.ReactElement {
       const definition = getScamDefinition(scamId);
       if (!definition) return;
 
-      // Check cost
-      if (definition.unlockCost !== undefined) {
-        if (resources.money < definition.unlockCost) return;
-        addMoney(-definition.unlockCost);
+      // Check cost using dynamic formula
+      const dynamicCost = getUnlockCostForScam(scamId);
+      if (dynamicCost !== undefined) {
+        if (resources.money < dynamicCost) return;
+        addMoney(-dynamicCost);
       }
 
       unlockScam(scamId);
@@ -499,8 +501,9 @@ export function GameScreen(): React.ReactElement {
           const visibleScams = tierScams.filter((scamDef) => {
             const scamState = scams[scamDef.id];
             if (scamState?.isUnlocked) return true;
-            if (scamDef.unlockCost === undefined) return true;
-            if (resources.money >= scamDef.unlockCost) return true;
+            const dynamicCost = getUnlockCostForScam(scamDef.id);
+            if (dynamicCost === undefined) return true;
+            if (resources.money >= dynamicCost) return true;
             return scamDef.id === nextGoalScamId;
           });
 
@@ -550,6 +553,7 @@ export function GameScreen(): React.ReactElement {
                     employeeRewardBonus={empBonuses.rewardBonus}
                     onHireEmployee={empDef ? () => handleHireEmployee(empDef.id, scamDef.id) : undefined}
                     employeeHireCost={empCost}
+                    unlockCost={getUnlockCostForScam(scamDef.id)}
                     testID={`scam-card-${scamDef.id}`}
                   />
                 );
@@ -572,7 +576,8 @@ export function GameScreen(): React.ReactElement {
                     <View style={styles.managersList}>
                       {tierManagers.map((manager) => {
                         const hired = isManagerHired(manager.id);
-                        const canAfford = resources.money >= manager.cost;
+                        const dynamicManagerCost = getManagerCostForScam(manager.scamId);
+                        const canAfford = resources.money >= dynamicManagerCost;
                         const scamState = scams[manager.scamId];
                         const scamUnlocked = scamState?.isUnlocked ?? false;
 
@@ -587,12 +592,12 @@ export function GameScreen(): React.ReactElement {
                                 {manager.name}
                               </TerminalText>
                               <TerminalText size="sm" color={COLORS.terminalGreenDim}>
-                                {hired ? '✓ HIRED' : `$${formatNumber(manager.cost)}`}
+                                {hired ? '✓ HIRED' : `$${formatNumber(dynamicManagerCost)}`}
                               </TerminalText>
                             </View>
                             {!hired && scamUnlocked && (
                               <PixelButton
-                                onPress={() => handleHireManager(manager.id, manager.cost, manager.scamId)}
+                                onPress={() => handleHireManager(manager.id, dynamicManagerCost, manager.scamId)}
                                 disabled={!canAfford}
                                 variant="primary"
                               >

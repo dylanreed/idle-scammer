@@ -15,6 +15,7 @@ import { isTierAccessible } from '../game/prestige/calculations';
 import { getManagerByScamId } from '../game/managers/definitions';
 import { useManagerStore } from '../game/managers/managerStore';
 import { useEmployeeStore } from '../game/employees/employeeStore';
+import { useBotStore } from '../game/bots/botStore';
 import { getEmployeesByScamId } from '../game/employees/definitions';
 import { getEmployeeCostForScam, getMaxEmployeesPerType, getUnlockCostForScam } from '../game/employees/calculations';
 import type { ScamTimer } from '../game/engine/types';
@@ -92,6 +93,7 @@ export function ScamListPanel({
   testID,
 }: ScamListPanelProps): React.ReactElement {
   const isManagerHired = useManagerStore((state) => state.isManagerHired);
+  const getScamBotBonuses = useBotStore((state) => state.getScamBotBonuses);
 
   return (
     <ScrollView
@@ -145,6 +147,9 @@ export function ScamListPanel({
 
               const empMaxCount = getMaxEmployeesPerType(resources.trust);
 
+              // Look up bot bonuses for this scam
+              const botBonuses = getScamBotBonuses(scamDef.id);
+
               return (
                 <ScamCard
                   key={scamDef.id}
@@ -162,6 +167,8 @@ export function ScamListPanel({
                   employeeMaxCount={empMaxCount}
                   employeeSpeedBonus={empBonuses.speedBonus}
                   employeeRewardBonus={empBonuses.rewardBonus}
+                  botSpeedBonus={botBonuses.speedBonus}
+                  botProfitBonus={botBonuses.profitBonus}
                   onHireEmployee={
                     empDef ? () => onHireEmployee(empDef.id, scamDef.id) : undefined
                   }

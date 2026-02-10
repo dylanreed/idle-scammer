@@ -190,6 +190,44 @@ describe('ScamCard', () => {
     });
   });
 
+  describe('bot bonuses', () => {
+    it('should reduce displayed duration when botSpeedBonus is provided', () => {
+      // Without bot bonus: 5000ms → "5s"
+      const { unmount } = render(<ScamCard {...createDefaultProps()} />);
+      expect(screen.getByText('5s')).toBeTruthy();
+      unmount();
+
+      // With botSpeedBonus 0.5: 5000 / 1.5 ≈ 3333ms → "3s"
+      render(<ScamCard {...createDefaultProps({ botSpeedBonus: 0.5 })} />);
+      expect(screen.getByText('3s')).toBeTruthy();
+    });
+
+    it('should increase displayed reward when botProfitBonus is provided', () => {
+      // Without bot bonus: reward = unlockCost(100) = $100
+      const { unmount } = render(<ScamCard {...createDefaultProps()} />);
+      expect(screen.getByText('+$100')).toBeTruthy();
+      unmount();
+
+      // With botProfitBonus 0.5: reward = 100 * 1.5 = $150
+      render(<ScamCard {...createDefaultProps({ botProfitBonus: 0.5 })} />);
+      expect(screen.getByText('+$150')).toBeTruthy();
+    });
+
+    it('should combine bot and employee bonuses', () => {
+      // employeeSpeedBonus: 0.2 → 5000/1.2 = 4167
+      // botSpeedBonus: 0.3 → 4167/1.3 ≈ 3205 → "3s"
+      render(<ScamCard {...createDefaultProps({
+        employeeSpeedBonus: 0.2,
+        botSpeedBonus: 0.3,
+        employeeRewardBonus: 0.2,
+        botProfitBonus: 0.3,
+      })} />);
+      expect(screen.getByText('3s')).toBeTruthy();
+      // reward = unlockCost(100) * 1.3(bot) * 1.2(employee) = 156
+      expect(screen.getByText('+$156')).toBeTruthy();
+    });
+  });
+
   describe('times completed', () => {
     it('should show times completed when greater than 0', () => {
       const scamState: ScamState = { ...mockUnlockedState, timesCompleted: 5 };

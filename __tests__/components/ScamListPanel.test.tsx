@@ -71,15 +71,39 @@ jest.mock('../../src/game/employees/employeeStore', () => {
   };
 });
 
+// Mock bot store
+jest.mock('../../src/game/bots/botStore', () => {
+  const mockGetScamBotBonuses = jest.fn(() => ({ speedBonus: 0, profitBonus: 0 }));
+  return {
+    useBotStore: Object.assign(
+      jest.fn((selector: any) => {
+        if (typeof selector === 'function') {
+          return selector({
+            getScamBotBonuses: mockGetScamBotBonuses,
+          });
+        }
+        return {};
+      }),
+      {
+        getState: jest.fn(() => ({
+          getScamBotBonuses: mockGetScamBotBonuses,
+        })),
+      }
+    ),
+  };
+});
+
 // Mock ScamCard to keep tests focused on panel logic
 jest.mock('../../src/components/ScamCard', () => ({
-  ScamCard: ({ testID, onStart, onUnlock, onUpgrade }: any) => {
+  ScamCard: ({ testID, onStart, onUnlock, onUpgrade, botSpeedBonus, botProfitBonus }: any) => {
     const React = require('react');
-    const { View, Pressable } = require('react-native');
+    const { View, Pressable, Text } = require('react-native');
     return React.createElement(View, { testID },
       React.createElement(Pressable, { testID: `${testID}-start`, onPress: onStart }),
       React.createElement(Pressable, { testID: `${testID}-unlock`, onPress: onUnlock }),
       React.createElement(Pressable, { testID: `${testID}-upgrade`, onPress: onUpgrade }),
+      botSpeedBonus !== undefined && React.createElement(Text, { testID: `${testID}-bot-speed` }, String(botSpeedBonus)),
+      botProfitBonus !== undefined && React.createElement(Text, { testID: `${testID}-bot-profit` }, String(botProfitBonus)),
     );
   },
 }));
@@ -199,6 +223,7 @@ import { isTierAccessible } from '../../src/game/prestige/calculations';
 import { getUnlockCostForScam } from '../../src/game/employees/calculations';
 import { getManagerByScamId } from '../../src/game/managers/definitions';
 import { getEmployeesByScamId } from '../../src/game/employees/definitions';
+import { useBotStore } from '../../src/game/bots/botStore';
 
 const mockIsTierAccessible = isTierAccessible as jest.MockedFunction<typeof isTierAccessible>;
 const mockGetUnlockCostForScam = getUnlockCostForScam as jest.MockedFunction<typeof getUnlockCostForScam>;
@@ -432,6 +457,52 @@ describe('ScamListPanel', () => {
       expect(mockIsTierAccessible).toHaveBeenCalledWith(3, 7);
       expect(mockIsTierAccessible).toHaveBeenCalledWith(4, 7);
       expect(mockIsTierAccessible).toHaveBeenCalledWith(5, 7);
+    });
+  });
+
+  describe('bot bonus props', () => {
+    afterEach(() => {
+      // Restore default bot store mock after each test in this block
+      const defaultGetScamBotBonuses = jest.fn(() => ({ speedBonus: 0, profitBonus: 0 }));
+      (useBotStore as unknown as jest.Mock).mockImplementation((selector: any) => {
+        if (typeof selector === 'function') {
+          return selector({ getScamBotBonuses: defaultGetScamBotBonuses });
+        }
+        return {};
+      });
+      (useBotStore.getState as jest.Mock).mockReturnValue({
+        getScamBotBonuses: defaultGetScamBotBonuses,
+      });
+    });
+
+    it('should pass bot bonuses from useBotStore to ScamCard', () => {
+      // Override bot store to return bonuses for scam-a
+      const mockGetScamBotBonuses = jest.fn((scamId: string) => {
+        if (scamId === 'scam-a') return { speedBonus: 0.3, profitBonus: 0.2 };
+        return { speedBonus: 0, profitBonus: 0 };
+      });
+      (useBotStore as unknown as jest.Mock).mockImplementation((selector: any) => {
+        if (typeof selector === 'function') {
+          return selector({ getScamBotBonuses: mockGetScamBotBonuses });
+        }
+        return {};
+      });
+      (useBotStore.getState as jest.Mock).mockReturnValue({
+        getScamBotBonuses: mockGetScamBotBonuses,
+      });
+
+      render(<ScamListPanel {...createDefaultProps()} />);
+
+      // ScamCard mock renders bot bonus values as Text elements
+      expect(screen.getByTestId('scam-card-scam-a-bot-speed')).toHaveTextContent('0.3');
+      expect(screen.getByTestId('scam-card-scam-a-bot-profit')).toHaveTextContent('0.2');
+    });
+
+    it('should pass zero bot bonuses when no bots assigned', () => {
+      render(<ScamListPanel {...createDefaultProps()} />);
+
+      expect(screen.getByTestId('scam-card-scam-a-bot-speed')).toHaveTextContent('0');
+      expect(screen.getByTestId('scam-card-scam-a-bot-profit')).toHaveTextContent('0');
     });
   });
 

@@ -73,6 +73,12 @@ export interface ScamCardProps {
   /** Current employee reward bonus for this scam (decimal, e.g. 0.24 = 24%) */
   employeeRewardBonus?: number;
 
+  /** Bot speed bonus for this scam (decimal, e.g. 0.3 = 30% from 3 speed bots) */
+  botSpeedBonus?: number;
+
+  /** Bot profit bonus for this scam (decimal, e.g. 0.2 = 20% from 2 profit bots) */
+  botProfitBonus?: number;
+
   /** Called when player hires an employee */
   onHireEmployee?: () => void;
 
@@ -144,6 +150,8 @@ export function ScamCard({
   employeeMaxCount,
   employeeSpeedBonus = 0,
   employeeRewardBonus = 0,
+  botSpeedBonus = 0,
+  botProfitBonus = 0,
   onHireEmployee,
   employeeHireCost,
   unlockCost: unlockCostProp,
@@ -154,8 +162,8 @@ export function ScamCard({
   const isRunning = status === 'running';
 
   // Calculate values for display (including employee bonuses)
-  const duration = calculateScamDuration(scamDefinition, level, employeeSpeedBonus);
-  const reward = calculateScamReward(scamDefinition, level, trust, 0, employeeRewardBonus);
+  const duration = calculateScamDuration(scamDefinition, level, employeeSpeedBonus, botSpeedBonus);
+  const reward = calculateScamReward(scamDefinition, level, trust, botProfitBonus, employeeRewardBonus);
   const progress = getTimerProgress(timer);
   const upgradeCost = calculateUpgradeCost(scamDefinition, level);
   // Use dynamic unlock cost prop when provided, fall back to static definition

@@ -26,38 +26,33 @@ describe('Tier 5 Scams', () => {
     expect(uniqueNames.size).toBe(TIER_5_SCAMS.length);
   });
 
-  test('first scam (government-contract-fraud) should be free with baseReward $1,000,000,000', () => {
+  test('first scam (government-contract-fraud) should cost $1,000,000,000', () => {
     const firstScam = TIER_5_SCAMS[0];
     expect(firstScam.id).toBe('government-contract-fraud');
-    expect(firstScam.unlockCost).toBeUndefined();
+    expect(firstScam.unlockCost).toBe(1000000000);
     expect(firstScam.baseReward).toBe(1000000000); // $1B (tier 5 baseCost)
   });
 
-  test('other 9 scams should have defined unlockCost', () => {
-    const paidScams = TIER_5_SCAMS.slice(1);
-    expect(paidScams).toHaveLength(9);
+  test('all 10 scams should have defined unlockCost', () => {
+    expect(TIER_5_SCAMS).toHaveLength(10);
 
-    paidScams.forEach((scam) => {
+    TIER_5_SCAMS.forEach((scam) => {
       expect(scam.unlockCost).toBeDefined();
       expect(typeof scam.unlockCost).toBe('number');
       expect(scam.unlockCost).toBeGreaterThan(0);
     });
   });
 
-  test('paid scams should have ascending unlock costs', () => {
-    const paidScams = TIER_5_SCAMS.slice(1);
-
-    for (let i = 1; i < paidScams.length; i++) {
-      const prevCost = paidScams[i - 1].unlockCost!;
-      const currentCost = paidScams[i].unlockCost!;
+  test('all scams should have ascending unlock costs', () => {
+    for (let i = 1; i < TIER_5_SCAMS.length; i++) {
+      const prevCost = TIER_5_SCAMS[i - 1].unlockCost!;
+      const currentCost = TIER_5_SCAMS[i].unlockCost!;
       expect(currentCost).toBeGreaterThan(prevCost);
     }
   });
 
-  test('baseReward should equal unlockCost for paid scams', () => {
-    const paidScams = TIER_5_SCAMS.slice(1);
-
-    paidScams.forEach((scam) => {
+  test('baseReward should equal unlockCost for all scams', () => {
+    TIER_5_SCAMS.forEach((scam) => {
       expect(scam.baseReward).toBe(scam.unlockCost);
     });
   });

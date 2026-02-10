@@ -407,8 +407,10 @@ describe('Game Loop', () => {
       // 10 seconds = 2 cycles, trust = 3
       const progress = calculateOfflineProgress(0, 10000, state, scamStates, 3);
 
-      // 2 cycles × $10 × trust(3) × OFFLINE_EFFICIENCY(0.5) = $30
-      expect(progress.earnings.money).toBe(30);
+      // 2 cycles × $10 × trust^0.3 × OFFLINE_EFFICIENCY(0.5)
+      // trust^0.3 = 3^0.3 ≈ 1.3903
+      // 2 × 10 × 1.3903 × 0.5 ≈ 13.90
+      expect(progress.earnings.money).toBeCloseTo(13.90, 1);
     });
 
     it('should sum earnings from multiple timers', () => {

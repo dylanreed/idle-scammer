@@ -7,7 +7,7 @@ import type { ScamDefinition } from './types';
  * Crypto Rug Pulls - The classic "to the moon" exit scam.
  * First Tier 3 scam, free to unlock within the tier.
  *
- * Kongregate economy: FREE scam uses tier baseCost ($100K) as baseReward
+ * Kongregate economy: unlockCost = baseReward = tier baseCost ($100K)
  */
 export const CRYPTO_RUG_PULLS: ScamDefinition = {
   id: 'crypto-rug-pulls',
@@ -17,7 +17,7 @@ export const CRYPTO_RUG_PULLS: ScamDefinition = {
   baseReward: 100000,
   resourceType: 'money',
   description: 'To the moon! Oh wait, the devs just sold everything',
-  unlockCost: undefined,
+  unlockCost: 100000, // Tier baseCost - entry gate to Tier 3
 };
 
 /**

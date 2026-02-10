@@ -43,17 +43,19 @@ export const LEVEL_BRACKETS: LevelBracket[] = [
  * Base values for each scam tier (1-10).
  * These define the starting point before level scaling.
  *
- * New Kongregate-style economy:
- * - Cost: base × costRate^(level-1) (simple exponential)
+ * Kongregate-style economy:
+ * - Cost: baseCost × getScamCostRate(baseCost)^(level-1) (graduated exponential)
  * - Profit: base × (1 + level × profitGrowth) × bracketBonus (linear)
+ *
+ * Cost rate is graduated per-scam based on log10(baseCost):
+ * cheap scams (1.07) scale slowly, expensive scams (1.10) scale faster.
+ * See getScamCostRate() in scams/calculations.ts.
  */
 export interface ScamTierBase {
   /** Tier number (1-10) */
   tier: number;
   /** Base cost for free scams (scams with unlockCost use that instead) */
   baseCost: number;
-  /** Cost growth rate per level (1.15 = 15% increase) */
-  costRate: number;
   /** Profit growth rate per level (0.10 = 10% increase) */
   profitGrowth: number;
   /** Base duration in milliseconds */
@@ -63,25 +65,23 @@ export interface ScamTierBase {
 /**
  * Base values for all 10 scam tiers from the economic spreadsheet.
  *
- * Kongregate-style economy tuned for crossover at L35:
- * - Cost: baseCost × 1.07^(level-1)  (7% increase per level)
- * - Profit: baseCost × (1 + (level-1) × 0.10) × bracketBonus
- *
- * With bracket bonuses (2.5x at L35), crossover happens around L35.
+ * Kongregate-style economy:
+ * - Cost: baseCost × getScamCostRate(baseCost)^(level-1)  (graduated per-scam rate)
+ * - Profit: baseCost × (1 + (level-1) × 0.10) × bracketBonus × trust^0.3
  */
 export const SCAM_TIER_BASES: ScamTierBase[] = [
-  // costRate 1.07 = 7% cost increase per level (tuned for L35 crossover)
   // profitGrowth 0.10 = 10% profit increase per level
-  { tier: 1, baseCost: 10, costRate: 1.07, profitGrowth: 0.10, baseDuration: 5000 },
-  { tier: 2, baseCost: 1000, costRate: 1.07, profitGrowth: 0.10, baseDuration: 5000 },
-  { tier: 3, baseCost: 100000, costRate: 1.07, profitGrowth: 0.10, baseDuration: 5000 },
-  { tier: 4, baseCost: 10000000, costRate: 1.07, profitGrowth: 0.10, baseDuration: 10000 },
-  { tier: 5, baseCost: 1000000000, costRate: 1.07, profitGrowth: 0.10, baseDuration: 30000 },
-  { tier: 6, baseCost: 100000000000, costRate: 1.07, profitGrowth: 0.10, baseDuration: 60000 },
-  { tier: 7, baseCost: 10000000000000, costRate: 1.07, profitGrowth: 0.10, baseDuration: 120000 },
-  { tier: 8, baseCost: 1000000000000000, costRate: 1.07, profitGrowth: 0.10, baseDuration: 300000 },
-  { tier: 9, baseCost: 100000000000000000, costRate: 1.07, profitGrowth: 0.10, baseDuration: 600000 },
-  { tier: 10, baseCost: 10000000000000000000, costRate: 1.07, profitGrowth: 0.10, baseDuration: 1200000 },
+  // cost rate is graduated per-scam: 1.07 (cheap) to 1.10 (expensive)
+  { tier: 1, baseCost: 10, profitGrowth: 0.10, baseDuration: 5000 },
+  { tier: 2, baseCost: 1000, profitGrowth: 0.10, baseDuration: 5000 },
+  { tier: 3, baseCost: 100000, profitGrowth: 0.10, baseDuration: 5000 },
+  { tier: 4, baseCost: 10000000, profitGrowth: 0.10, baseDuration: 10000 },
+  { tier: 5, baseCost: 1000000000, profitGrowth: 0.10, baseDuration: 30000 },
+  { tier: 6, baseCost: 100000000000, profitGrowth: 0.10, baseDuration: 60000 },
+  { tier: 7, baseCost: 10000000000000, profitGrowth: 0.10, baseDuration: 120000 },
+  { tier: 8, baseCost: 1000000000000000, profitGrowth: 0.10, baseDuration: 300000 },
+  { tier: 9, baseCost: 100000000000000000, profitGrowth: 0.10, baseDuration: 600000 },
+  { tier: 10, baseCost: 10000000000000000000, profitGrowth: 0.10, baseDuration: 1200000 },
 ];
 
 /**

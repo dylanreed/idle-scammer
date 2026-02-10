@@ -26,10 +26,10 @@ describe('TIER_4_SCAMS', () => {
     expect(uniqueNames.size).toBe(TIER_4_SCAMS.length);
   });
 
-  it('should have first scam (ponzi-schemes) be free', () => {
+  it('should have first scam (ponzi-schemes) cost $10,000,000', () => {
     const firstScam = TIER_4_SCAMS[0];
     expect(firstScam.id).toBe('ponzi-schemes');
-    expect(firstScam.unlockCost).toBeUndefined();
+    expect(firstScam.unlockCost).toBe(10000000);
   });
 
   it('should have first scam with baseReward of $10,000,000', () => {
@@ -37,28 +37,25 @@ describe('TIER_4_SCAMS', () => {
     expect(firstScam.baseReward).toBe(10000000);
   });
 
-  it('should have other 9 scams with defined unlockCost', () => {
-    const paidScams = TIER_4_SCAMS.slice(1);
-    expect(paidScams).toHaveLength(9);
-    paidScams.forEach((scam) => {
+  it('should have all 10 scams with defined unlockCost', () => {
+    expect(TIER_4_SCAMS).toHaveLength(10);
+    TIER_4_SCAMS.forEach((scam) => {
       expect(scam.unlockCost).toBeDefined();
       expect(typeof scam.unlockCost).toBe('number');
       expect(scam.unlockCost).toBeGreaterThan(0);
     });
   });
 
-  it('should have ascending unlock costs for paid scams', () => {
-    const paidScams = TIER_4_SCAMS.slice(1);
-    for (let i = 1; i < paidScams.length; i++) {
-      const prevCost = paidScams[i - 1].unlockCost!;
-      const currentCost = paidScams[i].unlockCost!;
+  it('should have ascending unlock costs', () => {
+    for (let i = 1; i < TIER_4_SCAMS.length; i++) {
+      const prevCost = TIER_4_SCAMS[i - 1].unlockCost!;
+      const currentCost = TIER_4_SCAMS[i].unlockCost!;
       expect(currentCost).toBeGreaterThanOrEqual(prevCost);
     }
   });
 
-  it('should have baseReward equal to unlockCost for paid scams', () => {
-    const paidScams = TIER_4_SCAMS.slice(1);
-    paidScams.forEach((scam) => {
+  it('should have baseReward equal to unlockCost', () => {
+    TIER_4_SCAMS.forEach((scam) => {
       expect(scam.baseReward).toBe(scam.unlockCost);
     });
   });

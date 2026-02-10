@@ -52,6 +52,30 @@ const MIN_DURATION_PERCENTAGE = 0.1;
 const BOT_COMPOUND_RATE = 0.01;
 
 /**
+ * Graduated cost rate parameters.
+ * Cheap scams scale slowly (1.07), expensive scams scale faster (1.10).
+ * Rate is interpolated linearly based on log10(baseCost).
+ */
+const MIN_COST_RATE = 1.07;
+const MAX_COST_RATE = 1.10;
+const MIN_LOG_COST = 1;  // log10(10) - cheapest scam ($10)
+const MAX_LOG_COST = 19; // log10(10^19) - most expensive scam ($10Qi)
+
+/**
+ * Returns the graduated cost rate for a scam based on its effective baseCost.
+ * Cheap scams ($10) get rate 1.07, expensive scams ($10Qi) get rate 1.10.
+ * Intermediate values are linearly interpolated on the log10 scale.
+ *
+ * @param baseCost - The scam's effective base cost (unlockCost or tier baseCost)
+ * @returns Cost rate between MIN_COST_RATE and MAX_COST_RATE
+ */
+export function getScamCostRate(baseCost: number): number {
+  const logCost = Math.log10(Math.max(baseCost, 10));
+  const t = Math.min(1, Math.max(0, (logCost - MIN_LOG_COST) / (MAX_LOG_COST - MIN_LOG_COST)));
+  return MIN_COST_RATE + t * (MAX_COST_RATE - MIN_COST_RATE);
+}
+
+/**
  * Gets the profit bracket multiplier for a given level.
  */
 export function getProfitBonusMultiplier(level: number): number {
@@ -184,17 +208,20 @@ export function calculateScamReward(
   const botMultiplier =
     resourceType === 'bots' ? calculateBotMultiplier(currentBots) : 1;
 
-  // Trust is a direct multiplier
-  return baseReward * linearMultiplier * bracketBonus * trust * botMultiplier;
+  // Trust uses diminishing returns: trust^0.3 to prevent runaway scaling
+  const trustMultiplier = Math.pow(trust, 0.3);
+
+  return baseReward * linearMultiplier * bracketBonus * trustMultiplier * botMultiplier;
 }
 
 /**
  * Calculates the cost to upgrade a scam to the next level.
  *
- * Kongregate-style simple exponential:
- * cost = baseCost × costRate^(level - 1)
+ * Graduated exponential:
+ * cost = baseCost × getScamCostRate(baseCost)^(level - 1)
  *
- * Where baseCost = unlockCost (or tier baseCost for free scams)
+ * Where baseCost = unlockCost (or tier baseCost for free scams),
+ * and the cost rate scales from 1.07 (cheap scams) to 1.10 (expensive scams).
  */
 export function calculateUpgradeCost(
   definition: ScamDefinition,
@@ -206,8 +233,9 @@ export function calculateUpgradeCost(
   // Base cost = unlock cost (consistent with base reward)
   const baseCost = unlockCost ?? tierBase.baseCost;
 
-  // Simple exponential: 15% increase per level
-  const costMultiplier = Math.pow(tierBase.costRate, level - 1);
+  // Graduated exponential cost growth per level
+  const costRate = getScamCostRate(baseCost);
+  const costMultiplier = Math.pow(costRate, level - 1);
 
   return Math.max(1, Math.floor(baseCost * costMultiplier));
 }

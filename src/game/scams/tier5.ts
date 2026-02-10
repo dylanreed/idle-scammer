@@ -7,7 +7,7 @@ import type { ScamDefinition } from './types';
  * Government Contract Fraud - Delivering nothing for billions.
  * First Tier 5 scam, free to unlock within the tier.
  *
- * Kongregate economy: FREE scam uses tier baseCost ($1B) as baseReward
+ * Kongregate economy: unlockCost = baseReward = tier baseCost ($1B)
  */
 export const GOVERNMENT_CONTRACT_FRAUD: ScamDefinition = {
   id: 'government-contract-fraud',
@@ -17,7 +17,7 @@ export const GOVERNMENT_CONTRACT_FRAUD: ScamDefinition = {
   baseReward: 1000000000,
   resourceType: 'money',
   description: 'Delivering nothing for billions. The military-industrial complex approves',
-  unlockCost: undefined,
+  unlockCost: 1000000000, // Tier baseCost - entry gate to Tier 5
 };
 
 /**

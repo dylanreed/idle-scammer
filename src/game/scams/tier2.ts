@@ -7,7 +7,7 @@ import type { ScamDefinition } from './types';
  * Tech Support Scams - The classic "Hello, this is Windows" call.
  * First Tier 2 scam, free to unlock within the tier.
  *
- * Kongregate economy: FREE scam uses tier baseCost ($1K) as baseReward
+ * Kongregate economy: unlockCost = baseReward = tier baseCost ($1K)
  */
 export const TECH_SUPPORT_SCAMS: ScamDefinition = {
   id: 'tech-support-scams',
@@ -17,7 +17,7 @@ export const TECH_SUPPORT_SCAMS: ScamDefinition = {
   baseReward: 1000,
   resourceType: 'money',
   description: 'Hello, this is Windows calling about your virus problem',
-  unlockCost: undefined,
+  unlockCost: 1000, // Tier baseCost - entry gate to Tier 2
 };
 
 /**

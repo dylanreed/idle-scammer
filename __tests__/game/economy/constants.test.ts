@@ -54,9 +54,9 @@ describe('Economy Constants', () => {
       expect(SCAM_TIER_BASES[9].baseCost).toBe(10000000000000000000);
     });
 
-    it('should have consistent cost rate of 1.07 (7% per level, tuned for L35 crossover)', () => {
+    it('should not have costRate property (graduated rates are per-scam)', () => {
       SCAM_TIER_BASES.forEach((tier) => {
-        expect(tier.costRate).toBe(1.07);
+        expect(tier).not.toHaveProperty('costRate');
       });
     });
 
@@ -72,7 +72,6 @@ describe('Economy Constants', () => {
       const base = getTierBase(1);
       expect(base.tier).toBe(1);
       expect(base.baseCost).toBe(10);
-      expect(base.costRate).toBe(1.07); // Tuned for L35 crossover
       expect(base.profitGrowth).toBe(0.1);
     });
 
@@ -80,7 +79,6 @@ describe('Economy Constants', () => {
       const base = getTierBase(5);
       expect(base.tier).toBe(5);
       expect(base.baseCost).toBe(1000000000); // $1B
-      expect(base.costRate).toBe(1.07); // Tuned for L35 crossover
       expect(base.profitGrowth).toBe(0.1);
     });
 

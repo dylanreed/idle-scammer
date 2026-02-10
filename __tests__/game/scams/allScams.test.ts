@@ -114,24 +114,24 @@ describe('ALL_SCAMS barrel export', () => {
       expect(firstScam.unlockCost).toBeUndefined();
     });
 
-    it('first scam of Tier 2 should be free', () => {
+    it('first scam of Tier 2 should have unlockCost of $1,000', () => {
       const firstScam = TIER_2_SCAMS[0];
-      expect(firstScam.unlockCost).toBeUndefined();
+      expect(firstScam.unlockCost).toBe(1000);
     });
 
-    it('first scam of Tier 3 should be free', () => {
+    it('first scam of Tier 3 should have unlockCost of $100,000', () => {
       const firstScam = TIER_3_SCAMS[0];
-      expect(firstScam.unlockCost).toBeUndefined();
+      expect(firstScam.unlockCost).toBe(100000);
     });
 
-    it('first scam of Tier 4 should be free', () => {
+    it('first scam of Tier 4 should have unlockCost of $10,000,000', () => {
       const firstScam = TIER_4_SCAMS[0];
-      expect(firstScam.unlockCost).toBeUndefined();
+      expect(firstScam.unlockCost).toBe(10000000);
     });
 
-    it('first scam of Tier 5 should be free', () => {
+    it('first scam of Tier 5 should have unlockCost of $1,000,000,000', () => {
       const firstScam = TIER_5_SCAMS[0];
-      expect(firstScam.unlockCost).toBeUndefined();
+      expect(firstScam.unlockCost).toBe(1000000000);
     });
   });
 

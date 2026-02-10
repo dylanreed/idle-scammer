@@ -11,6 +11,7 @@ import {
   isMilestoneLevel,
   calculateMilestoneBonus,
   calculateManagerCost,
+  getScamCostRate,
 } from '../../../src/game/scams/calculations';
 import { BOT_FARMS } from '../../../src/game/scams/definitions';
 import type { ScamDefinition } from '../../../src/game/scams/types';
@@ -90,26 +91,30 @@ describe('Scam Calculations', () => {
       expect(rewardL10).toBeGreaterThan(rewardL5);
     });
 
-    it('should multiply reward by trust', () => {
+    it('should multiply reward by trust^0.3', () => {
       const rewardTrust1 = calculateScamReward(testScam, 1, 1);
       const rewardTrust2 = calculateScamReward(testScam, 1, 2);
       const rewardTrust10 = calculateScamReward(testScam, 1, 10);
 
-      // At level 1 with baseReward 100: 100, 200, 1000
+      // At level 1 with baseReward 100
+      // trust^0.3: 1^0.3 = 1, 2^0.3 ≈ 1.2311, 10^0.3 ≈ 1.9953
+      // 100 × 1 = 100
+      // 100 × 1.2311 ≈ 123.11
+      // 100 × 1.9953 ≈ 199.53
       expect(rewardTrust1).toBe(100);
-      expect(rewardTrust2).toBe(200);
-      expect(rewardTrust10).toBe(1000);
+      expect(rewardTrust2).toBeCloseTo(123.11, 1);
+      expect(rewardTrust10).toBeCloseTo(199.53, 1);
     });
 
     it('should combine level and trust bonuses', () => {
       // Level 5 should give more than level 1
-      // Trust 3 should triple the result
+      // Trust 3 (3^0.3 ≈ 1.3903) multiplies the result
       const rewardL5T3 = calculateScamReward(testScam, 5, 3);
       const rewardL1T1 = calculateScamReward(testScam, 1, 1);
 
       expect(rewardL5T3).toBeGreaterThan(rewardL1T1);
-      // Should be at least 3x due to trust alone
-      expect(rewardL5T3).toBeGreaterThanOrEqual(rewardL1T1 * 3);
+      // Should be at least 1.39x due to trust alone
+      expect(rewardL5T3).toBeGreaterThanOrEqual(rewardL1T1 * 1.39);
     });
 
     it('should work with Bot Farms (generates bots)', () => {
@@ -130,8 +135,40 @@ describe('Scam Calculations', () => {
       // Trust can theoretically be fractional if damaged by snitching
       const reward = calculateScamReward(testScam, 1, 1.5);
 
-      // 100 * 1 * 1.5 = 150
-      expect(reward).toBe(150);
+      // 100 × 1.5^0.3 ≈ 100 × 1.1293 ≈ 112.93
+      expect(reward).toBeCloseTo(112.93, 1);
+    });
+  });
+
+  describe('getScamCostRate', () => {
+    it('should return minimum rate (1.07) for cheapest scam ($10)', () => {
+      const rate = getScamCostRate(10);
+      expect(rate).toBeCloseTo(1.07, 4);
+    });
+
+    it('should return maximum rate (1.10) for most expensive scam ($10Qi)', () => {
+      const rate = getScamCostRate(10_000_000_000_000_000_000);
+      expect(rate).toBeCloseTo(1.10, 4);
+    });
+
+    it('should return a rate between min and max for mid-range scams', () => {
+      const rate = getScamCostRate(1_000_000_000); // $1B
+      expect(rate).toBeGreaterThan(1.07);
+      expect(rate).toBeLessThan(1.10);
+    });
+
+    it('should increase monotonically with baseCost', () => {
+      const rates = [10, 1000, 100000, 10000000, 1000000000, 10000000000000000000].map(
+        (cost) => getScamCostRate(cost)
+      );
+      for (let i = 1; i < rates.length; i++) {
+        expect(rates[i]).toBeGreaterThan(rates[i - 1]);
+      }
+    });
+
+    it('should clamp values below $10 to minimum rate', () => {
+      const rate = getScamCostRate(1);
+      expect(rate).toBeCloseTo(1.07, 4);
     });
   });
 
@@ -327,12 +364,12 @@ describe('Scam Calculations', () => {
       const withBots = calculateScamReward(botScam, 5, 1, 50); // 50 bots = 1.5x
       const withBoth = calculateScamReward(botScam, 5, 2, 50);
 
-      // Trust 2x should double the reward
-      expect(withTrust).toBeCloseTo(baseReward * 2, 1);
+      // Trust 2^0.3 ≈ 1.2311 should multiply the reward
+      expect(withTrust).toBeCloseTo(baseReward * 1.2311, 1);
       // 50 bots should give 1.5x
       expect(withBots).toBeCloseTo(baseReward * 1.5, 1);
-      // Combined should be 2 * 1.5 = 3x
-      expect(withBoth).toBeCloseTo(baseReward * 3, 1);
+      // Combined should be 1.2311 * 1.5 ≈ 1.8467x
+      expect(withBoth).toBeCloseTo(baseReward * 1.8467, 1);
     });
 
     it('should default to 0 bots if not provided', () => {

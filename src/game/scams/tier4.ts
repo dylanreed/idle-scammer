@@ -7,7 +7,7 @@ import type { ScamDefinition } from './types';
  * Ponzi Schemes - Pay old investors with new investor money.
  * First Tier 4 scam, free to unlock within the tier.
  *
- * Kongregate economy: FREE scam uses tier baseCost ($10M) as baseReward
+ * Kongregate economy: unlockCost = baseReward = tier baseCost ($10M)
  */
 export const PONZI_SCHEMES: ScamDefinition = {
   id: 'ponzi-schemes',
@@ -17,7 +17,7 @@ export const PONZI_SCHEMES: ScamDefinition = {
   baseReward: 10000000,
   resourceType: 'money',
   description: 'Pay old investors with new investor money. What could go wrong?',
-  unlockCost: undefined,
+  unlockCost: 10000000, // Tier baseCost - entry gate to Tier 4
 };
 
 /**

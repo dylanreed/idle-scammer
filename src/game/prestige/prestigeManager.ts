@@ -27,6 +27,32 @@ export function resetAllStores(): void {
 }
 
 /**
+ * Nukes all game state back to the very beginning, including trust.
+ * This is the "start completely over" operation.
+ */
+export function fullReset(): void {
+  // Hydrate game resources to fresh initial state (trust = 1, everything else = 0)
+  useGameStore.getState().hydrate({
+    money: 0,
+    reputation: 0,
+    heat: 0,
+    bots: 0,
+    skillPoints: 0,
+    crypto: 0,
+    trust: 1,
+  });
+
+  // Reset scams to initial state
+  useScamStore.getState().resetScams();
+
+  // Reset employees
+  useEmployeeStore.getState().resetEmployees();
+
+  // Reset managers
+  useManagerStore.getState().resetManagers();
+}
+
+/**
  * Applies snitch bonuses to the game store.
  * Called after reset when player chose to snitch.
  *

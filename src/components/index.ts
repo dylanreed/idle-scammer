@@ -25,3 +25,6 @@ export type { ResourceHUDProps } from './ResourceHUD';
 
 export { ScamCard } from './ScamCard';
 export type { ScamCardProps, ScamCardStatus } from './ScamCard';
+
+export { PrestigeModal } from './PrestigeModal';
+export type { PrestigeModalProps } from './PrestigeModal';

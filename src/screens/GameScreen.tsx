@@ -1,12 +1,13 @@
 // ABOUTME: Main game screen that wires together all game systems
 // ABOUTME: Displays ResourceHUD, ScamCards, managers, and handles game loop integration
 
-import React, { useEffect, useCallback, useMemo, useRef } from 'react';
+import React, { useEffect, useCallback, useMemo, useRef, useState } from 'react';
 import { View, ScrollView, StyleSheet, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { ResourceHUD } from '../components/ResourceHUD';
 import { ScamCard } from '../components/ScamCard';
+import { PrestigeModal } from '../components/PrestigeModal';
 import { TerminalText } from '../components/TerminalText';
 import { PixelButton } from '../components/PixelButton';
 import { CRTFrame } from '../components/CRTFrame';
@@ -29,10 +30,13 @@ import {
   isMilestoneLevel,
 } from '../game/scams/calculations';
 import { calculateHeatFromScam, calculateHeatDecay, isTierAccessible } from '../game/prestige/calculations';
+import { executePrestige, fullReset } from '../game/prestige/prestigeManager';
+import { MAX_HEAT } from '../game/prestige/constants';
 import { useGameLoop, type TickResult } from '../game/engine/gameLoop';
 import { formatNumber } from '../utils/formatters';
 import type { ScamTimer } from '../game/engine/types';
 import type { ScamDefinition, ScamTier } from '../game/scams/types';
+import type { PrestigeResult } from '../game/prestige/types';
 
 /**
  * Tier display names shown as section headers
@@ -83,9 +87,21 @@ export function GameScreen(): React.ReactElement {
   const hireManager = useManagerStore((state) => state.hireManager);
   const isManagerHired = useManagerStore((state) => state.isManagerHired);
 
-  // Refs to hold timer functions (needed for auto-collect and manager auto-restart)
+  // Prestige modal state
+  const [showPrestige, setShowPrestige] = useState(false);
+  const [prestigePhase, setPrestigePhase] = useState<'choice' | 'result'>('choice');
+  const [prestigeResult, setPrestigeResult] = useState<PrestigeResult | undefined>(undefined);
+
+  // Reset confirmation state
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
+
+  // Ref guard to prevent double-triggering prestige (stale closures in useCallback)
+  const showPrestigeRef = useRef(false);
+
+  // Refs to hold timer and loop control functions
   const removeTimerRef = useRef<((scamId: string) => void) | null>(null);
   const addTimerRef = useRef<((scamId: string, durationMs: number) => void) | null>(null);
+  const pauseRef = useRef<(() => void) | null>(null);
 
   /**
    * Handle scam timer completion - award resources, auto-collect, and manager auto-restart
@@ -114,6 +130,19 @@ export function GameScreen(): React.ReactElement {
 
       // Increment completion counter
       incrementCompletion(timer.scamId);
+
+      // Check if heat has reached max (triggers prestige)
+      const currentHeat = useGameStore.getState().resources.heat;
+      if (currentHeat >= MAX_HEAT && !showPrestigeRef.current) {
+        showPrestigeRef.current = true;
+        setShowPrestige(true);
+        setPrestigePhase('choice');
+        setPrestigeResult(undefined);
+        // Pause the game loop while prestige modal is shown
+        if (pauseRef.current) {
+          pauseRef.current();
+        }
+      }
 
       // Auto-collect: remove the completed timer immediately
       if (removeTimerRef.current) {
@@ -154,14 +183,15 @@ export function GameScreen(): React.ReactElement {
   );
 
   // Initialize the game loop
-  const { start, engineState, addTimer, removeTimer } = useGameLoop({
+  const { start, stop, pause, engineState, addTimer, removeTimer } = useGameLoop({
     onTick: handleTick,
     onTimerComplete: handleTimerComplete,
   });
 
-  // Store timer functions in refs for use in handleTimerComplete
+  // Store timer and loop control functions in refs for use in callbacks
   removeTimerRef.current = removeTimer;
   addTimerRef.current = addTimer;
+  pauseRef.current = pause;
 
   // Start the game loop on mount
   useEffect(() => {
@@ -316,6 +346,41 @@ export function GameScreen(): React.ReactElement {
     [resources.money, addMoney, hireManager, isManagerHired, scams, timerMap, addTimer]
   );
 
+  /**
+   * Handle prestige choice - execute prestige and show result
+   */
+  const handlePrestigeChoice = useCallback(
+    (choice: 'clean-escape' | 'snitch') => {
+      const result = executePrestige(choice);
+      setPrestigeResult(result);
+      setPrestigePhase('result');
+    },
+    []
+  );
+
+  /**
+   * Handle prestige continue - hide modal and restart the game loop
+   */
+  const handlePrestigeContinue = useCallback(() => {
+    setShowPrestige(false);
+    showPrestigeRef.current = false;
+    setPrestigePhase('choice');
+    setPrestigeResult(undefined);
+    // Stop and restart the game loop for a clean slate
+    stop();
+    start();
+  }, [stop, start]);
+
+  /**
+   * Handle full game reset - wipe everything including trust
+   */
+  const handleResetConfirm = useCallback(() => {
+    setShowResetConfirm(false);
+    fullReset();
+    stop();
+    start();
+  }, [stop, start]);
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar style="light" />
@@ -325,6 +390,38 @@ export function GameScreen(): React.ReactElement {
         <TerminalText size="lg" color={COLORS.terminalGreen}>
           {'IDLE SCAMMER v0.1'}
         </TerminalText>
+        {!showResetConfirm ? (
+          <PixelButton
+            onPress={() => setShowResetConfirm(true)}
+            variant="danger"
+            style={styles.resetButton}
+            testID="reset-btn"
+          >
+            {'RESET'}
+          </PixelButton>
+        ) : (
+          <View style={styles.resetConfirm}>
+            <TerminalText size="sm" color={COLORS.warningRed}>
+              {'WIPE EVERYTHING?'}
+            </TerminalText>
+            <View style={styles.resetConfirmButtons}>
+              <PixelButton
+                onPress={handleResetConfirm}
+                variant="danger"
+                testID="reset-confirm-btn"
+              >
+                {'YES'}
+              </PixelButton>
+              <PixelButton
+                onPress={() => setShowResetConfirm(false)}
+                variant="secondary"
+                testID="reset-cancel-btn"
+              >
+                {'NO'}
+              </PixelButton>
+            </View>
+          </View>
+        )}
       </View>
 
       {/* Resource HUD */}
@@ -455,6 +552,16 @@ export function GameScreen(): React.ReactElement {
           );
         })}
       </ScrollView>
+
+      {/* Prestige modal overlay */}
+      <PrestigeModal
+        visible={showPrestige}
+        phase={prestigePhase}
+        resources={resources}
+        result={prestigeResult}
+        onChoose={handlePrestigeChoice}
+        onContinue={handlePrestigeContinue}
+      />
     </SafeAreaView>
   );
 }
@@ -510,5 +617,19 @@ const styles = StyleSheet.create({
   },
   managerInfo: {
     flex: 1,
+  },
+  resetButton: {
+    marginTop: SPACING.xs,
+    paddingVertical: SPACING.xs,
+    paddingHorizontal: SPACING.sm,
+  },
+  resetConfirm: {
+    alignItems: 'center',
+    marginTop: SPACING.xs,
+  },
+  resetConfirmButtons: {
+    flexDirection: 'row',
+    gap: SPACING.sm,
+    marginTop: SPACING.xs,
   },
 });

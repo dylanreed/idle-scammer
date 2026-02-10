@@ -7,6 +7,7 @@ import type { AppStateStatus } from 'react-native';
 import { loadGame, saveGame } from './storage';
 import { migrateIfNeeded, applySaveData, createSaveData, reconstructActiveTimers } from './saveManager';
 import { calculateOfflineProgress } from '../engine/gameLoop';
+import { calculateHeatDecay } from '../prestige/calculations';
 import { AUTO_SAVE_INTERVAL_MS } from './types';
 import { useGameStore } from '../store';
 import { useScamStore } from '../scams/scamStore';
@@ -62,6 +63,17 @@ export function GameProvider({ children }: GameProviderProps): React.ReactElemen
               scams,
               resources.trust
             );
+
+            // Apply heat decay for offline duration before adding new heat
+            const offlineSeconds = progress.elapsedMs / 1000;
+            const currentHeat = useGameStore.getState().resources.heat;
+            if (currentHeat > 0 && offlineSeconds > 0) {
+              const decayedHeat = calculateHeatDecay(currentHeat, offlineSeconds);
+              const heatLost = currentHeat - decayedHeat;
+              if (heatLost > 0) {
+                useGameStore.getState().addHeat(-heatLost);
+              }
+            }
 
             // Apply offline earnings
             if (progress.earnings.money > 0) {

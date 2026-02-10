@@ -3,7 +3,12 @@
 
 import {
   MAX_HEAT,
-  HEAT_PER_SCAM_TIER,
+  MIN_HEAT_PER_COMPLETION,
+  MAX_HEAT_PER_COMPLETION,
+  MIN_HEAT_LOG_COST,
+  MAX_HEAT_LOG_COST,
+  HEAT_TIER_DISCOUNT,
+  HEAT_DECAY_RATE,
   CLEAN_ESCAPE_TRUST_GAIN,
   SNITCH_TRUST_PENALTY,
   SNITCH_RESOURCE_KEEP_PERCENT,
@@ -16,36 +21,60 @@ describe('Prestige Constants', () => {
     });
   });
 
-  describe('HEAT_PER_SCAM_TIER', () => {
-    it('should define heat for tier 1 scams (0.5)', () => {
-      expect(HEAT_PER_SCAM_TIER[1]).toBe(0.5);
+  describe('Graduated heat constants', () => {
+    it('should define minimum heat per completion (cheap scams)', () => {
+      expect(MIN_HEAT_PER_COMPLETION).toBe(0.005);
     });
 
-    it('should define heat for tier 2 scams (1)', () => {
-      expect(HEAT_PER_SCAM_TIER[2]).toBe(1);
+    it('should define maximum heat per completion (expensive scams)', () => {
+      expect(MAX_HEAT_PER_COMPLETION).toBe(0.5);
     });
 
-    it('should define heat for tier 3 scams (2)', () => {
-      expect(HEAT_PER_SCAM_TIER[3]).toBe(2);
+    it('should have min < max for heat per completion', () => {
+      expect(MIN_HEAT_PER_COMPLETION).toBeLessThan(MAX_HEAT_PER_COMPLETION);
     });
 
-    it('should define heat for tier 4 scams (3)', () => {
-      expect(HEAT_PER_SCAM_TIER[4]).toBe(3);
+    it('should define log cost range for interpolation', () => {
+      expect(MIN_HEAT_LOG_COST).toBe(1);  // log10(10)
+      expect(MAX_HEAT_LOG_COST).toBe(19); // log10(10^19)
     });
+  });
 
-    it('should define heat for tier 5 scams (5)', () => {
-      expect(HEAT_PER_SCAM_TIER[5]).toBe(5);
-    });
-
+  describe('HEAT_TIER_DISCOUNT', () => {
     it('should have all 5 tiers defined', () => {
-      expect(Object.keys(HEAT_PER_SCAM_TIER)).toHaveLength(5);
+      expect(Object.keys(HEAT_TIER_DISCOUNT)).toHaveLength(5);
     });
 
-    it('should have increasing heat values per tier', () => {
-      expect(HEAT_PER_SCAM_TIER[1]).toBeLessThan(HEAT_PER_SCAM_TIER[2]);
-      expect(HEAT_PER_SCAM_TIER[2]).toBeLessThan(HEAT_PER_SCAM_TIER[3]);
-      expect(HEAT_PER_SCAM_TIER[3]).toBeLessThan(HEAT_PER_SCAM_TIER[4]);
-      expect(HEAT_PER_SCAM_TIER[4]).toBeLessThan(HEAT_PER_SCAM_TIER[5]);
+    it('should have T1 at full heat (1.0x)', () => {
+      expect(HEAT_TIER_DISCOUNT[1]).toBe(1.0);
+    });
+
+    it('should have decreasing multipliers for higher tiers', () => {
+      expect(HEAT_TIER_DISCOUNT[1]).toBeGreaterThan(HEAT_TIER_DISCOUNT[2]);
+      expect(HEAT_TIER_DISCOUNT[2]).toBeGreaterThan(HEAT_TIER_DISCOUNT[3]);
+      expect(HEAT_TIER_DISCOUNT[3]).toBeGreaterThan(HEAT_TIER_DISCOUNT[4]);
+      expect(HEAT_TIER_DISCOUNT[4]).toBeGreaterThan(HEAT_TIER_DISCOUNT[5]);
+    });
+
+    it('should have T5 at near-invisible heat (0.1x)', () => {
+      expect(HEAT_TIER_DISCOUNT[5]).toBe(0.1);
+    });
+
+    it('should have all values between 0 and 1', () => {
+      for (const tier of [1, 2, 3, 4, 5] as const) {
+        expect(HEAT_TIER_DISCOUNT[tier]).toBeGreaterThan(0);
+        expect(HEAT_TIER_DISCOUNT[tier]).toBeLessThanOrEqual(1);
+      }
+    });
+  });
+
+  describe('HEAT_DECAY_RATE', () => {
+    it('should be 0.001 per second', () => {
+      expect(HEAT_DECAY_RATE).toBe(0.001);
+    });
+
+    it('should be positive', () => {
+      expect(HEAT_DECAY_RATE).toBeGreaterThan(0);
     });
   });
 

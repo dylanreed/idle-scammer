@@ -3,18 +3,28 @@
 
 import {
   calculateHeatFromScam,
+  calculateHeatDecay,
   isPrestigeForced,
   calculateCleanEscapeResult,
   calculateSnitchResult,
 } from '../../../src/game/prestige/calculations';
-import { MAX_HEAT, CLEAN_ESCAPE_TRUST_GAIN, SNITCH_TRUST_PENALTY, SNITCH_RESOURCE_KEEP_PERCENT } from '../../../src/game/prestige/constants';
+import {
+  MAX_HEAT,
+  MIN_HEAT_PER_COMPLETION,
+  MAX_HEAT_PER_COMPLETION,
+  HEAT_TIER_DISCOUNT,
+  HEAT_DECAY_RATE,
+  CLEAN_ESCAPE_TRUST_GAIN,
+  SNITCH_TRUST_PENALTY,
+  SNITCH_RESOURCE_KEEP_PERCENT,
+} from '../../../src/game/prestige/constants';
 import type { ScamDefinition } from '../../../src/game/scams/types';
 import type { GameResources } from '../../../src/game/types';
 
 describe('Prestige Calculations', () => {
   describe('calculateHeatFromScam', () => {
-    it('should return 0.5 heat for tier 1 scams', () => {
-      const tier1Scam: ScamDefinition = {
+    it('should return low heat for cheap T1 scams (free scam, uses tier baseCost)', () => {
+      const cheapScam: ScamDefinition = {
         id: 'test-scam',
         name: 'Test Scam',
         tier: 1,
@@ -22,65 +32,161 @@ describe('Prestige Calculations', () => {
         baseReward: 10,
         resourceType: 'money',
         description: 'A test scam',
+        // No unlockCost → uses tier baseCost ($10)
       };
 
-      expect(calculateHeatFromScam(tier1Scam)).toBe(0.5);
+      const heat = calculateHeatFromScam(cheapScam);
+      // T1 baseCost=$10, log10(10)=1, t=0 → MIN_HEAT * 1.0 discount
+      expect(heat).toBeCloseTo(MIN_HEAT_PER_COMPLETION * HEAT_TIER_DISCOUNT[1]);
     });
 
-    it('should return 1 heat for tier 2 scams', () => {
-      const tier2Scam: ScamDefinition = {
-        id: 'test-scam',
-        name: 'Test Scam',
-        tier: 2,
+    it('should return higher heat for expensive scams', () => {
+      const cheapScam: ScamDefinition = {
+        id: 'cheap',
+        name: 'Cheap',
+        tier: 1,
         baseDuration: 1000,
         baseReward: 10,
         resourceType: 'money',
-        description: 'A test scam',
+        description: 'Cheap',
       };
 
-      expect(calculateHeatFromScam(tier2Scam)).toBe(1);
-    });
-
-    it('should return 2 heat for tier 3 scams', () => {
-      const tier3Scam: ScamDefinition = {
-        id: 'test-scam',
-        name: 'Test Scam',
-        tier: 3,
+      const expensiveScam: ScamDefinition = {
+        id: 'expensive',
+        name: 'Expensive',
+        tier: 1,
         baseDuration: 1000,
         baseReward: 10,
         resourceType: 'money',
-        description: 'A test scam',
+        description: 'Expensive',
+        unlockCost: 1_000_000, // $1M
       };
 
-      expect(calculateHeatFromScam(tier3Scam)).toBe(2);
+      expect(calculateHeatFromScam(expensiveScam)).toBeGreaterThan(
+        calculateHeatFromScam(cheapScam)
+      );
     });
 
-    it('should return 3 heat for tier 4 scams', () => {
-      const tier4Scam: ScamDefinition = {
-        id: 'test-scam',
-        name: 'Test Scam',
-        tier: 4,
+    it('should apply tier discount (higher tier = less heat per dollar)', () => {
+      // Same unlockCost, different tiers
+      const makeScam = (tier: 1 | 2 | 3 | 4 | 5): ScamDefinition => ({
+        id: `test-t${tier}`,
+        name: `Test T${tier}`,
+        tier,
         baseDuration: 1000,
         baseReward: 10,
         resourceType: 'money',
-        description: 'A test scam',
-      };
+        description: 'Test',
+        unlockCost: 100_000, // Same cost across tiers
+      });
 
-      expect(calculateHeatFromScam(tier4Scam)).toBe(3);
+      const t1Heat = calculateHeatFromScam(makeScam(1));
+      const t2Heat = calculateHeatFromScam(makeScam(2));
+      const t3Heat = calculateHeatFromScam(makeScam(3));
+      const t5Heat = calculateHeatFromScam(makeScam(5));
+
+      expect(t1Heat).toBeGreaterThan(t2Heat);
+      expect(t2Heat).toBeGreaterThan(t3Heat);
+      expect(t3Heat).toBeGreaterThan(t5Heat);
     });
 
-    it('should return 5 heat for tier 5 scams', () => {
-      const tier5Scam: ScamDefinition = {
-        id: 'test-scam',
-        name: 'Test Scam',
+    it('should scale heat between MIN and MAX based on log10(baseCost)', () => {
+      // At max log cost (10^19), heat should approach MAX_HEAT_PER_COMPLETION * tier discount
+      const maxCostScam: ScamDefinition = {
+        id: 'max-cost',
+        name: 'Max Cost',
+        tier: 1,
+        baseDuration: 1000,
+        baseReward: 10,
+        resourceType: 'money',
+        description: 'Max',
+        unlockCost: 1e19,
+      };
+
+      const heat = calculateHeatFromScam(maxCostScam);
+      expect(heat).toBeCloseTo(MAX_HEAT_PER_COMPLETION * HEAT_TIER_DISCOUNT[1]);
+    });
+
+    it('should use unlockCost when available, falling back to tier baseCost', () => {
+      const withUnlockCost: ScamDefinition = {
+        id: 'with-cost',
+        name: 'With Cost',
+        tier: 1,
+        baseDuration: 1000,
+        baseReward: 10,
+        resourceType: 'money',
+        description: 'Test',
+        unlockCost: 1_000_000,
+      };
+
+      const withoutUnlockCost: ScamDefinition = {
+        id: 'without-cost',
+        name: 'Without Cost',
+        tier: 1,
+        baseDuration: 1000,
+        baseReward: 10,
+        resourceType: 'money',
+        description: 'Test',
+        // No unlockCost → uses T1 baseCost ($10)
+      };
+
+      // $1M scam should generate much more heat than $10 scam
+      expect(calculateHeatFromScam(withUnlockCost)).toBeGreaterThan(
+        calculateHeatFromScam(withoutUnlockCost) * 5
+      );
+    });
+
+    it('should always return positive heat', () => {
+      const scam: ScamDefinition = {
+        id: 'test',
+        name: 'Test',
         tier: 5,
         baseDuration: 1000,
         baseReward: 10,
         resourceType: 'money',
-        description: 'A test scam',
+        description: 'Test',
       };
 
-      expect(calculateHeatFromScam(tier5Scam)).toBe(5);
+      expect(calculateHeatFromScam(scam)).toBeGreaterThan(0);
+    });
+  });
+
+  describe('calculateHeatDecay', () => {
+    it('should return same heat when deltaSeconds is 0', () => {
+      expect(calculateHeatDecay(50, 0)).toBe(50);
+    });
+
+    it('should return same heat when currentHeat is 0', () => {
+      expect(calculateHeatDecay(0, 100)).toBe(0);
+    });
+
+    it('should return same heat when currentHeat is negative', () => {
+      expect(calculateHeatDecay(-5, 100)).toBe(-5);
+    });
+
+    it('should decay heat over time', () => {
+      const decayed = calculateHeatDecay(50, 60);
+      expect(decayed).toBeLessThan(50);
+      expect(decayed).toBeGreaterThan(0);
+    });
+
+    it('should decay using exponential formula: heat * exp(-rate * seconds)', () => {
+      const heat = 80;
+      const seconds = 100;
+      const expected = heat * Math.exp(-HEAT_DECAY_RATE * seconds);
+      expect(calculateHeatDecay(heat, seconds)).toBeCloseTo(expected);
+    });
+
+    it('should decay more for longer time periods', () => {
+      const short = calculateHeatDecay(50, 60);
+      const long = calculateHeatDecay(50, 600);
+      expect(long).toBeLessThan(short);
+    });
+
+    it('should approach 0 with very large time deltas', () => {
+      // 10,000 seconds → heat should be very low
+      const decayed = calculateHeatDecay(100, 10_000);
+      expect(decayed).toBeLessThan(0.01);
     });
   });
 

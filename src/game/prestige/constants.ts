@@ -10,22 +10,40 @@ import type { ScamTier } from '../scams/types';
 export const MAX_HEAT = 100;
 
 /**
- * Heat generated per scam completion, indexed by scam tier.
- * Higher tier scams generate more police attention.
- *
- * Tier 1 (Small Time): 0.5 heat - Barely registers
- * Tier 2 (Getting Serious): 1 heat - Starting to get noticed
- * Tier 3 (Big Leagues): 2 heat - Police are paying attention
- * Tier 4 (Organized Crime): 3 heat - Feds are involved
- * Tier 5 (Mastermind): 5 heat - International task force
+ * Graduated heat parameters.
+ * Heat per completion scales with log10(baseCost), so cheap scams
+ * barely register while expensive scams attract serious attention.
  */
-export const HEAT_PER_SCAM_TIER: Record<ScamTier, number> = {
-  1: 0.5,
-  2: 1,
-  3: 2,
-  4: 3,
-  5: 5,
+export const MIN_HEAT_PER_COMPLETION = 0.005;
+export const MAX_HEAT_PER_COMPLETION = 0.5;
+export const MIN_HEAT_LOG_COST = 1;  // log10(10) - cheapest scam
+export const MAX_HEAT_LOG_COST = 19; // log10(10^19) - most expensive scam
+
+/**
+ * Tier discount multipliers for heat generation.
+ * Higher-tier scammers run tighter operations, generating
+ * proportionally less heat per dollar of scam value.
+ *
+ * Tier 1 (Small Time): 1.0x - Amateur hour, sloppy
+ * Tier 2 (Getting Serious): 0.6x - Getting careful
+ * Tier 3 (Big Leagues): 0.35x - Professional operations
+ * Tier 4 (Organized Crime): 0.2x - Tight ship
+ * Tier 5 (Mastermind): 0.1x - Near-invisible
+ */
+export const HEAT_TIER_DISCOUNT: Record<ScamTier, number> = {
+  1: 1.0,
+  2: 0.6,
+  3: 0.35,
+  4: 0.2,
+  5: 0.1,
 };
+
+/**
+ * Heat decay rate (percentage per second, multiplicative).
+ * Each second, heat is reduced by: heat × HEAT_DECAY_RATE.
+ * Creates natural equilibrium: few scams = stable, full empire = pressure.
+ */
+export const HEAT_DECAY_RATE = 0.001;
 
 /**
  * Trust gained from a clean escape.

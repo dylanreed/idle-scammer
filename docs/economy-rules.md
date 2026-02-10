@@ -9,30 +9,38 @@ Based on the "Math of Idle Games" series.
 
 ## Core Principles
 
-### Principle 1: Simple Exponential Cost
+### Principle 1: Graduated Exponential Cost
 ```
-cost = baseCost × 1.07^(level - 1)
+cost = baseCost × costRate^(level - 1)
 ```
 
 Where:
-- **baseCost** = unlockCost (or tier's baseCost if free)
-- **1.07** = 7% cost increase per level
+- **baseCost** = unlockCost (or tier's baseCost for Tier 1 free scams)
+- **costRate** = graduated per-scam from 1.07 to 1.10 based on log10(baseCost)
+  - Cheap scams ($10): rate 1.07 (7% per level)
+  - Expensive scams ($10Qi): rate 1.10 (10% per level)
+  - Formula: `rate = 1.07 + 0.03 × (log10(baseCost) - 1) / 18`
 
 ### Principle 2: Linear Profit Growth
 ```
-profit = baseCost × (1 + (level-1) × 0.10) × bracketBonus
+profit = baseCost × (1 + (level-1) × 0.10) × bracketBonus × trust^0.3
 ```
 
 Where:
 - **0.10** = 10% profit increase per level
-- **bracketBonus** = milestone multiplier
+- **bracketBonus** = ongoing multiplier from profit brackets
+- **trust^0.3** = diminishing returns trust multiplier
 
 ### Principle 3: Unlock Cost = Base Reward
 What you pay to unlock = what you earn at L1. This ensures the first
-upgrade feels immediately worthwhile.
+upgrade feels immediately worthwhile. All scams (including T2-T5 first
+scams) have an unlockCost. Only the T1 Bot Farms and Nigerian Prince
+are free.
 
-### Principle 4: Crossover at L38
-Cost exceeds profit around level 38, signaling it's time to unlock
+### Principle 4: Crossover Varies by Scam
+Cost exceeds single-cycle profit at different levels depending on
+the scam's cost rate. Cheap scams (rate 1.07) cross over later than
+expensive scams (rate 1.10). This signals it's time to unlock
 the next scam or prestige.
 
 ---
@@ -42,33 +50,36 @@ the next scam or prestige.
 ### Tier Configuration
 Each tier has these base values:
 - **baseCost** - Base cost/reward for free scams
-- **costRate** - 1.07 (7% per level)
 - **profitGrowth** - 0.10 (10% per level)
 - **baseDuration** - Base time to complete a scam
 
-### Tier Base Costs (100x Progression)
-| Tier | baseCost |
-|------|----------|
-| 1 | $10 |
-| 2 | $1K |
-| 3 | $100K |
-| 4 | $10M |
-| 5 | $1B |
-| 6 | $100B |
-| 7 | $10T |
-| 8 | $1Q |
-| 9 | $100Q |
-| 10 | $10Qn |
+Cost rate is NOT per-tier; it's graduated per-scam based on
+the scam's baseCost. See `getScamCostRate()` in `scams/calculations.ts`.
 
-### Tier Unlock Costs
-| Tier | Unlock Cost |
-|------|-------------|
-| 2 | $100K |
-| 3 | $10M |
-| 4 | $1B |
-| 5 | $100B |
-| 6 | $10T |
-| 7+ | 100x each |
+### Tier Base Costs (100x Progression)
+| Tier | baseCost | Trust Required |
+|------|----------|----------------|
+| 1 | $10 | 1 (default) |
+| 2 | $1K | 11 (1 prestige) |
+| 3 | $100K | 21 (2 prestiges) |
+| 4 | $10M | 31 (3 prestiges) |
+| 5 | $1B | 41 (4 prestiges) |
+
+### Scam Counts Per Tier
+- **Tier 1:** 9 money scams + Bot Farms (10 total)
+- **Tiers 2-5:** 10 money scams each
+- **Total:** 50 scams (49 money + 1 bot-generating)
+
+### First Scam Per Tier
+| Tier | First Scam | unlockCost |
+|------|------------|------------|
+| 1 | Nigerian Prince | FREE |
+| 2 | Tech Support Scams | $1K |
+| 3 | Crypto Rug Pulls | $100K |
+| 4 | Ponzi Schemes | $10M |
+| 5 | Gov Contract Fraud | $1B |
+
+Each tier's first scam costs the tier baseCost to unlock (acts as a gate).
 
 ---
 
@@ -108,27 +119,44 @@ When upgrading TO these levels, player receives a bonus cash payout:
 | 75 | 15x base | +$150 |
 | 100 | 25x base | +$250 |
 
-Formula: `bonus = baseReward × milestoneMultiplier × trust`
+Formula: `bonus = baseReward × milestoneMultiplier × trust^0.3`
 
 ---
 
 ## Scam Progression Rules
 
 ### Tier 1 Scams (100x Progression)
-| Scam | Unlock Cost | L1 Reward | Crossover |
+| Scam | Unlock Cost | L1 Reward | Cost Rate |
 |------|-------------|-----------|-----------|
-| Nigerian Prince | FREE ($10) | $10 | L38 |
-| iPhone Popup | $1K | $1K | L38 |
-| Phishing Links | $10K | $10K | L38 |
-| Survey Scams | $100K | $100K | L38 |
-| Fake Lottery | $1M | $1M | L38 |
-| Fake Antivirus | $10M | $10M | L38 |
-| Gift Card | $100M | $100M | L38 |
-| Advance Fee | $1B | $1B | L38 |
-| Fake Job | $10B | $10B | L38 |
+| Nigerian Prince | FREE ($10) | $10 | 1.070 |
+| iPhone Popup | $1K | $1K | 1.075 |
+| Phishing Links | $10K | $10K | 1.080 |
+| Survey Scams | $100K | $100K | 1.082 |
+| Fake Lottery | $1M | $1M | 1.085 |
+| Fake Antivirus | $10M | $10M | 1.087 |
+| Gift Card | $100M | $100M | 1.090 |
+| Advance Fee | $1B | $1B | 1.092 |
+| Fake Job | $10B | $10B | 1.095 |
 
 ### Duration Progression
 Later scams take longer (5s → 3min), incentivizing speed upgrades.
+
+---
+
+## Trust Multiplier
+
+Trust uses diminishing returns to prevent runaway scaling:
+```
+trustMultiplier = trust^0.3
+```
+
+| Trust | Multiplier | Notes |
+|-------|------------|-------|
+| 1 | 1.00x | Starting value |
+| 11 | 2.04x | After 1st prestige |
+| 21 | 2.66x | After 2nd prestige |
+| 31 | 3.11x | After 3rd prestige |
+| 41 | 3.47x | After 4th prestige (all tiers) |
 
 ---
 
@@ -138,36 +166,9 @@ Later scams take longer (5s → 3min), incentivizing speed upgrades.
 Manager cost = 75% of the next scam's unlock cost.
 This creates a decision point just before you can afford the next scam.
 
-| Manager | Scam | Cost | Formula |
-|---------|------|------|---------|
-| Prince Okonkwo | Nigerian Prince | $750 | 0.75 × $1K |
-| Popup Pete | iPhone Popup | $7.5K | 0.75 × $10K |
-| PhishMaster Phil | Phishing Links | $75K | 0.75 × $100K |
-| Survey Susan | Survey Scams | $750K | 0.75 × $1M |
-| Lucky Larry | Fake Lottery | $7.5M | 0.75 × $10M |
-| Dread Norton | Fake Antivirus | $75M | 0.75 × $100M |
-| Gwen Cardsworth | Gift Card | $750M | 0.75 × $1B |
-| Felix Upfront | Advance Fee | $7.5B | 0.75 × $10B |
-| Carla Careers | Fake Job | $75K | 0.75 × Tier 2 unlock |
-
 ### Manager Automation
 - When hired, managers auto-start and auto-restart scams
 - UI shows "AUTO (MANAGED)" or "AUTO RUNNING..."
-
----
-
-## Example Progression (Nigerian Prince)
-
-| Level | Cost | Reward | Ratio | Status |
-|-------|------|--------|-------|--------|
-| 1 | $10 | $10 | 1.00 | Break even |
-| 10 | $18 | $29 | 1.58 | Profitable |
-| 20 | $36 | $44 | 1.21 | Still good |
-| 30 | $71 | $98 | 1.37 | Bracket bonus! |
-| 35 | $99 | $110 | 1.11 | Slowing down |
-| 38 | $121 | $118 | 0.97 | Crossover |
-| 40 | $139 | $123 | 0.88 | Diminishing |
-| 50 | $275 | $236 | 0.86 | Time to move on |
 
 ---
 
@@ -177,5 +178,6 @@ This creates a decision point just before you can afford the next scam.
 2. **L1 reward** - earn $X per completion (break even in 1 run!)
 3. **L1-15** - upgrades feel good, rapid progression
 4. **L15-30** - slowing down, but bracket bonuses help
-5. **L30-38** - approaching crossover, consider next scam
-6. **L38+** - diminishing returns, unlock next scam or prestige
+5. **L30+** - approaching crossover, consider next scam
+6. **Crossover** - diminishing returns, unlock next scam or prestige
+7. **Cheap scams stay profitable longer** (1.07 rate), expensive scams cross over sooner (1.10 rate)

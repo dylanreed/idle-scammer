@@ -6,24 +6,55 @@ import type { GameResources } from '../types';
 import type { PrestigeResult, PrestigeBonus } from './types';
 import {
   MAX_HEAT,
-  HEAT_PER_SCAM_TIER,
+  MIN_HEAT_PER_COMPLETION,
+  MAX_HEAT_PER_COMPLETION,
+  MIN_HEAT_LOG_COST,
+  MAX_HEAT_LOG_COST,
+  HEAT_TIER_DISCOUNT,
+  HEAT_DECAY_RATE,
   CLEAN_ESCAPE_TRUST_GAIN,
   SNITCH_TRUST_PENALTY,
   SNITCH_RESOURCE_KEEP_PERCENT,
   SKILL_POINTS_PER_TRUST,
   TIER_TRUST_REQUIREMENTS,
 } from './constants';
+import { getTierBase } from '../economy/constants';
 import type { ScamTier } from '../scams/types';
 
 /**
  * Calculates heat gained from completing a scam.
- * Higher tier scams generate more heat (police attention).
+ * Uses graduated formula based on log10(baseCost), then applies
+ * a tier discount (higher-tier scammers run tighter operations).
  *
  * @param scamDefinition - The scam that was completed
  * @returns The amount of heat to add
  */
 export function calculateHeatFromScam(scamDefinition: ScamDefinition): number {
-  return HEAT_PER_SCAM_TIER[scamDefinition.tier];
+  const { unlockCost, tier } = scamDefinition;
+  const tierBase = getTierBase(tier);
+  const baseCost = unlockCost ?? tierBase.baseCost;
+
+  // Graduated heat based on log10(baseCost)
+  const logCost = Math.log10(Math.max(baseCost, 10));
+  const t = Math.min(1, Math.max(0, (logCost - MIN_HEAT_LOG_COST) / (MAX_HEAT_LOG_COST - MIN_HEAT_LOG_COST)));
+  const baseHeat = MIN_HEAT_PER_COMPLETION + t * (MAX_HEAT_PER_COMPLETION - MIN_HEAT_PER_COMPLETION);
+
+  // Apply tier discount
+  const tierDiscount = HEAT_TIER_DISCOUNT[tier] ?? 1.0;
+  return baseHeat * tierDiscount;
+}
+
+/**
+ * Calculates heat decay for a time delta.
+ * Heat decays exponentially: heat × (1 - HEAT_DECAY_RATE)^seconds.
+ *
+ * @param currentHeat - Current heat level
+ * @param deltaSeconds - Time elapsed in seconds
+ * @returns New heat value after decay
+ */
+export function calculateHeatDecay(currentHeat: number, deltaSeconds: number): number {
+  if (currentHeat <= 0 || deltaSeconds <= 0) return currentHeat;
+  return currentHeat * Math.exp(-HEAT_DECAY_RATE * deltaSeconds);
 }
 
 /**

@@ -28,8 +28,8 @@ import {
   calculateMilestoneBonus,
   isMilestoneLevel,
 } from '../game/scams/calculations';
-import { calculateHeatFromScam, isTierAccessible } from '../game/prestige/calculations';
-import { useGameLoop } from '../game/engine/gameLoop';
+import { calculateHeatFromScam, calculateHeatDecay, isTierAccessible } from '../game/prestige/calculations';
+import { useGameLoop, type TickResult } from '../game/engine/gameLoop';
 import { formatNumber } from '../utils/formatters';
 import type { ScamTimer } from '../game/engine/types';
 import type { ScamDefinition, ScamTier } from '../game/scams/types';
@@ -135,8 +135,27 @@ export function GameScreen(): React.ReactElement {
     [scams, resources.trust, addMoney, addHeat, incrementCompletion, isManagerHired]
   );
 
+  /**
+   * Handle tick - apply heat decay each frame
+   */
+  const handleTick = useCallback(
+    (result: TickResult) => {
+      if (result.deltaMs <= 0) return;
+      const currentHeat = useGameStore.getState().resources.heat;
+      if (currentHeat <= 0) return;
+
+      const decayedHeat = calculateHeatDecay(currentHeat, result.deltaMs / 1000);
+      const heatLost = currentHeat - decayedHeat;
+      if (heatLost > 0) {
+        addHeat(-heatLost);
+      }
+    },
+    [addHeat]
+  );
+
   // Initialize the game loop
   const { start, engineState, addTimer, removeTimer } = useGameLoop({
+    onTick: handleTick,
     onTimerComplete: handleTimerComplete,
   });
 

@@ -10,7 +10,10 @@ export type {
 
 export {
   MAX_HEAT,
-  HEAT_PER_SCAM_TIER,
+  MIN_HEAT_PER_COMPLETION,
+  MAX_HEAT_PER_COMPLETION,
+  HEAT_TIER_DISCOUNT,
+  HEAT_DECAY_RATE,
   CLEAN_ESCAPE_TRUST_GAIN,
   SNITCH_TRUST_PENALTY,
   SNITCH_RESOURCE_KEEP_PERCENT,
@@ -18,6 +21,7 @@ export {
 
 export {
   calculateHeatFromScam,
+  calculateHeatDecay,
   isPrestigeForced,
   calculateCleanEscapeResult,
   calculateSnitchResult,

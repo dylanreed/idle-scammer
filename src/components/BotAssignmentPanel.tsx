@@ -10,8 +10,10 @@ import { COLORS, SPACING } from './theme';
 import { useBotStore } from '../game/bots/botStore';
 import { useGameStore } from '../game/store';
 import { useScamStore } from '../game/scams/scamStore';
+import { useEmployeeStore } from '../game/employees/employeeStore';
 import { ALL_SCAMS } from '../game/scams/definitions';
 import { IDLE_BOT_HEAT_REDUCTION } from '../game/bots/constants';
+import { getMaxUsefulSpeedBots } from '../game/scams/calculations';
 
 /**
  * Props for the BotAssignmentPanel component
@@ -32,6 +34,7 @@ export function BotAssignmentPanel({ testID }: BotAssignmentPanelProps): React.R
   const assignments = useBotStore((s) => s.assignments);
   const assignBot = useBotStore((s) => s.assignBot);
   const unassignBot = useBotStore((s) => s.unassignBot);
+  const clearScamBots = useBotStore((s) => s.clearScamBots);
   const getTotalAssigned = useBotStore((s) => s.getTotalAssigned);
   const getAvailableBots = useBotStore((s) => s.getAvailableBots);
   const getScamBotBonuses = useBotStore((s) => s.getScamBotBonuses);
@@ -72,6 +75,9 @@ export function BotAssignmentPanel({ testID }: BotAssignmentPanelProps): React.R
       {unlockedScams.map((scamDef) => {
         const assignment = assignments[scamDef.id] ?? { speedBots: 0, profitBots: 0 };
         const bonuses = getScamBotBonuses(scamDef.id);
+        const scamLevel = scams[scamDef.id]?.level ?? 1;
+        const empBonuses = useEmployeeStore.getState().getScamBonuses(scamDef.id);
+        const maxSpeedBots = getMaxUsefulSpeedBots(scamDef, scamLevel, empBonuses.speedBonus);
 
         return (
           <View key={scamDef.id} style={styles.scamRow} testID={`bot-row-${scamDef.id}`}>
@@ -99,7 +105,7 @@ export function BotAssignmentPanel({ testID }: BotAssignmentPanelProps): React.R
                 </TerminalText>
                 <PixelButton
                   onPress={() => assignBot(scamDef.id, 'speed')}
-                  disabled={idle === 0}
+                  disabled={idle === 0 || assignment.speedBots >= maxSpeedBots}
                   variant="primary"
                   style={styles.compactButton}
                   testID={`bot-spd-plus-${scamDef.id}`}
@@ -135,6 +141,17 @@ export function BotAssignmentPanel({ testID }: BotAssignmentPanelProps): React.R
                   {'+'}
                 </PixelButton>
               </View>
+
+              {/* Clear all bots from this scam */}
+              <PixelButton
+                onPress={() => clearScamBots(scamDef.id)}
+                disabled={assignment.speedBots === 0 && assignment.profitBots === 0}
+                variant="secondary"
+                style={styles.compactButton}
+                testID={`bot-clear-${scamDef.id}`}
+              >
+                {'CLR'}
+              </PixelButton>
             </View>
 
             {/* Show bonus percentages if any bots assigned */}

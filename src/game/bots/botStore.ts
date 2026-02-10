@@ -15,6 +15,9 @@ export interface BotStoreActions {
   /** Unassign one bot from a scam role (returns to pool) */
   unassignBot: (scamId: string, role: 'speed' | 'profit') => void;
 
+  /** Clear all bots (speed + profit) from a specific scam */
+  clearScamBots: (scamId: string) => void;
+
   /** Get computed speed and profit bonuses for a scam */
   getScamBotBonuses: (scamId: string) => BotBonuses;
 
@@ -84,6 +87,20 @@ export const useBotStore = create<BotStoreState>()((set, get) => ({
             ...existing,
             [key]: newValue,
           },
+        },
+      };
+    });
+  },
+
+  clearScamBots: (scamId: string) => {
+    set((state) => {
+      const existing = state.assignments[scamId];
+      if (!existing) return state;
+
+      return {
+        assignments: {
+          ...state.assignments,
+          [scamId]: { speedBots: 0, profitBots: 0 },
         },
       };
     });

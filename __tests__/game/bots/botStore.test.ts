@@ -187,6 +187,39 @@ describe('Bot store', () => {
     });
   });
 
+  describe('clearScamBots', () => {
+    it('should remove all bots from a specific scam', () => {
+      useBotStore.getState().assignBot('nigerian-prince-emails', 'speed');
+      useBotStore.getState().assignBot('nigerian-prince-emails', 'speed');
+      useBotStore.getState().assignBot('nigerian-prince-emails', 'profit');
+
+      useBotStore.getState().clearScamBots('nigerian-prince-emails');
+
+      const { assignments } = useBotStore.getState();
+      expect(assignments['nigerian-prince-emails']).toEqual({ speedBots: 0, profitBots: 0 });
+    });
+
+    it('should not affect other scams', () => {
+      useBotStore.getState().assignBot('nigerian-prince-emails', 'speed');
+      useBotStore.getState().assignBot('phishing-links', 'profit');
+      useBotStore.getState().assignBot('phishing-links', 'profit');
+
+      useBotStore.getState().clearScamBots('nigerian-prince-emails');
+
+      const { assignments } = useBotStore.getState();
+      expect(assignments['nigerian-prince-emails']).toEqual({ speedBots: 0, profitBots: 0 });
+      expect(assignments['phishing-links']).toEqual({ speedBots: 0, profitBots: 2 });
+    });
+
+    it('should be safe to call on a scam with no assignments', () => {
+      useBotStore.getState().clearScamBots('nonexistent-scam');
+
+      // Should not throw or create an entry
+      const { assignments } = useBotStore.getState();
+      expect(assignments['nonexistent-scam']).toBeUndefined();
+    });
+  });
+
   describe('hydrate', () => {
     it('should restore assignments from a saved map', () => {
       const savedAssignments = {

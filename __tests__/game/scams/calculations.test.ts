@@ -12,6 +12,7 @@ import {
   getScamCostRate,
   calculateMaxBuyCount,
   calculateMaxBuyCost,
+  getMaxUsefulSpeedBots,
 } from '../../../src/game/scams/calculations';
 import type { ScamDefinition } from '../../../src/game/scams/types';
 
@@ -347,6 +348,75 @@ describe('Scam Calculations', () => {
       const rewardExplicit = calculateScamReward(testScam, 1, 1, 0);
 
       expect(rewardDefault).toBe(rewardExplicit);
+    });
+  });
+
+  describe('getMaxUsefulSpeedBots', () => {
+    // Central Bank Heists-like scam: 180s base, level 1
+    const longScam: ScamDefinition = {
+      id: 'long-scam',
+      name: 'Long Scam',
+      tier: 5,
+      baseDuration: 180000, // 180 seconds in ms
+      baseReward: 1000,
+      resourceType: 'money',
+      description: 'Long scam',
+      unlockCost: 1000,
+    };
+
+    it('should return 90 for a level 1 scam with no employee bonus (speedMult=1.0)', () => {
+      // floor((1 / (1.0 * 1 * 0.1) - 1) / 0.1) = floor((10 - 1) / 0.1) = floor(90) = 90
+      expect(getMaxUsefulSpeedBots(longScam, 1, 0)).toBe(90);
+    });
+
+    it('should return 0 when speed multiplier alone reaches the duration floor', () => {
+      // At level 100+, speedMult = 10.0
+      // 1 / (10 * 1 * 0.1) = 1, so (1 - 1) / 0.1 = 0
+      expect(getMaxUsefulSpeedBots(longScam, 100, 0)).toBe(0);
+    });
+
+    it('should account for employee speed bonus', () => {
+      // Level 1 (speedMult=1.0), empBonus=0.5
+      // floor((1 / (1.0 * 1.5 * 0.1) - 1) / 0.1) = floor((6.667 - 1) / 0.1) = floor(56.67) = 56
+      expect(getMaxUsefulSpeedBots(longScam, 1, 0.5)).toBe(56);
+    });
+
+    it('should return fewer bots at higher levels', () => {
+      const botsL1 = getMaxUsefulSpeedBots(longScam, 1, 0);     // speedMult 1.0
+      const botsL10 = getMaxUsefulSpeedBots(longScam, 10, 0);    // speedMult 1.5
+      const botsL25 = getMaxUsefulSpeedBots(longScam, 25, 0);    // speedMult 2.0
+      const botsL50 = getMaxUsefulSpeedBots(longScam, 50, 0);    // speedMult 3.0
+      const botsL75 = getMaxUsefulSpeedBots(longScam, 75, 0);    // speedMult 5.0
+
+      expect(botsL1).toBeGreaterThan(botsL10);
+      expect(botsL10).toBeGreaterThan(botsL25);
+      expect(botsL25).toBeGreaterThan(botsL50);
+      expect(botsL50).toBeGreaterThan(botsL75);
+    });
+
+    it('should return specific values for known speed brackets', () => {
+      // Level 10 (speedMult=1.5): floor((1/(1.5*0.1) - 1)/0.1) = floor((6.667-1)/0.1) = floor(56.67) = 56
+      expect(getMaxUsefulSpeedBots(longScam, 10, 0)).toBe(56);
+
+      // Level 25 (speedMult=2.0): floor((1/(2*0.1) - 1)/0.1) = floor((5-1)/0.1) = floor(40) = 40
+      expect(getMaxUsefulSpeedBots(longScam, 25, 0)).toBe(40);
+
+      // Level 50 (speedMult=3.0): floor((1/(3*0.1) - 1)/0.1) = floor((3.333-1)/0.1) = floor(23.33) = 23
+      expect(getMaxUsefulSpeedBots(longScam, 50, 0)).toBe(23);
+
+      // Level 75 (speedMult=5.0): floor((1/(5*0.1) - 1)/0.1) = floor((2-1)/0.1) = floor(10) = 10
+      expect(getMaxUsefulSpeedBots(longScam, 75, 0)).toBe(10);
+    });
+
+    it('should never return negative', () => {
+      // Even with absurdly high speed already
+      expect(getMaxUsefulSpeedBots(longScam, 200, 5.0)).toBe(0);
+    });
+
+    it('should work with the test scam definition', () => {
+      // testScam: baseDuration 1000, level 1, speedMult 1.0
+      // Same formula: floor((10 - 1) / 0.1) = 90
+      expect(getMaxUsefulSpeedBots(testScam, 1, 0)).toBe(90);
     });
   });
 });

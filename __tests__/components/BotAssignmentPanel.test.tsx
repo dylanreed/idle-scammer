@@ -8,6 +8,7 @@ import { BotAssignmentPanel } from '../../src/components/BotAssignmentPanel';
 // Mock the stores
 const mockAssignBot = jest.fn();
 const mockUnassignBot = jest.fn();
+const mockClearScamBots = jest.fn();
 const mockGetScamBotBonuses = jest.fn().mockReturnValue({ speedBonus: 0, profitBonus: 0 });
 const mockGetTotalAssigned = jest.fn().mockReturnValue(0);
 const mockGetAvailableBots = jest.fn().mockReturnValue(0);
@@ -18,6 +19,7 @@ jest.mock('../../src/game/bots/botStore', () => ({
       assignments: {},
       assignBot: mockAssignBot,
       unassignBot: mockUnassignBot,
+      clearScamBots: mockClearScamBots,
       getScamBotBonuses: mockGetScamBotBonuses,
       getTotalAssigned: mockGetTotalAssigned,
       getAvailableBots: mockGetAvailableBots,
@@ -64,6 +66,22 @@ jest.mock('../../src/game/bots/constants', () => ({
   BOT_GENERATION_RATES: { 1: 0.0001, 2: 0.001, 3: 0.005, 4: 0.02, 5: 0.1 },
 }));
 
+// Mock employee store for speed bonus lookups
+const mockGetScamBonusesEmployee = jest.fn().mockReturnValue({ speedBonus: 0, rewardBonus: 0 });
+jest.mock('../../src/game/employees/employeeStore', () => ({
+  useEmployeeStore: {
+    getState: () => ({
+      getScamBonuses: mockGetScamBonusesEmployee,
+    }),
+  },
+}));
+
+// Mock getMaxUsefulSpeedBots - default to 90 (high cap, won't interfere with most tests)
+const mockGetMaxUsefulSpeedBots = jest.fn().mockReturnValue(90);
+jest.mock('../../src/game/scams/calculations', () => ({
+  getMaxUsefulSpeedBots: (...args: unknown[]) => mockGetMaxUsefulSpeedBots(...args),
+}));
+
 // Import the mocked stores so we can reconfigure them in individual tests
 const { useBotStore } = require('../../src/game/bots/botStore');
 const { useGameStore } = require('../../src/game/store');
@@ -74,6 +92,8 @@ describe('BotAssignmentPanel', () => {
     mockGetTotalAssigned.mockReturnValue(0);
     mockGetAvailableBots.mockReturnValue(5);
     mockGetScamBotBonuses.mockReturnValue({ speedBonus: 0, profitBonus: 0 });
+    mockGetMaxUsefulSpeedBots.mockReturnValue(90);
+    mockGetScamBonusesEmployee.mockReturnValue({ speedBonus: 0, rewardBonus: 0 });
 
     // Reset store mocks to default implementations (tests may override these)
     (useBotStore as jest.Mock).mockImplementation((selector: Function) => {
@@ -189,6 +209,7 @@ describe('BotAssignmentPanel', () => {
           assignments: { 'scam-1': { speedBots: 1, profitBots: 0 } },
           assignBot: mockAssignBot,
           unassignBot: mockUnassignBot,
+          clearScamBots: mockClearScamBots,
           getScamBotBonuses: mockGetScamBotBonuses,
           getTotalAssigned: mockGetTotalAssigned,
           getAvailableBots: mockGetAvailableBots,
@@ -216,6 +237,7 @@ describe('BotAssignmentPanel', () => {
           assignments: { 'scam-1': { speedBots: 0, profitBots: 1 } },
           assignBot: mockAssignBot,
           unassignBot: mockUnassignBot,
+          clearScamBots: mockClearScamBots,
           getScamBotBonuses: mockGetScamBotBonuses,
           getTotalAssigned: mockGetTotalAssigned,
           getAvailableBots: mockGetAvailableBots,
@@ -227,6 +249,26 @@ describe('BotAssignmentPanel', () => {
 
       fireEvent.press(screen.getByTestId('bot-profit-minus-scam-1'));
       expect(mockUnassignBot).toHaveBeenCalledWith('scam-1', 'profit');
+    });
+
+    it('CLEAR button calls clearScamBots(scamId)', () => {
+      (useBotStore as jest.Mock).mockImplementation((selector: Function) => {
+        const state = {
+          assignments: { 'scam-1': { speedBots: 2, profitBots: 3 } },
+          assignBot: mockAssignBot,
+          unassignBot: mockUnassignBot,
+          clearScamBots: mockClearScamBots,
+          getScamBotBonuses: mockGetScamBotBonuses,
+          getTotalAssigned: mockGetTotalAssigned,
+          getAvailableBots: mockGetAvailableBots,
+        };
+        return selector(state);
+      });
+
+      render(<BotAssignmentPanel testID="bot-panel" />);
+
+      fireEvent.press(screen.getByTestId('bot-clear-scam-1'));
+      expect(mockClearScamBots).toHaveBeenCalledWith('scam-1');
     });
   });
 
@@ -252,6 +294,89 @@ describe('BotAssignmentPanel', () => {
       expect(spdMinus.props.accessibilityState.disabled).toBe(true);
       expect(profitMinus.props.accessibilityState.disabled).toBe(true);
     });
+
+    it('speed + button is disabled when speed bots reach the cap', () => {
+      mockGetMaxUsefulSpeedBots.mockReturnValue(3);
+      mockGetAvailableBots.mockReturnValue(5); // bots available, but cap reached
+
+      (useBotStore as jest.Mock).mockImplementation((selector: Function) => {
+        const state = {
+          assignments: { 'scam-1': { speedBots: 3, profitBots: 0 } },
+          assignBot: mockAssignBot,
+          unassignBot: mockUnassignBot,
+          clearScamBots: mockClearScamBots,
+          getScamBotBonuses: mockGetScamBotBonuses,
+          getTotalAssigned: mockGetTotalAssigned,
+          getAvailableBots: mockGetAvailableBots,
+        };
+        return selector(state);
+      });
+
+      render(<BotAssignmentPanel testID="bot-panel" />);
+
+      const spdPlus = screen.getByTestId('bot-spd-plus-scam-1');
+      expect(spdPlus.props.accessibilityState.disabled).toBe(true);
+    });
+
+    it('speed + button is enabled when below the cap with available bots', () => {
+      mockGetMaxUsefulSpeedBots.mockReturnValue(10);
+      mockGetAvailableBots.mockReturnValue(5);
+
+      (useBotStore as jest.Mock).mockImplementation((selector: Function) => {
+        const state = {
+          assignments: { 'scam-1': { speedBots: 3, profitBots: 0 } },
+          assignBot: mockAssignBot,
+          unassignBot: mockUnassignBot,
+          clearScamBots: mockClearScamBots,
+          getScamBotBonuses: mockGetScamBotBonuses,
+          getTotalAssigned: mockGetTotalAssigned,
+          getAvailableBots: mockGetAvailableBots,
+        };
+        return selector(state);
+      });
+
+      render(<BotAssignmentPanel testID="bot-panel" />);
+
+      const spdPlus = screen.getByTestId('bot-spd-plus-scam-1');
+      expect(spdPlus.props.accessibilityState.disabled).toBe(false);
+    });
+
+    it('speed cap does not affect profit + button', () => {
+      mockGetMaxUsefulSpeedBots.mockReturnValue(0); // speed cap at 0
+      mockGetAvailableBots.mockReturnValue(5);
+
+      render(<BotAssignmentPanel testID="bot-panel" />);
+
+      const profitPlus = screen.getByTestId('bot-profit-plus-scam-1');
+      expect(profitPlus.props.accessibilityState.disabled).toBe(false);
+    });
+
+    it('CLEAR button is disabled when no bots are assigned to scam', () => {
+      render(<BotAssignmentPanel testID="bot-panel" />);
+
+      const clearBtn = screen.getByTestId('bot-clear-scam-1');
+      expect(clearBtn.props.accessibilityState.disabled).toBe(true);
+    });
+
+    it('CLEAR button is enabled when bots are assigned to scam', () => {
+      (useBotStore as jest.Mock).mockImplementation((selector: Function) => {
+        const state = {
+          assignments: { 'scam-1': { speedBots: 1, profitBots: 2 } },
+          assignBot: mockAssignBot,
+          unassignBot: mockUnassignBot,
+          clearScamBots: mockClearScamBots,
+          getScamBotBonuses: mockGetScamBotBonuses,
+          getTotalAssigned: mockGetTotalAssigned,
+          getAvailableBots: mockGetAvailableBots,
+        };
+        return selector(state);
+      });
+
+      render(<BotAssignmentPanel testID="bot-panel" />);
+
+      const clearBtn = screen.getByTestId('bot-clear-scam-1');
+      expect(clearBtn.props.accessibilityState.disabled).toBe(false);
+    });
   });
 
   describe('bonus display', () => {
@@ -263,6 +388,7 @@ describe('BotAssignmentPanel', () => {
           assignments: { 'scam-1': { speedBots: 2, profitBots: 1 } },
           assignBot: mockAssignBot,
           unassignBot: mockUnassignBot,
+          clearScamBots: mockClearScamBots,
           getScamBotBonuses: mockGetScamBotBonuses,
           getTotalAssigned: mockGetTotalAssigned,
           getAvailableBots: mockGetAvailableBots,

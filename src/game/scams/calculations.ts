@@ -3,6 +3,7 @@
 
 import type { ScamDefinition } from './types';
 import { getTierBase } from '../economy/constants';
+import { SPEED_BOT_BONUS } from '../bots/constants';
 
 /**
  * Milestone levels and their one-time bonus multipliers.
@@ -45,6 +46,32 @@ const SPEED_BRACKETS: { maxLevel: number; multiplier: number }[] = [
  * Minimum duration as a percentage of base.
  */
 const MIN_DURATION_PERCENTAGE = 0.1;
+
+/**
+ * Returns the maximum number of speed bots that can usefully reduce a scam's duration.
+ * Beyond this count, additional speed bots are wasted because the duration floor
+ * (MIN_DURATION_PERCENTAGE × baseDuration) has been reached.
+ *
+ * @param definition - The scam definition (for baseDuration)
+ * @param level - The scam's current level (determines speed bracket multiplier)
+ * @param employeeSpeedBonus - Employee speed bonus as decimal (e.g. 0.5 = 50%)
+ * @returns Maximum useful speed bots (0 if already at floor without any bots)
+ */
+export function getMaxUsefulSpeedBots(
+  definition: ScamDefinition,
+  level: number,
+  employeeSpeedBonus: number = 0
+): number {
+  const speedMult = getSpeedMultiplier(level);
+  const empFactor = 1 + employeeSpeedBonus;
+  const denominator = speedMult * empFactor * MIN_DURATION_PERCENTAGE;
+
+  // If already at or past floor without bots, no bots are useful
+  if (denominator >= 1) return 0;
+
+  const maxBots = (1 / denominator - 1) / SPEED_BOT_BONUS;
+  return Math.max(0, Math.floor(maxBots));
+}
 
 /**
  * Graduated cost rate parameters.

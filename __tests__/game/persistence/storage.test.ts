@@ -48,6 +48,7 @@ describe('Storage', () => {
       },
     },
     managers: {},
+    employees: {},
   };
 
   beforeEach(() => {

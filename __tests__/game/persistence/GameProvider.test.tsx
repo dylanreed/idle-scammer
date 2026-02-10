@@ -96,6 +96,7 @@ describe('GameProvider', () => {
           isHired: true,
         },
       },
+      employees: {},
     };
 
     mockStorage.loadGame.mockResolvedValue(savedData);
@@ -230,6 +231,7 @@ describe('GameProvider', () => {
           isHired: true,
         },
       },
+      employees: {},
     };
 
     mockStorage.loadGame.mockResolvedValue(savedData);

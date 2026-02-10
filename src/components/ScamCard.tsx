@@ -11,6 +11,7 @@ import { COLORS, SPACING } from './theme';
 import { formatNumber, formatDuration } from '../utils/formatters';
 import type { ScamDefinition } from '../game/scams/types';
 import type { ScamState } from '../game/scams/types';
+import type { EmployeeDefinition } from '../game/employees/types';
 import type { ScamTimer } from '../game/engine/types';
 import {
   calculateScamDuration,
@@ -56,6 +57,27 @@ export interface ScamCardProps {
 
   /** Called when player clicks upgrade button */
   onUpgrade: () => void;
+
+  /** Employee definition for this scam (if available) */
+  employeeDefinition?: EmployeeDefinition;
+
+  /** How many of this employee type are hired */
+  employeeCount?: number;
+
+  /** Maximum employees of this type allowed (trust-based cap) */
+  employeeMaxCount?: number;
+
+  /** Current employee speed bonus for this scam (decimal, e.g. 0.06 = 6%) */
+  employeeSpeedBonus?: number;
+
+  /** Current employee reward bonus for this scam (decimal, e.g. 0.24 = 24%) */
+  employeeRewardBonus?: number;
+
+  /** Called when player hires an employee */
+  onHireEmployee?: () => void;
+
+  /** Cost to hire the next employee */
+  employeeHireCost?: number;
 
   /** Test ID for testing */
   testID?: string;
@@ -114,15 +136,22 @@ export function ScamCard({
   onStart,
   onUnlock,
   onUpgrade,
+  employeeDefinition,
+  employeeCount = 0,
+  employeeMaxCount,
+  employeeSpeedBonus = 0,
+  employeeRewardBonus = 0,
+  onHireEmployee,
+  employeeHireCost,
   testID,
 }: ScamCardProps): React.ReactElement {
   const status = getScamStatus(scamState, timer);
   const level = scamState?.level ?? 1;
   const isRunning = status === 'running';
 
-  // Calculate values for display
-  const duration = calculateScamDuration(scamDefinition, level);
-  const reward = calculateScamReward(scamDefinition, level, trust);
+  // Calculate values for display (including employee bonuses)
+  const duration = calculateScamDuration(scamDefinition, level, employeeSpeedBonus);
+  const reward = calculateScamReward(scamDefinition, level, trust, 0, employeeRewardBonus);
   const progress = getTimerProgress(timer);
   const upgradeCost = calculateUpgradeCost(scamDefinition, level);
   const canAffordUnlock =
@@ -262,6 +291,43 @@ export function ScamCard({
         </View>
       )}
 
+      {/* Employee section - hire and view bonuses */}
+      {status !== 'locked' && employeeDefinition && onHireEmployee && employeeHireCost !== undefined && (
+        <View style={styles.employeeSection}>
+          <View style={styles.employeeHeader}>
+            <TerminalText size="sm" color={COLORS.terminalGreen}>
+              {employeeMaxCount !== undefined
+                ? `${employeeDefinition.name} x${employeeCount}/${employeeMaxCount}`
+                : `${employeeDefinition.name} x${employeeCount}`}
+            </TerminalText>
+            {(employeeSpeedBonus > 0 || employeeRewardBonus > 0) && (
+              <TerminalText size="sm" color={COLORS.terminalGreenDim}>
+                {`Speed +${Math.round(employeeSpeedBonus * 100)}% / Reward +${Math.round(employeeRewardBonus * 100)}%`}
+              </TerminalText>
+            )}
+          </View>
+          {employeeMaxCount !== undefined && employeeCount >= employeeMaxCount ? (
+            <PixelButton
+              onPress={() => {}}
+              disabled
+              variant="secondary"
+              testID={testID ? `${testID}-hire-employee` : undefined}
+            >
+              MAX
+            </PixelButton>
+          ) : (
+            <PixelButton
+              onPress={onHireEmployee}
+              disabled={money < employeeHireCost}
+              variant="secondary"
+              testID={testID ? `${testID}-hire-employee` : undefined}
+            >
+              {`HIRE ($${formatNumber(employeeHireCost)})`}
+            </PixelButton>
+          )}
+        </View>
+      )}
+
       {/* Times completed counter */}
       {status !== 'locked' && scamState && scamState.timesCompleted > 0 && (
         <TerminalText
@@ -315,6 +381,18 @@ const styles = StyleSheet.create({
   },
   upgradeContainer: {
     marginTop: SPACING.sm,
+  },
+  employeeSection: {
+    marginTop: SPACING.sm,
+    paddingTop: SPACING.sm,
+    borderTopWidth: 1,
+    borderTopColor: COLORS.terminalGreenDim + '40',
+  },
+  employeeHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: SPACING.xs,
   },
   completedCount: {
     marginTop: SPACING.sm,

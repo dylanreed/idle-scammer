@@ -11,7 +11,7 @@ export const CALL_CENTER_OPERATOR: EmployeeDefinition = {
   id: 'call-center-operator',
   name: 'Call Center Operator',
   scamId: 'tech-support-scams',
-  baseCost: 500,
+  baseCost: 37500,
   speedBoost: 0.03,
   rewardBoost: 0.06,
 };
@@ -24,7 +24,7 @@ export const CATFISH_PROFILE_CREATOR: EmployeeDefinition = {
   id: 'catfish-profile-creator',
   name: 'Catfish Profile Creator',
   scamId: 'romance-catfishing',
-  baseCost: 600,
+  baseCost: 375000,
   speedBoost: 0.02,
   rewardBoost: 0.08,
 };
@@ -37,7 +37,7 @@ export const SOB_STORY_WRITER: EmployeeDefinition = {
   id: 'sob-story-writer',
   name: 'Sob Story Writer',
   scamId: 'fake-charity-drives',
-  baseCost: 700,
+  baseCost: 3750000,
   speedBoost: 0.03,
   rewardBoost: 0.07,
 };
@@ -50,7 +50,7 @@ export const FAKE_LANDLORD: EmployeeDefinition = {
   id: 'fake-landlord',
   name: 'Fake Landlord',
   scamId: 'rental-scams',
-  baseCost: 800,
+  baseCost: 37500000,
   speedBoost: 0.04,
   rewardBoost: 0.05,
 };
@@ -63,7 +63,7 @@ export const BOT_NETWORK_ADMIN: EmployeeDefinition = {
   id: 'bot-network-admin',
   name: 'Bot Network Admin',
   scamId: 'ticket-scalping-bots',
-  baseCost: 900,
+  baseCost: 375000000,
   speedBoost: 0.05,
   rewardBoost: 0.04,
 };
@@ -76,7 +76,7 @@ export const REVIEW_GHOST_WRITER: EmployeeDefinition = {
   id: 'review-ghost-writer',
   name: 'Review Ghost Writer',
   scamId: 'fake-review-farms',
-  baseCost: 1000,
+  baseCost: 3750000000,
   speedBoost: 0.03,
   rewardBoost: 0.07,
 };
@@ -89,7 +89,7 @@ export const CLICK_BOT_OPERATOR: EmployeeDefinition = {
   id: 'click-bot-operator',
   name: 'Click Bot Operator',
   scamId: 'click-fraud',
-  baseCost: 1100,
+  baseCost: 37500000000,
   speedBoost: 0.04,
   rewardBoost: 0.06,
 };
@@ -102,7 +102,7 @@ export const DEEPFAKE_ARTIST: EmployeeDefinition = {
   id: 'deepfake-artist',
   name: 'Deepfake Artist',
   scamId: 'influencer-impersonation',
-  baseCost: 1200,
+  baseCost: 375000000000,
   speedBoost: 0.02,
   rewardBoost: 0.09,
 };
@@ -115,7 +115,7 @@ export const PHANTOM_SHIPPER: EmployeeDefinition = {
   id: 'phantom-shipper',
   name: 'Phantom Shipper',
   scamId: 'dropshipping-fraud',
-  baseCost: 1300,
+  baseCost: 3750000000000,
   speedBoost: 0.02,
   rewardBoost: 0.08,
 };
@@ -128,7 +128,7 @@ export const WARRANTY_CALLER: EmployeeDefinition = {
   id: 'warranty-caller',
   name: 'Warranty Caller',
   scamId: 'warranty-scams',
-  baseCost: 1400,
+  baseCost: 37500000000000,
   speedBoost: 0.03,
   rewardBoost: 0.07,
 };

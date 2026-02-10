@@ -15,6 +15,9 @@ import { COLORS, SPACING } from '../components/theme';
 import { useGameStore } from '../game/store';
 import { useScamStore } from '../game/scams/scamStore';
 import { useManagerStore } from '../game/managers/managerStore';
+import { useEmployeeStore } from '../game/employees/employeeStore';
+import { getEmployeesByScamId } from '../game/employees/definitions';
+import { getEmployeeCostForScam, canHireEmployee, getMaxEmployeesPerType, calculateEmployeeHeat } from '../game/employees/calculations';
 import { ALL_SCAMS, TIER_1_SCAMS } from '../game/scams/definitions';
 import { TIER_2_SCAMS } from '../game/scams/tier2';
 import { TIER_3_SCAMS } from '../game/scams/tier3';
@@ -87,6 +90,10 @@ export function GameScreen(): React.ReactElement {
   const hireManager = useManagerStore((state) => state.hireManager);
   const isManagerHired = useManagerStore((state) => state.isManagerHired);
 
+  // Get employee states and actions from employee store
+  const employees = useEmployeeStore((state) => state.employees);
+  const hireEmployee = useEmployeeStore((state) => state.hireEmployee);
+
   // Prestige modal state
   const [showPrestige, setShowPrestige] = useState(false);
   const [prestigePhase, setPrestigePhase] = useState<'choice' | 'result'>('choice');
@@ -114,11 +121,14 @@ export function GameScreen(): React.ReactElement {
       const scamState = scams[timer.scamId];
       if (!scamState) return;
 
-      // Calculate reward based on level and trust
+      // Calculate reward based on level, trust, and employee bonuses
+      const { rewardBonus } = useEmployeeStore.getState().getScamBonuses(timer.scamId);
       const reward = calculateScamReward(
         definition,
         scamState.level,
-        resources.trust
+        resources.trust,
+        0,
+        rewardBonus
       );
 
       // Award money
@@ -153,7 +163,8 @@ export function GameScreen(): React.ReactElement {
       const manager = getManagerByScamId(timer.scamId);
       if (manager && isManagerHired(manager.id) && addTimerRef.current) {
         // Schedule auto-restart on next tick to avoid state conflicts
-        const duration = calculateScamDuration(definition, scamState.level);
+        const { speedBonus } = useEmployeeStore.getState().getScamBonuses(timer.scamId);
+        const duration = calculateScamDuration(definition, scamState.level, speedBonus);
         setTimeout(() => {
           if (addTimerRef.current) {
             addTimerRef.current(timer.scamId, duration);
@@ -170,13 +181,25 @@ export function GameScreen(): React.ReactElement {
   const handleTick = useCallback(
     (result: TickResult) => {
       if (result.deltaMs <= 0) return;
-      const currentHeat = useGameStore.getState().resources.heat;
-      if (currentHeat <= 0) return;
 
-      const decayedHeat = calculateHeatDecay(currentHeat, result.deltaMs / 1000);
-      const heatLost = currentHeat - decayedHeat;
-      if (heatLost > 0) {
-        addHeat(-heatLost);
+      const deltaSeconds = result.deltaMs / 1000;
+
+      // Apply heat decay
+      const currentHeat = useGameStore.getState().resources.heat;
+      if (currentHeat > 0) {
+        const decayedHeat = calculateHeatDecay(currentHeat, deltaSeconds);
+        const heatLost = currentHeat - decayedHeat;
+        if (heatLost > 0) {
+          addHeat(-heatLost);
+        }
+      }
+
+      // Apply employee heat generation
+      const totalEmployees = useEmployeeStore.getState().getAllEmployeeStates()
+        .reduce((sum, e) => sum + e.count, 0);
+      if (totalEmployees > 0) {
+        const employeeHeat = calculateEmployeeHeat(totalEmployees, deltaSeconds);
+        addHeat(employeeHeat);
       }
     },
     [addHeat]
@@ -215,7 +238,8 @@ export function GameScreen(): React.ReactElement {
       const definition = ALL_SCAMS.find((s) => s.id === managerDef.scamId);
       if (!definition) continue;
 
-      const duration = calculateScamDuration(definition, scamState.level);
+      const { speedBonus } = useEmployeeStore.getState().getScamBonuses(managerDef.scamId);
+      const duration = calculateScamDuration(definition, scamState.level, speedBonus);
       addTimer(managerDef.scamId, duration);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -260,8 +284,9 @@ export function GameScreen(): React.ReactElement {
       // Check if already running
       if (timerMap[scamId]) return;
 
-      // Calculate duration and start timer
-      const duration = calculateScamDuration(definition, scamState.level);
+      // Calculate duration with employee speed bonus
+      const { speedBonus } = useEmployeeStore.getState().getScamBonuses(scamId);
+      const duration = calculateScamDuration(definition, scamState.level, speedBonus);
       addTimer(scamId, duration);
     },
     [scams, timerMap, addTimer]
@@ -339,11 +364,32 @@ export function GameScreen(): React.ReactElement {
       const definition = getScamDefinition(scamId);
       const scamState = scams[scamId];
       if (definition && scamState?.isUnlocked && !timerMap[scamId]) {
-        const duration = calculateScamDuration(definition, scamState.level);
+        const { speedBonus } = useEmployeeStore.getState().getScamBonuses(scamId);
+        const duration = calculateScamDuration(definition, scamState.level, speedBonus);
         addTimer(scamId, duration);
       }
     },
     [resources.money, addMoney, hireManager, isManagerHired, scams, timerMap, addTimer]
+  );
+
+  /**
+   * Handle hiring an employee for a scam
+   */
+  const handleHireEmployee = useCallback(
+    (employeeId: string, scamId: string) => {
+      const count = useEmployeeStore.getState().getEmployeeCount(employeeId);
+
+      // Trust-based cap: can't hire more than trust level per type
+      if (!canHireEmployee(resources.trust, count)) return;
+
+      const cost = getEmployeeCostForScam(scamId, count);
+
+      if (resources.money < cost) return;
+
+      addMoney(-cost);
+      hireEmployee(employeeId);
+    },
+    [resources.money, resources.trust, addMoney, hireEmployee]
   );
 
   /**
@@ -475,6 +521,16 @@ export function GameScreen(): React.ReactElement {
               {visibleScams.map((scamDef) => {
                 const manager = getManagerByScamId(scamDef.id);
                 const hasManager = manager ? isManagerHired(manager.id) : false;
+
+                // Look up employee for this scam
+                const scamEmployees = getEmployeesByScamId(scamDef.id);
+                const empDef = scamEmployees.length > 0 ? scamEmployees[0] : undefined;
+                const empCount = empDef ? useEmployeeStore.getState().getEmployeeCount(empDef.id) : 0;
+                const empBonuses = useEmployeeStore.getState().getScamBonuses(scamDef.id);
+                const empCost = empDef ? getEmployeeCostForScam(scamDef.id, empCount) : undefined;
+
+                const empMaxCount = getMaxEmployeesPerType(resources.trust);
+
                 return (
                   <ScamCard
                     key={scamDef.id}
@@ -487,6 +543,13 @@ export function GameScreen(): React.ReactElement {
                     onStart={() => handleStartScam(scamDef.id)}
                     onUnlock={() => handleUnlockScam(scamDef.id)}
                     onUpgrade={() => handleUpgradeScam(scamDef.id)}
+                    employeeDefinition={empDef}
+                    employeeCount={empCount}
+                    employeeMaxCount={empMaxCount}
+                    employeeSpeedBonus={empBonuses.speedBonus}
+                    employeeRewardBonus={empBonuses.rewardBonus}
+                    onHireEmployee={empDef ? () => handleHireEmployee(empDef.id, scamDef.id) : undefined}
+                    employeeHireCost={empCost}
                     testID={`scam-card-${scamDef.id}`}
                   />
                 );

@@ -190,6 +190,7 @@ describe('SaveManager', () => {
             isHired: true,
           },
         },
+        employees: {},
       };
 
       const { resources, scams, managers } = applySaveData(saveData);
@@ -214,6 +215,7 @@ describe('SaveManager', () => {
         },
         scams: {},
         managers: {},
+        employees: {},
       };
 
       const { resources, scams, managers } = applySaveData(saveData);
@@ -238,6 +240,7 @@ describe('SaveManager', () => {
         },
         scams: {},
         managers: {},
+        employees: {},
       };
 
       const { resources } = applySaveData(saveData);
@@ -276,6 +279,7 @@ describe('SaveManager', () => {
             isHired: true,
           },
         },
+        employees: {},
       };
 
       const result = migrateIfNeeded(saveData);
@@ -333,8 +337,9 @@ describe('SaveManager', () => {
 
       const result = migrateIfNeeded(v1SaveData);
 
-      expect(result.version).toBe(2);
+      expect(result.version).toBe(SAVE_VERSION);
       expect(result.managers).toEqual({});
+      expect(result.employees).toEqual({});
       // Existing data preserved
       expect(result.resources.money).toBe(1000);
       expect(result.scams['bot-farms'].level).toBe(5);

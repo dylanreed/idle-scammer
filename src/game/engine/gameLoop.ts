@@ -14,6 +14,8 @@ import { ALL_SCAMS } from '../scams/definitions';
 import { calculateScamReward } from '../scams/calculations';
 import { calculateHeatFromScam } from '../prestige/calculations';
 import type { ScamStateMap } from '../scams/scamStore';
+import { useEmployeeStore } from '../employees/employeeStore';
+import { calculateEmployeeHeat } from '../employees/calculations';
 
 /**
  * Result of a single game tick
@@ -142,7 +144,8 @@ export function calculateOfflineProgress(
         const scamDef = ALL_SCAM_DEFS.find((s) => s.id === timer.scamId);
 
         if (scamState && scamDef) {
-          const rewardPerCycle = calculateScamReward(scamDef, scamState.level, trust);
+          const { rewardBonus } = useEmployeeStore.getState().getScamBonuses(timer.scamId);
+          const rewardPerCycle = calculateScamReward(scamDef, scamState.level, trust, 0, rewardBonus);
           const totalReward = rewardPerCycle * cycles * OFFLINE_EFFICIENCY;
           const heatPerCycle = calculateHeatFromScam(scamDef);
 
@@ -160,6 +163,14 @@ export function calculateOfflineProgress(
         }
       }
     }
+  }
+
+  // Add employee heat for offline duration
+  const totalEmployees = useEmployeeStore.getState().getAllEmployeeStates()
+    .reduce((sum, e) => sum + e.count, 0);
+  if (totalEmployees > 0) {
+    const offlineSeconds = elapsedMs / 1000;
+    earnings.heat += calculateEmployeeHeat(totalEmployees, offlineSeconds) * OFFLINE_EFFICIENCY;
   }
 
   return {

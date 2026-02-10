@@ -42,6 +42,9 @@ export interface EmployeeStoreActions {
 
   /** Reset all employee state (for prestige) */
   resetEmployees: () => void;
+
+  /** Restore employee state from save data */
+  hydrate: (employees: EmployeeStateMap) => void;
 }
 
 /**
@@ -146,5 +149,9 @@ export const useEmployeeStore = create<EmployeeStoreState>()((set, get) => ({
 
   resetEmployees: () => {
     set({ employees: getInitialEmployeeState() });
+  },
+
+  hydrate: (employees: EmployeeStateMap) => {
+    set({ employees });
   },
 }));

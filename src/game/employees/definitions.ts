@@ -15,7 +15,7 @@ export const BOT_WRANGLER: EmployeeDefinition = {
   id: 'bot-wrangler',
   name: 'Bot Wrangler',
   scamId: 'bot-farms',
-  baseCost: 50,
+  baseCost: 25,
   speedBoost: 0.03, // 3% faster per employee
   rewardBoost: 0.05, // 5% more bots per employee
 };
@@ -28,7 +28,7 @@ export const EMAIL_COPYWRITER: EmployeeDefinition = {
   id: 'email-copywriter',
   name: 'Email Copywriter',
   scamId: 'nigerian-prince-emails',
-  baseCost: 100,
+  baseCost: 375,
   speedBoost: 0.02, // 2% faster
   rewardBoost: 0.08, // 8% better returns from better copy
 };
@@ -41,7 +41,7 @@ export const LOTTERY_ANNOUNCER: EmployeeDefinition = {
   id: 'lottery-announcer',
   name: 'Lottery Announcer',
   scamId: 'fake-lottery-winnings',
-  baseCost: 120,
+  baseCost: 3750000,
   speedBoost: 0.04, // 4% faster processing
   rewardBoost: 0.06, // 6% more convincing
 };
@@ -54,7 +54,7 @@ export const POPUP_DESIGNER: EmployeeDefinition = {
   id: 'popup-designer',
   name: 'Popup Designer',
   scamId: 'iphone-popup',
-  baseCost: 80,
+  baseCost: 3750,
   speedBoost: 0.05, // 5% faster popup spam
   rewardBoost: 0.04, // 4% better click rates
 };
@@ -67,7 +67,7 @@ export const DOMAIN_SPOOFER: EmployeeDefinition = {
   id: 'domain-spoofer',
   name: 'Domain Spoofer',
   scamId: 'phishing-links',
-  baseCost: 150,
+  baseCost: 37500,
   speedBoost: 0.03, // 3% faster setup
   rewardBoost: 0.07, // 7% more credentials harvested
 };
@@ -80,7 +80,7 @@ export const SURVEY_BOT_OPERATOR: EmployeeDefinition = {
   id: 'survey-bot-operator',
   name: 'Survey Bot Operator',
   scamId: 'survey-scams',
-  baseCost: 180,
+  baseCost: 375000,
   speedBoost: 0.04, // 4% faster surveys
   rewardBoost: 0.06, // 6% more data harvested
 };
@@ -93,7 +93,7 @@ export const FEAR_MONGER: EmployeeDefinition = {
   id: 'fear-monger',
   name: 'Fear Monger',
   scamId: 'fake-antivirus-popups',
-  baseCost: 140,
+  baseCost: 37500000,
   speedBoost: 0.03, // 3% faster scare tactics
   rewardBoost: 0.07, // 7% more panic purchases
 };
@@ -106,7 +106,7 @@ export const GIFT_CARD_RESELLER: EmployeeDefinition = {
   id: 'gift-card-reseller',
   name: 'Gift Card Reseller',
   scamId: 'gift-card-scams',
-  baseCost: 200,
+  baseCost: 375000000,
   speedBoost: 0.02, // 2% faster conversion
   rewardBoost: 0.08, // 8% better resale rates
 };
@@ -119,7 +119,7 @@ export const TRUST_BUILDER: EmployeeDefinition = {
   id: 'trust-builder',
   name: 'Trust Builder',
   scamId: 'advance-fee-fraud',
-  baseCost: 250,
+  baseCost: 3750000000,
   speedBoost: 0.02, // 2% faster trust building
   rewardBoost: 0.09, // 9% larger fees extracted
 };
@@ -132,7 +132,7 @@ export const RESUME_FAKER: EmployeeDefinition = {
   id: 'resume-faker',
   name: 'Resume Faker',
   scamId: 'fake-job-postings',
-  baseCost: 300,
+  baseCost: 37500000000,
   speedBoost: 0.02, // 2% faster job creation
   rewardBoost: 0.1, // 10% higher training fees
 };

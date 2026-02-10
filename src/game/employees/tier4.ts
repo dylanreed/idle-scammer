@@ -11,7 +11,7 @@ export const PYRAMID_ARCHITECT: EmployeeDefinition = {
   id: 'pyramid-architect',
   name: 'Pyramid Architect',
   scamId: 'ponzi-schemes',
-  baseCost: 2500,
+  baseCost: 375000000,
   speedBoost: 0.02,
   rewardBoost: 0.04,
 };
@@ -24,7 +24,7 @@ export const MONEY_MULE_COORDINATOR: EmployeeDefinition = {
   id: 'money-mule-coordinator',
   name: 'Money Mule Coordinator',
   scamId: 'money-laundering-networks',
-  baseCost: 2600,
+  baseCost: 3750000000,
   speedBoost: 0.03,
   rewardBoost: 0.05,
 };
@@ -37,7 +37,7 @@ export const DATA_BROKER: EmployeeDefinition = {
   id: 'data-broker',
   name: 'Data Broker',
   scamId: 'identity-theft-rings',
-  baseCost: 2700,
+  baseCost: 37500000000,
   speedBoost: 0.04,
   rewardBoost: 0.06,
 };
@@ -50,7 +50,7 @@ export const CARD_CLONING_SPECIALIST: EmployeeDefinition = {
   id: 'card-cloning-specialist',
   name: 'Card Cloning Specialist',
   scamId: 'credit-card-fraud-networks',
-  baseCost: 2800,
+  baseCost: 375000000000,
   speedBoost: 0.05,
   rewardBoost: 0.07,
 };
@@ -63,7 +63,7 @@ export const TRUST_BROKER: EmployeeDefinition = {
   id: 'trust-broker',
   name: 'Trust Broker',
   scamId: 'fake-escrow-services',
-  baseCost: 2900,
+  baseCost: 3750000000000,
   speedBoost: 0.03,
   rewardBoost: 0.08,
 };
@@ -76,7 +76,7 @@ export const INVOICE_FORGER: EmployeeDefinition = {
   id: 'invoice-forger',
   name: 'Invoice Forger',
   scamId: 'invoice-fraud',
-  baseCost: 3000,
+  baseCost: 37500000000000,
   speedBoost: 0.02,
   rewardBoost: 0.09,
 };
@@ -89,7 +89,7 @@ export const CLAIMS_ADJUSTER: EmployeeDefinition = {
   id: 'claims-adjuster',
   name: 'Claims Adjuster',
   scamId: 'insurance-fraud',
-  baseCost: 3100,
+  baseCost: 375000000000000,
   speedBoost: 0.04,
   rewardBoost: 0.06,
 };
@@ -102,7 +102,7 @@ export const TAX_IDENTITY_THIEF: EmployeeDefinition = {
   id: 'tax-identity-thief',
   name: 'Tax Identity Thief',
   scamId: 'tax-refund-fraud',
-  baseCost: 3200,
+  baseCost: 3750000000000000,
   speedBoost: 0.03,
   rewardBoost: 0.07,
 };
@@ -115,7 +115,7 @@ export const HEALTHCARE_FRAUDSTER: EmployeeDefinition = {
   id: 'healthcare-fraudster',
   name: 'Healthcare Fraudster',
   scamId: 'medicare-fraud',
-  baseCost: 3300,
+  baseCost: 37500000000000000,
   speedBoost: 0.05,
   rewardBoost: 0.05,
 };
@@ -128,7 +128,7 @@ export const CORPORATE_SHELL_BUILDER: EmployeeDefinition = {
   id: 'corporate-shell-builder',
   name: 'Corporate Shell Builder',
   scamId: 'shell-company-networks',
-  baseCost: 3400,
+  baseCost: 375000000000000000,
   speedBoost: 0.04,
   rewardBoost: 0.08,
 };

@@ -12,6 +12,7 @@ import { AUTO_SAVE_INTERVAL_MS } from './types';
 import { useGameStore } from '../store';
 import { useScamStore } from '../scams/scamStore';
 import { useManagerStore } from '../managers/managerStore';
+import { useEmployeeStore } from '../employees/employeeStore';
 import { COLORS } from '../../components/theme';
 
 interface GameProviderProps {
@@ -39,12 +40,13 @@ export function GameProvider({ children }: GameProviderProps): React.ReactElemen
           const migrated = migrateIfNeeded(rawSave);
 
           // Extract state from save
-          const { resources, scams, managers } = applySaveData(migrated);
+          const { resources, scams, managers, employees } = applySaveData(migrated);
 
           // Hydrate all stores
           useGameStore.getState().hydrate(resources);
           useScamStore.getState().hydrate(scams);
           useManagerStore.getState().hydrate(managers);
+          useEmployeeStore.getState().hydrate(employees);
 
           // Calculate offline earnings
           const timers = reconstructActiveTimers(scams, managers);
@@ -160,8 +162,9 @@ function performSave() {
   const resources = useGameStore.getState().resources;
   const scams = useScamStore.getState().scams;
   const managers = useManagerStore.getState().managers;
+  const employees = useEmployeeStore.getState().employees;
 
-  const saveData = createSaveData(resources, scams, managers);
+  const saveData = createSaveData(resources, scams, managers, employees);
   saveGame(saveData).catch((error) => {
     console.warn('[GameProvider] Auto-save failed:', error);
   });

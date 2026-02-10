@@ -26,6 +26,9 @@ export {
   calculateEmployeeCost,
   calculateSpeedBonus,
   calculateRewardBonus,
+  getEmployeeBaseCost,
+  getEmployeeCostForScam,
+  clearEmployeeCostCache,
 } from './calculations';
 
 // Store

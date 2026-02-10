@@ -11,7 +11,7 @@ export const LOBBYIST: EmployeeDefinition = {
   id: 'lobbyist',
   name: 'Lobbyist',
   scamId: 'government-contract-fraud',
-  baseCost: 3500,
+  baseCost: 37500000000,
   speedBoost: 0.02,
   rewardBoost: 0.04,
 };
@@ -24,7 +24,7 @@ export const INTL_WIRE_ROUTER: EmployeeDefinition = {
   id: 'intl-wire-router',
   name: 'International Wire Router',
   scamId: 'international-wire-fraud',
-  baseCost: 3600,
+  baseCost: 375000000000,
   speedBoost: 0.03,
   rewardBoost: 0.05,
 };
@@ -37,7 +37,7 @@ export const SHADOW_BANKER: EmployeeDefinition = {
   id: 'shadow-banker',
   name: 'Shadow Banker',
   scamId: 'shadow-banking',
-  baseCost: 3700,
+  baseCost: 3750000000000,
   speedBoost: 0.04,
   rewardBoost: 0.06,
 };
@@ -50,7 +50,7 @@ export const DISINFORMATION_AGENT: EmployeeDefinition = {
   id: 'disinformation-agent',
   name: 'Disinformation Agent',
   scamId: 'election-manipulation',
-  baseCost: 3800,
+  baseCost: 37500000000000,
   speedBoost: 0.02,
   rewardBoost: 0.07,
 };
@@ -63,7 +63,7 @@ export const CORPORATE_MOLE: EmployeeDefinition = {
   id: 'corporate-mole',
   name: 'Corporate Mole',
   scamId: 'corporate-espionage',
-  baseCost: 3900,
+  baseCost: 375000000000000,
   speedBoost: 0.05,
   rewardBoost: 0.08,
 };
@@ -76,7 +76,7 @@ export const ALGORITHMIC_TRADER: EmployeeDefinition = {
   id: 'algorithmic-trader',
   name: 'Algorithmic Trader',
   scamId: 'stock-manipulation',
-  baseCost: 4000,
+  baseCost: 3750000000000000,
   speedBoost: 0.03,
   rewardBoost: 0.09,
 };
@@ -89,7 +89,7 @@ export const PROPERTY_FABRICATOR: EmployeeDefinition = {
   id: 'property-fabricator',
   name: 'Property Fabricator',
   scamId: 'real-estate-fraud-empires',
-  baseCost: 4100,
+  baseCost: 37500000000000000,
   speedBoost: 0.04,
   rewardBoost: 0.05,
 };
@@ -102,7 +102,7 @@ export const UNDERGROUND_CHEMIST: EmployeeDefinition = {
   id: 'underground-chemist',
   name: 'Underground Chemist',
   scamId: 'pharmaceutical-counterfeiting',
-  baseCost: 4200,
+  baseCost: 375000000000000000,
   speedBoost: 0.02,
   rewardBoost: 0.07,
 };
@@ -115,7 +115,7 @@ export const MASTER_FORGER: EmployeeDefinition = {
   id: 'master-forger',
   name: 'Master Forger',
   scamId: 'art-forgery-and-laundering',
-  baseCost: 4300,
+  baseCost: 3750000000000000000,
   speedBoost: 0.03,
   rewardBoost: 0.06,
 };
@@ -128,7 +128,7 @@ export const SYSTEM_INFILTRATOR: EmployeeDefinition = {
   id: 'system-infiltrator',
   name: 'System Infiltrator',
   scamId: 'central-bank-heists',
-  baseCost: 4400,
+  baseCost: 37500000000000000000,
   speedBoost: 0.05,
   rewardBoost: 0.09,
 };

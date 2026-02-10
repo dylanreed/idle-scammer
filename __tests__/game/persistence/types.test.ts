@@ -10,8 +10,8 @@ import {
 
 describe('Persistence Types', () => {
   describe('constants', () => {
-    it('should export SAVE_VERSION at 2', () => {
-      expect(SAVE_VERSION).toBe(2);
+    it('should export SAVE_VERSION at 3', () => {
+      expect(SAVE_VERSION).toBe(3);
     });
 
     it('should export correct STORAGE_KEY', () => {
@@ -24,9 +24,9 @@ describe('Persistence Types', () => {
   });
 
   describe('SaveData interface', () => {
-    it('should accept valid SaveData structure with managers', () => {
+    it('should accept valid SaveData structure with managers and employees', () => {
       const validSaveData: SaveData = {
-        version: 2,
+        version: 3,
         savedAt: Date.now(),
         resources: {
           money: 100,
@@ -51,17 +51,24 @@ describe('Persistence Types', () => {
             isHired: true,
           },
         },
+        employees: {
+          'email-copywriter': {
+            employeeId: 'email-copywriter',
+            count: 3,
+          },
+        },
       };
 
       // TypeScript compilation is the main test - this verifies runtime shape
-      expect(validSaveData.version).toBe(2);
+      expect(validSaveData.version).toBe(3);
       expect(validSaveData.savedAt).toBeGreaterThan(0);
       expect(validSaveData.resources).toBeDefined();
       expect(validSaveData.scams).toBeDefined();
       expect(validSaveData.managers).toBeDefined();
+      expect(validSaveData.employees).toBeDefined();
     });
 
-    it('should require all SaveData fields including managers', () => {
+    it('should require all SaveData fields including managers and employees', () => {
       // This test documents the expected structure
       const saveData: SaveData = {
         version: SAVE_VERSION,
@@ -77,6 +84,7 @@ describe('Persistence Types', () => {
         },
         scams: {},
         managers: {},
+        employees: {},
       };
 
       expect(saveData).toHaveProperty('version');
@@ -84,6 +92,7 @@ describe('Persistence Types', () => {
       expect(saveData).toHaveProperty('resources');
       expect(saveData).toHaveProperty('scams');
       expect(saveData).toHaveProperty('managers');
+      expect(saveData).toHaveProperty('employees');
     });
   });
 });

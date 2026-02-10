@@ -159,14 +159,19 @@ export function getSpeedMultiplier(level: number): number {
  */
 export function calculateScamDuration(
   definition: ScamDefinition,
-  level: number
+  level: number,
+  employeeSpeedBonus: number = 0
 ): number {
   const { baseDuration } = definition;
   const speedMultiplier = getSpeedMultiplier(level);
   const calculatedDuration = baseDuration / speedMultiplier;
+
+  // Employee speed bonus reduces duration further (e.g., 0.5 = 50% faster)
+  const withEmployeeBoost = calculatedDuration / (1 + employeeSpeedBonus);
+
   const minimumDuration = baseDuration * MIN_DURATION_PERCENTAGE;
 
-  return Math.max(Math.round(calculatedDuration), Math.round(minimumDuration));
+  return Math.max(Math.round(withEmployeeBoost), Math.round(minimumDuration));
 }
 
 /**
@@ -185,7 +190,8 @@ export function calculateScamReward(
   definition: ScamDefinition,
   level: number,
   trust: number,
-  currentBots: number = 0
+  currentBots: number = 0,
+  employeeRewardBonus: number = 0
 ): number {
   const { unlockCost, tier, resourceType, baseReward: definitionBaseReward } = definition;
   const tierBase = getTierBase(tier);
@@ -211,7 +217,10 @@ export function calculateScamReward(
   // Trust uses diminishing returns: trust^0.3 to prevent runaway scaling
   const trustMultiplier = Math.pow(trust, 0.3);
 
-  return baseReward * linearMultiplier * bracketBonus * trustMultiplier * botMultiplier;
+  // Employee reward bonus (e.g., 0.5 = +50% reward from hired employees)
+  const employeeMultiplier = 1 + employeeRewardBonus;
+
+  return baseReward * linearMultiplier * bracketBonus * trustMultiplier * botMultiplier * employeeMultiplier;
 }
 
 /**

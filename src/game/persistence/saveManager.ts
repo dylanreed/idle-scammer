@@ -6,11 +6,13 @@ import { SAVE_VERSION } from './types';
 import type { GameResources } from '../types';
 import type { ScamStateMap } from '../scams/scamStore';
 import type { ManagerStateMap } from '../managers/managerStore';
+import type { EmployeeStateMap } from '../employees/employeeStore';
 import type { ScamTimer } from '../engine/types';
 import { ALL_MANAGERS } from '../managers/definitions';
 import { ALL_SCAMS } from '../scams/definitions';
 import { calculateScamDuration } from '../scams/calculations';
 import { createTimer } from '../engine/timer';
+import { useEmployeeStore } from '../employees/employeeStore';
 
 /**
  * Creates a SaveData snapshot from current game state.
@@ -19,12 +21,14 @@ import { createTimer } from '../engine/timer';
  * @param resources - Current game resources from the game store
  * @param scams - Current scam states from the scam store
  * @param managers - Current manager states from the manager store
+ * @param employees - Current employee states from the employee store
  * @returns Complete SaveData object ready for storage
  */
 export function createSaveData(
   resources: GameResources,
   scams: ScamStateMap,
-  managers: ManagerStateMap
+  managers: ManagerStateMap,
+  employees: EmployeeStateMap = {}
 ): SaveData {
   return {
     version: SAVE_VERSION,
@@ -32,6 +36,7 @@ export function createSaveData(
     resources,
     scams,
     managers,
+    employees,
   };
 }
 
@@ -46,11 +51,13 @@ export function applySaveData(saveData: SaveData): {
   resources: GameResources;
   scams: ScamStateMap;
   managers: ManagerStateMap;
+  employees: EmployeeStateMap;
 } {
   return {
     resources: saveData.resources,
     scams: saveData.scams,
     managers: saveData.managers,
+    employees: saveData.employees ?? {},
   };
 }
 
@@ -79,6 +86,15 @@ export function migrateIfNeeded(saveData: SaveData): SaveData {
       ...migrated,
       version: 2,
       managers: (migrated as SaveData).managers ?? {},
+    };
+  }
+
+  // Migration from version 2 to version 3: add employees field
+  if (migrated.version < 3) {
+    migrated = {
+      ...migrated,
+      version: 3,
+      employees: (migrated as SaveData).employees ?? {},
     };
   }
 
@@ -124,8 +140,9 @@ export function reconstructActiveTimers(
       continue;
     }
 
-    // Calculate duration based on current level
-    const duration = calculateScamDuration(scamDef, scamState.level);
+    // Calculate duration based on current level and employee bonuses
+    const { speedBonus } = useEmployeeStore.getState().getScamBonuses(managerDef.scamId);
+    const duration = calculateScamDuration(scamDef, scamState.level, speedBonus);
 
     timers.push(createTimer(managerDef.scamId, duration, now));
   }

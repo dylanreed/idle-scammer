@@ -117,11 +117,6 @@ describe('BotAssignmentPanel', () => {
   });
 
   describe('header and summary', () => {
-    it('renders "BOT NETWORK" header', () => {
-      render(<BotAssignmentPanel testID="bot-panel" />);
-      expect(screen.getByText('BOT NETWORK')).toBeTruthy();
-    });
-
     it('shows bot summary with total, deployed, and idle counts', () => {
       mockGetTotalAssigned.mockReturnValue(2);
       mockGetAvailableBots.mockReturnValue(3);

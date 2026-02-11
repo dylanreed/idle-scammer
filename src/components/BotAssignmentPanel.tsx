@@ -48,11 +48,6 @@ export function BotAssignmentPanel({ testID }: BotAssignmentPanelProps): React.R
 
   return (
     <CRTFrame testID={testID}>
-      {/* Header */}
-      <TerminalText size="md" color={COLORS.terminalGreen}>
-        {'BOT NETWORK'}
-      </TerminalText>
-
       {/* Summary */}
       <TerminalText size="sm" color={COLORS.terminalGreenDim} testID="bot-summary">
         {`Total: ${wholeBots} | Deployed: ${deployed} | Idle: ${idle}`}

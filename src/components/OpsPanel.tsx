@@ -1,8 +1,8 @@
 // ABOUTME: Operations center panel combining bot assignment and manager hiring
-// ABOUTME: Wraps BotAssignmentPanel and ManagerPanel in a scrollable container
+// ABOUTME: Wraps BotAssignmentPanel and ManagerPanel in a scrollable container with collapsible sections
 
-import React from 'react';
-import { ScrollView, StyleSheet } from 'react-native';
+import React, { useState } from 'react';
+import { ScrollView, Pressable, StyleSheet } from 'react-native';
 import { BotAssignmentPanel } from './BotAssignmentPanel';
 import { ManagerPanel } from './ManagerPanel';
 import { PixelButton } from './PixelButton';
@@ -32,9 +32,11 @@ export interface OpsPanelProps {
   testID?: string;
 }
 
+type OpsSection = 'bots' | 'managers';
+
 /**
  * Operations center panel that combines bot assignment and manager hiring.
- * Bot panel is first (frequent interaction), managers second (one-time purchases).
+ * Each section has a collapsible header; Escape Plan is always visible.
  */
 export function OpsPanel({
   resources,
@@ -44,6 +46,23 @@ export function OpsPanel({
   onPrestige,
   testID,
 }: OpsPanelProps): React.ReactElement {
+  const [collapsedSections, setCollapsedSections] = useState<Set<OpsSection>>(new Set());
+
+  const toggleSection = (section: OpsSection) => {
+    setCollapsedSections((prev) => {
+      const next = new Set(prev);
+      if (next.has(section)) {
+        next.delete(section);
+      } else {
+        next.add(section);
+      }
+      return next;
+    });
+  };
+
+  const botsCollapsed = collapsedSections.has('bots');
+  const managersCollapsed = collapsedSections.has('managers');
+
   return (
     <ScrollView
       style={styles.container}
@@ -52,14 +71,45 @@ export function OpsPanel({
       showsVerticalScrollIndicator={false}
       testID={testID}
     >
-      <BotAssignmentPanel testID="bot-assignment-panel" />
-      <ManagerPanel
-        resources={resources}
-        scams={scams}
-        isManagerHired={isManagerHired}
-        onHireManager={onHireManager}
-        testID="manager-panel"
-      />
+      {/* Bot Network Section */}
+      <Pressable
+        testID="ops-section-bots"
+        onPress={() => toggleSection('bots')}
+      >
+        <TerminalText
+          size="md"
+          color={COLORS.terminalGreen}
+          style={styles.sectionHeader}
+        >
+          {`${botsCollapsed ? '▶' : '▼'} BOT NETWORK`}
+        </TerminalText>
+      </Pressable>
+      {!botsCollapsed && <BotAssignmentPanel testID="bot-assignment-panel" />}
+
+      {/* Managers Section */}
+      <Pressable
+        testID="ops-section-managers"
+        onPress={() => toggleSection('managers')}
+      >
+        <TerminalText
+          size="md"
+          color={COLORS.terminalGreen}
+          style={styles.sectionHeader}
+        >
+          {`${managersCollapsed ? '▶' : '▼'} MANAGERS`}
+        </TerminalText>
+      </Pressable>
+      {!managersCollapsed && (
+        <ManagerPanel
+          resources={resources}
+          scams={scams}
+          isManagerHired={isManagerHired}
+          onHireManager={onHireManager}
+          testID="manager-panel"
+        />
+      )}
+
+      {/* Escape Plan - always visible */}
       <CRTFrame testID="prestige-section">
         <TerminalText size="md" color={COLORS.terminalGreen}>
           {'ESCAPE PLAN'}
@@ -87,5 +137,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.md,
     paddingBottom: SPACING.xl,
     gap: SPACING.md,
+  },
+  sectionHeader: {
+    marginTop: SPACING.sm,
+    marginBottom: SPACING.xs,
   },
 });

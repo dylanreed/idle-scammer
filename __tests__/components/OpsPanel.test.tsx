@@ -120,4 +120,83 @@ describe('OpsPanel', () => {
       expect(mockOnPrestige).toHaveBeenCalledTimes(1);
     });
   });
+
+  describe('collapsible sections', () => {
+    it('renders BOT NETWORK section header with expand chevron', () => {
+      render(<OpsPanel {...defaultProps} />);
+      const header = screen.getByTestId('ops-section-bots');
+      expect(header).toBeTruthy();
+      expect(screen.getByText(/▼.*BOT NETWORK/)).toBeTruthy();
+    });
+
+    it('renders MANAGERS section header with expand chevron', () => {
+      render(<OpsPanel {...defaultProps} />);
+      const header = screen.getByTestId('ops-section-managers');
+      expect(header).toBeTruthy();
+      expect(screen.getByText(/▼.*MANAGERS/)).toBeTruthy();
+    });
+
+    it('hides BotAssignmentPanel when BOT NETWORK header is pressed', () => {
+      render(<OpsPanel {...defaultProps} />);
+
+      // Initially visible
+      expect(screen.getByTestId('bot-assignment-panel')).toBeTruthy();
+
+      // Collapse
+      fireEvent.press(screen.getByTestId('ops-section-bots'));
+      expect(screen.queryByTestId('bot-assignment-panel')).toBeNull();
+
+      // Header still visible with collapsed chevron
+      expect(screen.getByText(/▶.*BOT NETWORK/)).toBeTruthy();
+    });
+
+    it('hides ManagerPanel when MANAGERS header is pressed', () => {
+      render(<OpsPanel {...defaultProps} />);
+
+      // Initially visible
+      expect(screen.getByTestId('manager-panel')).toBeTruthy();
+
+      // Collapse
+      fireEvent.press(screen.getByTestId('ops-section-managers'));
+      expect(screen.queryByTestId('manager-panel')).toBeNull();
+
+      // Header still visible with collapsed chevron
+      expect(screen.getByText(/▶.*MANAGERS/)).toBeTruthy();
+    });
+
+    it('toggles back to expanded when pressed again', () => {
+      render(<OpsPanel {...defaultProps} />);
+
+      // Collapse bots section
+      fireEvent.press(screen.getByTestId('ops-section-bots'));
+      expect(screen.queryByTestId('bot-assignment-panel')).toBeNull();
+
+      // Expand again
+      fireEvent.press(screen.getByTestId('ops-section-bots'));
+      expect(screen.getByTestId('bot-assignment-panel')).toBeTruthy();
+      expect(screen.getByText(/▼.*BOT NETWORK/)).toBeTruthy();
+    });
+
+    it('collapsing one section does not affect the other', () => {
+      render(<OpsPanel {...defaultProps} />);
+
+      // Collapse only bots
+      fireEvent.press(screen.getByTestId('ops-section-bots'));
+
+      // Bots hidden, managers still visible
+      expect(screen.queryByTestId('bot-assignment-panel')).toBeNull();
+      expect(screen.getByTestId('manager-panel')).toBeTruthy();
+    });
+
+    it('ESCAPE PLAN section is always visible (not collapsible)', () => {
+      render(<OpsPanel {...defaultProps} />);
+
+      // Collapse both sections
+      fireEvent.press(screen.getByTestId('ops-section-bots'));
+      fireEvent.press(screen.getByTestId('ops-section-managers'));
+
+      // Escape plan still visible
+      expect(screen.getByTestId('flee-button')).toBeTruthy();
+    });
+  });
 });

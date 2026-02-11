@@ -2,7 +2,7 @@
 // ABOUTME: Displays hire buttons, cost, locked/hired status, and optional portraits per manager
 
 import React from 'react';
-import { View, StyleSheet, Image } from 'react-native';
+import { View, Pressable, StyleSheet, Image } from 'react-native';
 import { TerminalText } from './TerminalText';
 import { PixelButton } from './PixelButton';
 import { CRTFrame } from './CRTFrame';
@@ -36,6 +36,12 @@ export interface ManagerPanelProps {
   /** Callback when hiring a manager */
   onHireManager: (managerId: string, cost: number, scamId: string) => void;
 
+  /** Set of tier numbers that are currently collapsed (shared with ScamListPanel) */
+  collapsedTiers?: Set<ScamTier>;
+
+  /** Called when a tier header is pressed to toggle collapse */
+  onToggleTier?: (tier: ScamTier) => void;
+
   /** Optional test ID */
   testID?: string;
 }
@@ -61,6 +67,8 @@ export function ManagerPanel({
   scams,
   isManagerHired,
   onHireManager,
+  collapsedTiers = new Set(),
+  onToggleTier,
   testID,
 }: ManagerPanelProps): React.ReactElement {
   return (
@@ -76,16 +84,24 @@ export function ManagerPanel({
 
         if (tierManagers.length === 0) return null;
 
+        const isCollapsed = collapsedTiers.has(tier);
+        const chevron = isCollapsed ? '▶' : '▼';
+
         return (
           <View key={`tier-managers-${tier}`}>
-            <TerminalText
-              size="sm"
-              color={COLORS.terminalGreenDim}
-              style={styles.managersLabel}
+            <Pressable
+              testID={`manager-tier-header-${tier}`}
+              onPress={() => onToggleTier?.(tier)}
             >
-              {`TIER ${tier} MANAGERS`}
-            </TerminalText>
-            <CRTFrame style={styles.managersSection}>
+              <TerminalText
+                size="sm"
+                color={COLORS.terminalGreenDim}
+                style={styles.managersLabel}
+              >
+                {`${chevron} TIER ${tier} MANAGERS`}
+              </TerminalText>
+            </Pressable>
+            {!isCollapsed && <CRTFrame style={styles.managersSection}>
               <TerminalText size="sm" color={COLORS.terminalGreenDim}>
                 {'Managers automate your scams'}
               </TerminalText>
@@ -136,7 +152,7 @@ export function ManagerPanel({
                   );
                 })}
               </View>
-            </CRTFrame>
+            </CRTFrame>}
           </View>
         );
       })}

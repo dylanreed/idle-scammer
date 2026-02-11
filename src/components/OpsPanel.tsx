@@ -10,7 +10,7 @@ import { CRTFrame } from './CRTFrame';
 import { TerminalText } from './TerminalText';
 import { COLORS, SPACING } from './theme';
 import type { GameResources } from '../game/types';
-import type { ScamState } from '../game/scams/types';
+import type { ScamState, ScamTier } from '../game/scams/types';
 
 export interface OpsPanelProps {
   /** Current game resources */
@@ -28,6 +28,12 @@ export interface OpsPanelProps {
   /** Called when the player voluntarily prestiges */
   onPrestige: () => void;
 
+  /** Set of tier numbers that are currently collapsed (shared with ScamListPanel) */
+  collapsedTiers: Set<ScamTier>;
+
+  /** Called when a tier header is pressed to toggle collapse */
+  onToggleTier: (tier: ScamTier) => void;
+
   /** Test ID for testing */
   testID?: string;
 }
@@ -44,6 +50,8 @@ export function OpsPanel({
   isManagerHired,
   onHireManager,
   onPrestige,
+  collapsedTiers,
+  onToggleTier,
   testID,
 }: OpsPanelProps): React.ReactElement {
   const [collapsedSections, setCollapsedSections] = useState<Set<OpsSection>>(new Set());
@@ -105,6 +113,8 @@ export function OpsPanel({
           scams={scams}
           isManagerHired={isManagerHired}
           onHireManager={onHireManager}
+          collapsedTiers={collapsedTiers}
+          onToggleTier={onToggleTier}
           testID="manager-panel"
         />
       )}

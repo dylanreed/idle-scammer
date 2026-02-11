@@ -1,7 +1,7 @@
 // ABOUTME: Panel component that renders tier-grouped scam cards in a scrollable list
 // ABOUTME: Extracts the scam list rendering logic from GameScreen for better separation of concerns
 
-import React, { useState } from 'react';
+import React from 'react';
 import { View, ScrollView, Pressable, StyleSheet } from 'react-native';
 import { ScamCard } from './ScamCard';
 import { TerminalText } from './TerminalText';
@@ -54,6 +54,12 @@ export interface ScamListPanelProps {
   /** Called when the player hires an employee */
   onHireEmployee: (employeeId: string, scamId: string) => void;
 
+  /** Set of tier numbers that are currently collapsed */
+  collapsedTiers: Set<ScamTier>;
+
+  /** Called when a tier header is pressed to toggle collapse */
+  onToggleTier: (tier: ScamTier) => void;
+
   /** Test ID for testing */
   testID?: string;
 }
@@ -96,23 +102,12 @@ export function ScamListPanel({
   onUpgrade,
   onMaxBuy,
   onHireEmployee,
+  collapsedTiers,
+  onToggleTier,
   testID,
 }: ScamListPanelProps): React.ReactElement {
   const isManagerHired = useManagerStore((state) => state.isManagerHired);
   const getScamBotBonuses = useBotStore((state) => state.getScamBotBonuses);
-  const [collapsedTiers, setCollapsedTiers] = useState<Set<ScamTier>>(new Set());
-
-  const toggleTier = (tier: ScamTier) => {
-    setCollapsedTiers((prev) => {
-      const next = new Set(prev);
-      if (next.has(tier)) {
-        next.delete(tier);
-      } else {
-        next.add(tier);
-      }
-      return next;
-    });
-  };
 
   return (
     <ScrollView
@@ -172,7 +167,7 @@ export function ScamListPanel({
             {/* Tier Header - Pressable to toggle collapse */}
             <Pressable
               testID={`tier-header-${tier}`}
-              onPress={() => toggleTier(tier)}
+              onPress={() => onToggleTier(tier)}
             >
               <TerminalText
                 size="md"

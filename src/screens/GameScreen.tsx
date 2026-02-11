@@ -39,7 +39,7 @@ import { executePrestige, fullReset } from '../game/prestige/prestigeManager';
 import { MAX_HEAT } from '../game/prestige/constants';
 import { useGameLoop, type TickResult } from '../game/engine/gameLoop';
 import type { ScamTimer } from '../game/engine/types';
-import type { ScamDefinition, ScamTier } from '../game/scams/types';
+import type { ScamDefinition, ScamTier, ScamState } from '../game/scams/types';
 import type { PrestigeResult } from '../game/prestige/types';
 import { useBotStore } from '../game/bots/botStore';
 import { BOT_GENERATION_RATES, IDLE_BOT_HEAT_REDUCTION } from '../game/bots/constants';
@@ -94,6 +94,20 @@ export function GameScreen(): React.ReactElement {
 
   // Reset confirmation state
   const [showResetConfirm, setShowResetConfirm] = useState(false);
+
+  // Shared collapse state for tier sections (scam list + manager panel)
+  const [collapsedTiers, setCollapsedTiers] = useState<Set<ScamTier>>(new Set());
+  const toggleTier = useCallback((tier: ScamTier) => {
+    setCollapsedTiers((prev) => {
+      const next = new Set(prev);
+      if (next.has(tier)) {
+        next.delete(tier);
+      } else {
+        next.add(tier);
+      }
+      return next;
+    });
+  }, []);
 
   // Ref guard to prevent double-triggering prestige (stale closures in useCallback)
   const showPrestigeRef = useRef(false);
@@ -550,6 +564,8 @@ export function GameScreen(): React.ReactElement {
             onUpgrade={handleUpgradeScam}
             onMaxBuy={handleMaxBuyScam}
             onHireEmployee={handleHireEmployee}
+            collapsedTiers={collapsedTiers}
+            onToggleTier={toggleTier}
             testID="scam-list-panel"
           />
         }
@@ -560,6 +576,8 @@ export function GameScreen(): React.ReactElement {
             isManagerHired={isManagerHired}
             onHireManager={handleHireManager}
             onPrestige={handleVoluntaryPrestige}
+            collapsedTiers={collapsedTiers}
+            onToggleTier={toggleTier}
             testID="ops-panel"
           />
         }

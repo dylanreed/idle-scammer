@@ -120,7 +120,7 @@ describe('ManagerPanel', () => {
         />
       );
 
-      expect(screen.getByText('TIER 1 MANAGERS')).toBeTruthy();
+      expect(screen.getByText(/TIER 1 MANAGERS/)).toBeTruthy();
     });
 
     it('does not render managers for inaccessible tiers', () => {
@@ -134,7 +134,7 @@ describe('ManagerPanel', () => {
       );
 
       // Tier 2 is not accessible (isTierAccessible returns false for tier !== 1)
-      expect(screen.queryByText('TIER 2 MANAGERS')).toBeNull();
+      expect(screen.queryByText(/TIER 2 MANAGERS/)).toBeNull();
     });
   });
 
@@ -253,6 +253,95 @@ describe('ManagerPanel', () => {
       // mgr-1 has a portrait, mgr-2 does not
       const images = screen.getAllByTestId('manager-portrait');
       expect(images.length).toBe(1);
+    });
+  });
+
+  describe('collapsible tier headers', () => {
+    it('shows expanded chevron on tier header by default', () => {
+      render(
+        <ManagerPanel
+          resources={createResources()}
+          scams={createScamStates()}
+          isManagerHired={defaultIsManagerHired}
+          onHireManager={defaultOnHireManager}
+        />
+      );
+
+      expect(screen.getByText(/▼.*TIER 1 MANAGERS/)).toBeTruthy();
+    });
+
+    it('shows collapsed chevron when tier is in collapsedTiers set', () => {
+      render(
+        <ManagerPanel
+          resources={createResources()}
+          scams={createScamStates()}
+          isManagerHired={defaultIsManagerHired}
+          onHireManager={defaultOnHireManager}
+          collapsedTiers={new Set([1] as const)}
+        />
+      );
+
+      expect(screen.getByText(/▶.*TIER 1 MANAGERS/)).toBeTruthy();
+    });
+
+    it('hides manager rows when tier is collapsed', () => {
+      render(
+        <ManagerPanel
+          resources={createResources()}
+          scams={createScamStates()}
+          isManagerHired={defaultIsManagerHired}
+          onHireManager={defaultOnHireManager}
+          collapsedTiers={new Set([1] as const)}
+        />
+      );
+
+      // Manager names should be hidden
+      expect(screen.queryByText('Test Manager 1')).toBeNull();
+      expect(screen.queryByText('Test Manager 2')).toBeNull();
+    });
+
+    it('shows manager rows when tier is expanded', () => {
+      render(
+        <ManagerPanel
+          resources={createResources()}
+          scams={createScamStates()}
+          isManagerHired={defaultIsManagerHired}
+          onHireManager={defaultOnHireManager}
+          collapsedTiers={new Set()}
+        />
+      );
+
+      expect(screen.getByText('Test Manager 1')).toBeTruthy();
+      expect(screen.getByText('Test Manager 2')).toBeTruthy();
+    });
+
+    it('calls onToggleTier when tier header is pressed', () => {
+      const onToggleTier = jest.fn();
+      render(
+        <ManagerPanel
+          resources={createResources()}
+          scams={createScamStates()}
+          isManagerHired={defaultIsManagerHired}
+          onHireManager={defaultOnHireManager}
+          onToggleTier={onToggleTier}
+        />
+      );
+
+      fireEvent.press(screen.getByTestId('manager-tier-header-1'));
+      expect(onToggleTier).toHaveBeenCalledWith(1);
+    });
+
+    it('tier header has testID for testing', () => {
+      render(
+        <ManagerPanel
+          resources={createResources()}
+          scams={createScamStates()}
+          isManagerHired={defaultIsManagerHired}
+          onHireManager={defaultOnHireManager}
+        />
+      );
+
+      expect(screen.getByTestId('manager-tier-header-1')).toBeTruthy();
     });
   });
 });

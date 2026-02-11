@@ -270,6 +270,8 @@ function createDefaultProps(overrides: Partial<ScamListPanelProps> = {}): ScamLi
     onUpgrade: jest.fn(),
     onMaxBuy: jest.fn(),
     onHireEmployee: jest.fn(),
+    collapsedTiers: new Set(),
+    onToggleTier: jest.fn(),
     testID: 'scam-list-panel',
     ...overrides,
   };
@@ -539,57 +541,56 @@ describe('ScamListPanel', () => {
   describe('collapsible tier headers', () => {
     it('should render tier headers as pressable with expand indicator', () => {
       render(<ScamListPanel {...createDefaultProps()} />);
-      // Header should show with expand chevron
       const header = screen.getByTestId('tier-header-1');
       expect(header).toBeTruthy();
       expect(screen.getByText(/▼.*TIER 1: SMALL TIME/)).toBeTruthy();
     });
 
-    it('should toggle collapse when tier header is pressed', () => {
-      render(<ScamListPanel {...createDefaultProps()} />);
-      const header = screen.getByTestId('tier-header-1');
-
-      // Initially expanded - scam card visible
-      expect(screen.getByTestId('scam-card-scam-a')).toBeTruthy();
-
-      // Tap to collapse
-      fireEvent.press(header);
-
-      // Now collapsed - scam card hidden
-      expect(screen.queryByTestId('scam-card-scam-a')).toBeNull();
-
-      // Header still visible with collapsed indicator
+    it('should show collapsed chevron when tier is in collapsedTiers', () => {
+      const props = createDefaultProps({
+        collapsedTiers: new Set([1] as const),
+      });
+      render(<ScamListPanel {...props} />);
       expect(screen.getByText(/▶.*TIER 1: SMALL TIME/)).toBeTruthy();
     });
 
-    it('should toggle back to expanded when pressed again', () => {
-      render(<ScamListPanel {...createDefaultProps()} />);
-      const header = screen.getByTestId('tier-header-1');
+    it('should call onToggleTier when tier header is pressed', () => {
+      const onToggleTier = jest.fn();
+      const props = createDefaultProps({ onToggleTier });
+      render(<ScamListPanel {...props} />);
 
-      // Collapse
-      fireEvent.press(header);
-      expect(screen.queryByTestId('scam-card-scam-a')).toBeNull();
-
-      // Expand
-      fireEvent.press(header);
-      expect(screen.getByTestId('scam-card-scam-a')).toBeTruthy();
-      expect(screen.getByText(/▼.*TIER 1: SMALL TIME/)).toBeTruthy();
+      fireEvent.press(screen.getByTestId('tier-header-1'));
+      expect(onToggleTier).toHaveBeenCalledWith(1);
     });
 
-    it('should keep collapsed tier header visible while hiding cards', () => {
+    it('should hide scam cards when tier is collapsed', () => {
       const props = createDefaultProps({
+        collapsedTiers: new Set([1] as const),
+      });
+      render(<ScamListPanel {...props} />);
+
+      // Header still visible
+      expect(screen.getByTestId('tier-header-1')).toBeTruthy();
+      // Cards hidden
+      expect(screen.queryByTestId('scam-card-scam-a')).toBeNull();
+    });
+
+    it('should show scam cards when tier is expanded', () => {
+      render(<ScamListPanel {...createDefaultProps()} />);
+      expect(screen.getByTestId('scam-card-scam-a')).toBeTruthy();
+    });
+
+    it('should keep collapsed tier header visible while hiding all cards', () => {
+      const props = createDefaultProps({
+        collapsedTiers: new Set([1] as const),
         scams: {
           'scam-a': { scamId: 'scam-a', level: 1, isUnlocked: true, timesCompleted: 0 },
           'scam-b': { scamId: 'scam-b', level: 1, isUnlocked: true, timesCompleted: 0 },
         },
       });
       render(<ScamListPanel {...props} />);
-      const header = screen.getByTestId('tier-header-1');
 
-      // Collapse
-      fireEvent.press(header);
-
-      // Header still visible
+      // Header visible
       expect(screen.getByTestId('tier-header-1')).toBeTruthy();
       // Cards hidden
       expect(screen.queryByTestId('scam-card-scam-a')).toBeNull();

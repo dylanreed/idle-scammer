@@ -52,6 +52,8 @@ const defaultProps: OpsPanelProps = {
   isManagerHired: jest.fn(() => false),
   onHireManager: jest.fn(),
   onPrestige: jest.fn(),
+  collapsedTiers: new Set(),
+  onToggleTier: jest.fn(),
   testID: 'ops-panel',
 };
 

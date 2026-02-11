@@ -46,7 +46,7 @@ export interface PixelButtonProps {
 const VARIANT_COLORS: Record<PixelButtonVariant, string> = {
   primary: COLORS.terminalGreen,
   secondary: COLORS.terminalGreenDim,
-  danger: COLORS.warningRed,
+  danger: COLORS.hotPink,
   gold: COLORS.gold,
 };
 
@@ -56,7 +56,7 @@ const VARIANT_COLORS: Record<PixelButtonVariant, string> = {
 const VARIANT_TEXT_COLORS: Record<PixelButtonVariant, string> = {
   primary: COLORS.terminalGreen,
   secondary: COLORS.terminalGreenDim,
-  danger: COLORS.warningRed,
+  danger: COLORS.hotPink,
   gold: COLORS.gold,
 };
 
@@ -137,14 +137,14 @@ const styles = StyleSheet.create({
     borderRightWidth: 4,
   },
   pressed: {
-    // When pressed, flatten the button by reducing bottom/right borders
-    borderBottomWidth: 2,
-    borderRightWidth: 2,
-    // Slight offset to simulate being pushed in
-    marginTop: 2,
-    marginLeft: 2,
-    marginBottom: -2,
-    marginRight: -2,
+    // When pressed, flatten the button — spray-can push feel
+    borderBottomWidth: 1,
+    borderRightWidth: 1,
+    // More aggressive offset to simulate being pushed in
+    marginTop: 3,
+    marginLeft: 3,
+    marginBottom: -3,
+    marginRight: -3,
   },
   disabled: {
     opacity: 0.5,
@@ -155,7 +155,7 @@ const styles = StyleSheet.create({
     fontSize: FONT_SIZES.md,
     fontWeight: 'bold',
     textTransform: 'uppercase',
-    letterSpacing: 1,
+    letterSpacing: 2,
   },
   textDisabled: {
     color: COLORS.textDim,

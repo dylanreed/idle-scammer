@@ -61,6 +61,7 @@ const styles = StyleSheet.create({
     borderRadius: BORDER_RADIUS.lg,
     borderWidth: 2,
     borderColor: COLORS.terminalGreenDim,
+    borderStyle: 'dashed',
     padding: SPACING.md,
     overflow: 'hidden',
     // Apply the glow effect

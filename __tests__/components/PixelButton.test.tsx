@@ -57,7 +57,7 @@ describe('PixelButton', () => {
       expect(flatStyle.borderColor).toBe(COLORS.terminalGreen);
     });
 
-    it('renders danger variant with warning red', () => {
+    it('renders danger variant with spray paint pink', () => {
       render(
         <PixelButton onPress={() => {}} variant="danger" testID="pixel-button">
           Danger
@@ -69,7 +69,7 @@ describe('PixelButton', () => {
       const flatStyle = Array.isArray(style)
         ? Object.assign({}, ...style.filter(Boolean))
         : style;
-      expect(flatStyle.borderColor).toBe(COLORS.warningRed);
+      expect(flatStyle.borderColor).toBe(COLORS.hotPink);
     });
 
     it('renders gold variant with gold color', () => {

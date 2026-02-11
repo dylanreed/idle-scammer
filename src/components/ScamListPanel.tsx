@@ -168,6 +168,7 @@ export function ScamListPanel({
             <Pressable
               testID={`tier-header-${tier}`}
               onPress={() => onToggleTier(tier)}
+              style={styles.tierHeaderRow}
             >
               <TerminalText
                 size="md"
@@ -176,6 +177,15 @@ export function ScamListPanel({
               >
                 {`${chevron} TIER ${tier}: ${TIER_NAMES[tier]}`}
               </TerminalText>
+              {!isCollapsed && (
+                <TerminalText
+                  size="sm"
+                  color={COLORS.terminalGreenFaded}
+                  style={styles.classifiedStamp}
+                >
+                  {'// CLASSIFIED'}
+                </TerminalText>
+              )}
             </Pressable>
 
             {/* Scam Cards (hidden when collapsed) */}
@@ -239,9 +249,17 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  sectionTitle: {
-    marginBottom: SPACING.md,
+  tierHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
     marginTop: SPACING.lg,
+    marginBottom: SPACING.md,
+  },
+  sectionTitle: {
+  },
+  classifiedStamp: {
+    marginLeft: SPACING.sm,
+    letterSpacing: 3,
   },
   lockMessage: {
     marginBottom: SPACING.md,

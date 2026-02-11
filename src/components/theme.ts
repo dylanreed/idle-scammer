@@ -2,54 +2,55 @@
 // ABOUTME: Defines colors, fonts, spacing, and other visual constants used throughout the app
 
 /**
- * Color palette for the CRT monitor / terminal hacker aesthetic.
- * All colors are optimized for dark backgrounds with high contrast green text.
+ * Color palette: "Fluorescent Grime" — spreadsheet aesthetics + graffiti
+ * in a shady internet cafe. CRT phosphor greens, spray paint pinks,
+ * and highlighter yellows on green-tinted near-black backgrounds.
  */
 export const COLORS = {
-  /** Primary dark background - near black */
-  background: '#0a0a0a',
+  /** Primary dark background - green-tinted near-black */
+  background: '#0a0e0a',
 
-  /** Secondary background for layered elements */
-  backgroundSecondary: '#1a1a1a',
+  /** Secondary background - worn desk surface */
+  backgroundSecondary: '#141a14',
 
-  /** Tertiary background for deeper nesting */
-  backgroundTertiary: '#2a2a2a',
+  /** Tertiary background - spreadsheet gridline tone */
+  backgroundTertiary: '#2a3a2a',
 
-  /** Primary terminal green - full brightness */
-  terminalGreen: '#00ff00',
+  /** Primary terminal green - warm CRT phosphor */
+  terminalGreen: '#00ff41',
 
   /** Dimmed terminal green for secondary text */
-  terminalGreenDim: '#00aa00',
+  terminalGreenDim: '#00b33c',
 
   /** Very dim green for disabled/inactive states */
-  terminalGreenFaded: '#005500',
+  terminalGreenFaded: '#004d2a',
 
-  /** Hot pink accent for important actions / warnings */
-  hotPink: '#ff00ff',
+  /** Spray paint pink accent for important actions */
+  hotPink: '#ff2d6b',
 
-  /** Warning/danger red */
-  warningRed: '#ff0000',
+  /** Street-red for warnings */
+  warningRed: '#ff4444',
 
-  /** Gold for premium/special items */
-  gold: '#ffd700',
+  /** Highlighter yellow for premium/special items */
+  gold: '#ffb800',
 
   /** Trust resource blue / cyan accent */
-  trustBlue: '#00ffff',
+  trustBlue: '#41ffff',
 
-  /** Default text color (terminal green) */
-  text: '#00ff00',
+  /** Default text color (CRT phosphor green) */
+  text: '#00ff41',
 
   /** Dim text for secondary information */
-  textDim: '#008800',
+  textDim: '#008c2e',
 
   /** Border color for CRT frames */
-  border: '#00ff00',
+  border: '#00ff41',
 
   /** Subtle border for inner elements */
-  borderDim: '#004400',
+  borderDim: '#004d2a',
 
-  /** Glow effect color (same as terminal green with alpha applied via shadow) */
-  glow: '#00ff00',
+  /** Glow effect color (CRT phosphor green with alpha applied via shadow) */
+  glow: '#00ff41',
 } as const;
 
 /**

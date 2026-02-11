@@ -15,6 +15,11 @@ jest.mock('../../src/game/prestige/calculations', () => ({
   isTierAccessible: jest.fn(),
 }));
 
+// Mock isTierFullyUnlocked from scam calculations
+jest.mock('../../src/game/scams/calculations', () => ({
+  isTierFullyUnlocked: jest.fn(),
+}));
+
 // Mock employee calculations
 jest.mock('../../src/game/employees/calculations', () => ({
   getUnlockCostForScam: jest.fn(),
@@ -224,11 +229,13 @@ import { getUnlockCostForScam } from '../../src/game/employees/calculations';
 import { getManagerByScamId } from '../../src/game/managers/definitions';
 import { getEmployeesByScamId } from '../../src/game/employees/definitions';
 import { useBotStore } from '../../src/game/bots/botStore';
+import { isTierFullyUnlocked } from '../../src/game/scams/calculations';
 
 const mockIsTierAccessible = isTierAccessible as jest.MockedFunction<typeof isTierAccessible>;
 const mockGetUnlockCostForScam = getUnlockCostForScam as jest.MockedFunction<typeof getUnlockCostForScam>;
 const mockGetManagerByScamId = getManagerByScamId as jest.MockedFunction<typeof getManagerByScamId>;
 const mockGetEmployeesByScamId = getEmployeesByScamId as jest.MockedFunction<typeof getEmployeesByScamId>;
+const mockIsTierFullyUnlocked = isTierFullyUnlocked as jest.MockedFunction<typeof isTierFullyUnlocked>;
 
 /**
  * Default game resources for testing
@@ -280,6 +287,9 @@ beforeEach(() => {
     return scam?.unlockCost;
   });
 
+  // Default: all tiers are fully unlocked (so existing tests aren't affected by lock gating)
+  mockIsTierFullyUnlocked.mockReturnValue(true);
+
   // Default: no managers
   mockGetManagerByScamId.mockReturnValue(undefined);
 
@@ -291,12 +301,12 @@ describe('ScamListPanel', () => {
   describe('tier headers', () => {
     it('should render tier header for accessible tiers', () => {
       render(<ScamListPanel {...createDefaultProps()} />);
-      expect(screen.getByText('TIER 1: SMALL TIME')).toBeTruthy();
+      expect(screen.getByText(/TIER 1: SMALL TIME/)).toBeTruthy();
     });
 
     it('should NOT render tier header for inaccessible tiers', () => {
       render(<ScamListPanel {...createDefaultProps()} />);
-      expect(screen.queryByText('TIER 2: GETTING SERIOUS')).toBeNull();
+      expect(screen.queryByText(/TIER 2: GETTING SERIOUS/)).toBeNull();
     });
 
     it('should render multiple tier headers when multiple tiers are accessible', () => {
@@ -309,8 +319,8 @@ describe('ScamListPanel', () => {
         },
       });
       render(<ScamListPanel {...props} />);
-      expect(screen.getByText('TIER 1: SMALL TIME')).toBeTruthy();
-      expect(screen.getByText('TIER 2: GETTING SERIOUS')).toBeTruthy();
+      expect(screen.getByText(/TIER 1: SMALL TIME/)).toBeTruthy();
+      expect(screen.getByText(/TIER 2: GETTING SERIOUS/)).toBeTruthy();
     });
   });
 
@@ -522,7 +532,144 @@ describe('ScamListPanel', () => {
       });
       render(<ScamListPanel {...props} />);
       // Tier 2 header should not render since scam-d is too expensive and not goal
-      expect(screen.queryByText('TIER 2: GETTING SERIOUS')).toBeNull();
+      expect(screen.queryByText(/TIER 2: GETTING SERIOUS/)).toBeNull();
+    });
+  });
+
+  describe('collapsible tier headers', () => {
+    it('should render tier headers as pressable with expand indicator', () => {
+      render(<ScamListPanel {...createDefaultProps()} />);
+      // Header should show with expand chevron
+      const header = screen.getByTestId('tier-header-1');
+      expect(header).toBeTruthy();
+      expect(screen.getByText(/▼.*TIER 1: SMALL TIME/)).toBeTruthy();
+    });
+
+    it('should toggle collapse when tier header is pressed', () => {
+      render(<ScamListPanel {...createDefaultProps()} />);
+      const header = screen.getByTestId('tier-header-1');
+
+      // Initially expanded - scam card visible
+      expect(screen.getByTestId('scam-card-scam-a')).toBeTruthy();
+
+      // Tap to collapse
+      fireEvent.press(header);
+
+      // Now collapsed - scam card hidden
+      expect(screen.queryByTestId('scam-card-scam-a')).toBeNull();
+
+      // Header still visible with collapsed indicator
+      expect(screen.getByText(/▶.*TIER 1: SMALL TIME/)).toBeTruthy();
+    });
+
+    it('should toggle back to expanded when pressed again', () => {
+      render(<ScamListPanel {...createDefaultProps()} />);
+      const header = screen.getByTestId('tier-header-1');
+
+      // Collapse
+      fireEvent.press(header);
+      expect(screen.queryByTestId('scam-card-scam-a')).toBeNull();
+
+      // Expand
+      fireEvent.press(header);
+      expect(screen.getByTestId('scam-card-scam-a')).toBeTruthy();
+      expect(screen.getByText(/▼.*TIER 1: SMALL TIME/)).toBeTruthy();
+    });
+
+    it('should keep collapsed tier header visible while hiding cards', () => {
+      const props = createDefaultProps({
+        scams: {
+          'scam-a': { scamId: 'scam-a', level: 1, isUnlocked: true, timesCompleted: 0 },
+          'scam-b': { scamId: 'scam-b', level: 1, isUnlocked: true, timesCompleted: 0 },
+        },
+      });
+      render(<ScamListPanel {...props} />);
+      const header = screen.getByTestId('tier-header-1');
+
+      // Collapse
+      fireEvent.press(header);
+
+      // Header still visible
+      expect(screen.getByTestId('tier-header-1')).toBeTruthy();
+      // Cards hidden
+      expect(screen.queryByTestId('scam-card-scam-a')).toBeNull();
+      expect(screen.queryByTestId('scam-card-scam-b')).toBeNull();
+    });
+  });
+
+  describe('tier lock gating', () => {
+    it('should show locked state for tier 2 when tier 1 is not fully unlocked', () => {
+      mockIsTierAccessible.mockReturnValue(true);
+      mockIsTierFullyUnlocked.mockImplementation((tier) => tier !== 1);
+
+      const props = createDefaultProps({
+        resources: createDefaultResources({ trust: 5 }),
+        scams: {
+          'scam-a': { scamId: 'scam-a', level: 1, isUnlocked: true, timesCompleted: 0 },
+          'scam-d': { scamId: 'scam-d', level: 1, isUnlocked: true, timesCompleted: 0 },
+        },
+      });
+      render(<ScamListPanel {...props} />);
+
+      // Tier 2 header should show locked
+      expect(screen.getByText(/🔒.*TIER 2: GETTING SERIOUS/)).toBeTruthy();
+      // Should show lock message
+      expect(screen.getByText('UNLOCK ALL TIER 1 SCAMS FIRST')).toBeTruthy();
+      // Tier 2 scam cards should NOT render
+      expect(screen.queryByTestId('scam-card-scam-d')).toBeNull();
+    });
+
+    it('should show tier 2 as normal when tier 1 is fully unlocked', () => {
+      mockIsTierAccessible.mockReturnValue(true);
+      mockIsTierFullyUnlocked.mockReturnValue(true);
+
+      const props = createDefaultProps({
+        resources: createDefaultResources({ trust: 5 }),
+        scams: {
+          'scam-a': { scamId: 'scam-a', level: 1, isUnlocked: true, timesCompleted: 0 },
+          'scam-d': { scamId: 'scam-d', level: 1, isUnlocked: true, timesCompleted: 0 },
+        },
+      });
+      render(<ScamListPanel {...props} />);
+
+      // Tier 2 header should show expanded (not locked)
+      expect(screen.getByText(/▼.*TIER 2: GETTING SERIOUS/)).toBeTruthy();
+      // Scam card should render
+      expect(screen.getByTestId('scam-card-scam-d')).toBeTruthy();
+    });
+
+    it('should never lock tier 1 (no previous tier to gate on)', () => {
+      mockIsTierAccessible.mockReturnValue(true);
+      // Even if isTierFullyUnlocked returns false for tier 0, tier 1 should never be locked
+      mockIsTierFullyUnlocked.mockReturnValue(false);
+
+      render(<ScamListPanel {...createDefaultProps()} />);
+
+      // Tier 1 should show expanded with scam card
+      expect(screen.getByText(/▼.*TIER 1: SMALL TIME/)).toBeTruthy();
+      expect(screen.getByTestId('scam-card-scam-a')).toBeTruthy();
+    });
+
+    it('should not allow pressing locked tier header to expand', () => {
+      mockIsTierAccessible.mockReturnValue(true);
+      mockIsTierFullyUnlocked.mockImplementation((tier) => tier !== 1);
+
+      const props = createDefaultProps({
+        resources: createDefaultResources({ trust: 5 }),
+        scams: {
+          'scam-a': { scamId: 'scam-a', level: 1, isUnlocked: true, timesCompleted: 0 },
+          'scam-d': { scamId: 'scam-d', level: 1, isUnlocked: true, timesCompleted: 0 },
+        },
+      });
+      render(<ScamListPanel {...props} />);
+
+      // Try pressing locked tier 2 header
+      const header = screen.getByTestId('tier-header-2');
+      fireEvent.press(header);
+
+      // Should still be locked, no scam cards
+      expect(screen.queryByTestId('scam-card-scam-d')).toBeNull();
+      expect(screen.getByText('UNLOCK ALL TIER 1 SCAMS FIRST')).toBeTruthy();
     });
   });
 });

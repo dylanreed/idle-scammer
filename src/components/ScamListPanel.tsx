@@ -1,8 +1,8 @@
 // ABOUTME: Panel component that renders tier-grouped scam cards in a scrollable list
 // ABOUTME: Extracts the scam list rendering logic from GameScreen for better separation of concerns
 
-import React from 'react';
-import { View, ScrollView, StyleSheet } from 'react-native';
+import React, { useState } from 'react';
+import { View, ScrollView, Pressable, StyleSheet } from 'react-native';
 import { ScamCard } from './ScamCard';
 import { TerminalText } from './TerminalText';
 import { COLORS, SPACING } from './theme';
@@ -12,6 +12,7 @@ import { TIER_3_SCAMS } from '../game/scams/tier3';
 import { TIER_4_SCAMS } from '../game/scams/tier4';
 import { TIER_5_SCAMS } from '../game/scams/tier5';
 import { isTierAccessible } from '../game/prestige/calculations';
+import { isTierFullyUnlocked } from '../game/scams/calculations';
 import { getManagerByScamId } from '../game/managers/definitions';
 import { useManagerStore } from '../game/managers/managerStore';
 import { useEmployeeStore } from '../game/employees/employeeStore';
@@ -83,6 +84,7 @@ const SCAMS_BY_TIER: { tier: ScamTier; scams: ScamDefinition[] }[] = [
  * Scrollable panel that renders scam cards organized by tier.
  * Filters tiers by accessibility (trust level) and scams by visibility
  * (unlocked, affordable, or next goal).
+ * Tier headers are collapsible; tiers are locked until the previous tier is fully unlocked.
  */
 export function ScamListPanel({
   resources,
@@ -98,6 +100,19 @@ export function ScamListPanel({
 }: ScamListPanelProps): React.ReactElement {
   const isManagerHired = useManagerStore((state) => state.isManagerHired);
   const getScamBotBonuses = useBotStore((state) => state.getScamBotBonuses);
+  const [collapsedTiers, setCollapsedTiers] = useState<Set<ScamTier>>(new Set());
+
+  const toggleTier = (tier: ScamTier) => {
+    setCollapsedTiers((prev) => {
+      const next = new Set(prev);
+      if (next.has(tier)) {
+        next.delete(tier);
+      } else {
+        next.add(tier);
+      }
+      return next;
+    });
+  };
 
   return (
     <ScrollView
@@ -109,6 +124,33 @@ export function ScamListPanel({
       {SCAMS_BY_TIER.map(({ tier, scams: tierScams }) => {
         const accessible = isTierAccessible(tier, resources.trust);
         if (!accessible) return null;
+
+        // Check if the previous tier is fully unlocked (tier 1 is never gated)
+        const isLocked = tier > 1 && !isTierFullyUnlocked(tier - 1, scams);
+
+        if (isLocked) {
+          // Locked tier: show header with lock icon and message, no scam cards
+          return (
+            <View key={`tier-${tier}`}>
+              <Pressable testID={`tier-header-${tier}`} disabled>
+                <TerminalText
+                  size="md"
+                  color={COLORS.terminalGreenDim}
+                  style={styles.sectionTitle}
+                >
+                  {`🔒 TIER ${tier}: ${TIER_NAMES[tier]}`}
+                </TerminalText>
+              </Pressable>
+              <TerminalText
+                size="sm"
+                color={COLORS.warningRed}
+                style={styles.lockMessage}
+              >
+                {`UNLOCK ALL TIER ${tier - 1} SCAMS FIRST`}
+              </TerminalText>
+            </View>
+          );
+        }
 
         // Filter visible scams
         const visibleScams = tierScams.filter((scamDef) => {
@@ -122,19 +164,27 @@ export function ScamListPanel({
 
         if (visibleScams.length === 0) return null;
 
+        const isCollapsed = collapsedTiers.has(tier);
+        const chevron = isCollapsed ? '▶' : '▼';
+
         return (
           <View key={`tier-${tier}`}>
-            {/* Tier Header */}
-            <TerminalText
-              size="md"
-              color={COLORS.terminalGreenDim}
-              style={styles.sectionTitle}
+            {/* Tier Header - Pressable to toggle collapse */}
+            <Pressable
+              testID={`tier-header-${tier}`}
+              onPress={() => toggleTier(tier)}
             >
-              {`TIER ${tier}: ${TIER_NAMES[tier]}`}
-            </TerminalText>
+              <TerminalText
+                size="md"
+                color={COLORS.terminalGreenDim}
+                style={styles.sectionTitle}
+              >
+                {`${chevron} TIER ${tier}: ${TIER_NAMES[tier]}`}
+              </TerminalText>
+            </Pressable>
 
-            {/* Scam Cards */}
-            {visibleScams.map((scamDef) => {
+            {/* Scam Cards (hidden when collapsed) */}
+            {!isCollapsed && visibleScams.map((scamDef) => {
               const manager = getManagerByScamId(scamDef.id);
               const hasManager = manager ? isManagerHired(manager.id) : false;
 
@@ -197,5 +247,9 @@ const styles = StyleSheet.create({
   sectionTitle: {
     marginBottom: SPACING.md,
     marginTop: SPACING.lg,
+  },
+  lockMessage: {
+    marginBottom: SPACING.md,
+    marginLeft: SPACING.md,
   },
 });

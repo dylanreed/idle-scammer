@@ -14,6 +14,7 @@ export {
   calculateScamDuration,
   calculateScamReward,
   calculateUpgradeCost,
+  isTierFullyUnlocked,
 } from './calculations';
 
 // Store

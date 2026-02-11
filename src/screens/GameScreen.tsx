@@ -32,6 +32,7 @@ import {
   isMilestoneLevel,
   calculateMaxBuyCount,
   calculateMaxBuyCost,
+  isTierFullyUnlocked,
 } from '../game/scams/calculations';
 import { calculateHeatFromScam, calculateHeatDecay, isTierAccessible } from '../game/prestige/calculations';
 import { executePrestige, fullReset } from '../game/prestige/prestigeManager';
@@ -303,6 +304,9 @@ export function GameScreen(): React.ReactElement {
       const definition = getScamDefinition(scamId);
       if (!definition) return;
 
+      // Tier gate: previous tier must be fully unlocked before unlocking scams in this tier
+      if (definition.tier > 1 && !isTierFullyUnlocked(definition.tier - 1, scams)) return;
+
       // Check cost using dynamic formula
       const dynamicCost = getUnlockCostForScam(scamId);
       if (dynamicCost !== undefined) {
@@ -312,7 +316,7 @@ export function GameScreen(): React.ReactElement {
 
       unlockScam(scamId);
     },
-    [resources.money, addMoney, unlockScam]
+    [resources.money, scams, addMoney, unlockScam]
   );
 
   /**

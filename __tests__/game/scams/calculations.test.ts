@@ -13,8 +13,10 @@ import {
   calculateMaxBuyCount,
   calculateMaxBuyCost,
   getMaxUsefulSpeedBots,
+  isTierFullyUnlocked,
 } from '../../../src/game/scams/calculations';
 import type { ScamDefinition } from '../../../src/game/scams/types';
+import type { ScamState } from '../../../src/game/scams/types';
 
 describe('Scam Calculations', () => {
   // Create a test definition with larger values for bracket-based calculations
@@ -418,6 +420,80 @@ describe('Scam Calculations', () => {
       // testScam: baseDuration 1000, level 1, speedMult 1.0
       // Same formula: floor((10 - 1) / 0.03) = 300
       expect(getMaxUsefulSpeedBots(testScam, 1, 0)).toBe(300);
+    });
+  });
+
+  describe('isTierFullyUnlocked', () => {
+    it('should return true when all scams in a tier are unlocked', () => {
+      // Tier 1 has 9 scams - create state with all unlocked
+      const scamsState: Record<string, ScamState> = {
+        'nigerian-prince-emails': { scamId: 'nigerian-prince-emails', level: 1, isUnlocked: true, timesCompleted: 0 },
+        'fake-lottery-winnings': { scamId: 'fake-lottery-winnings', level: 1, isUnlocked: true, timesCompleted: 0 },
+        'iphone-popup': { scamId: 'iphone-popup', level: 1, isUnlocked: true, timesCompleted: 0 },
+        'phishing-links': { scamId: 'phishing-links', level: 1, isUnlocked: true, timesCompleted: 0 },
+        'survey-scams': { scamId: 'survey-scams', level: 1, isUnlocked: true, timesCompleted: 0 },
+        'fake-antivirus-popups': { scamId: 'fake-antivirus-popups', level: 1, isUnlocked: true, timesCompleted: 0 },
+        'gift-card-scams': { scamId: 'gift-card-scams', level: 1, isUnlocked: true, timesCompleted: 0 },
+        'advance-fee-fraud': { scamId: 'advance-fee-fraud', level: 1, isUnlocked: true, timesCompleted: 0 },
+        'fake-job-postings': { scamId: 'fake-job-postings', level: 1, isUnlocked: true, timesCompleted: 0 },
+      };
+      expect(isTierFullyUnlocked(1, scamsState)).toBe(true);
+    });
+
+    it('should return false when any scam in the tier is locked', () => {
+      const scamsState: Record<string, ScamState> = {
+        'nigerian-prince-emails': { scamId: 'nigerian-prince-emails', level: 1, isUnlocked: true, timesCompleted: 0 },
+        'fake-lottery-winnings': { scamId: 'fake-lottery-winnings', level: 1, isUnlocked: true, timesCompleted: 0 },
+        'iphone-popup': { scamId: 'iphone-popup', level: 1, isUnlocked: false, timesCompleted: 0 },
+        'phishing-links': { scamId: 'phishing-links', level: 1, isUnlocked: true, timesCompleted: 0 },
+        'survey-scams': { scamId: 'survey-scams', level: 1, isUnlocked: true, timesCompleted: 0 },
+        'fake-antivirus-popups': { scamId: 'fake-antivirus-popups', level: 1, isUnlocked: true, timesCompleted: 0 },
+        'gift-card-scams': { scamId: 'gift-card-scams', level: 1, isUnlocked: true, timesCompleted: 0 },
+        'advance-fee-fraud': { scamId: 'advance-fee-fraud', level: 1, isUnlocked: true, timesCompleted: 0 },
+        'fake-job-postings': { scamId: 'fake-job-postings', level: 1, isUnlocked: true, timesCompleted: 0 },
+      };
+      expect(isTierFullyUnlocked(1, scamsState)).toBe(false);
+    });
+
+    it('should return false when a scam has no state entry', () => {
+      // Missing 'fake-job-postings' from state entirely
+      const scamsState: Record<string, ScamState> = {
+        'nigerian-prince-emails': { scamId: 'nigerian-prince-emails', level: 1, isUnlocked: true, timesCompleted: 0 },
+        'fake-lottery-winnings': { scamId: 'fake-lottery-winnings', level: 1, isUnlocked: true, timesCompleted: 0 },
+        'iphone-popup': { scamId: 'iphone-popup', level: 1, isUnlocked: true, timesCompleted: 0 },
+        'phishing-links': { scamId: 'phishing-links', level: 1, isUnlocked: true, timesCompleted: 0 },
+        'survey-scams': { scamId: 'survey-scams', level: 1, isUnlocked: true, timesCompleted: 0 },
+        'fake-antivirus-popups': { scamId: 'fake-antivirus-popups', level: 1, isUnlocked: true, timesCompleted: 0 },
+        'gift-card-scams': { scamId: 'gift-card-scams', level: 1, isUnlocked: true, timesCompleted: 0 },
+        'advance-fee-fraud': { scamId: 'advance-fee-fraud', level: 1, isUnlocked: true, timesCompleted: 0 },
+      };
+      expect(isTierFullyUnlocked(1, scamsState)).toBe(false);
+    });
+
+    it('should work for tier 2 scams', () => {
+      const scamsState: Record<string, ScamState> = {
+        'tech-support-scams': { scamId: 'tech-support-scams', level: 1, isUnlocked: true, timesCompleted: 0 },
+        'romance-catfishing': { scamId: 'romance-catfishing', level: 1, isUnlocked: true, timesCompleted: 0 },
+        'fake-charity-drives': { scamId: 'fake-charity-drives', level: 1, isUnlocked: true, timesCompleted: 0 },
+        'rental-scams': { scamId: 'rental-scams', level: 1, isUnlocked: true, timesCompleted: 0 },
+        'ticket-scalping-bots': { scamId: 'ticket-scalping-bots', level: 1, isUnlocked: true, timesCompleted: 0 },
+        'fake-review-farms': { scamId: 'fake-review-farms', level: 1, isUnlocked: true, timesCompleted: 0 },
+        'click-fraud': { scamId: 'click-fraud', level: 1, isUnlocked: true, timesCompleted: 0 },
+        'influencer-impersonation': { scamId: 'influencer-impersonation', level: 1, isUnlocked: true, timesCompleted: 0 },
+        'dropshipping-fraud': { scamId: 'dropshipping-fraud', level: 1, isUnlocked: true, timesCompleted: 0 },
+        'warranty-scams': { scamId: 'warranty-scams', level: 1, isUnlocked: true, timesCompleted: 0 },
+      };
+      expect(isTierFullyUnlocked(2, scamsState)).toBe(true);
+    });
+
+    it('should return true for tier 0 (nonexistent tier is always considered unlocked)', () => {
+      // Tier 0 doesn't exist, so it should be treated as fully unlocked
+      // This ensures tier 1 is never gated
+      expect(isTierFullyUnlocked(0 as any, {})).toBe(true);
+    });
+
+    it('should return false for empty scams state', () => {
+      expect(isTierFullyUnlocked(1, {})).toBe(false);
     });
   });
 });

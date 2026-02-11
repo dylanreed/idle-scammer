@@ -1,9 +1,14 @@
 // ABOUTME: Calculation functions for scam duration, rewards, and upgrade costs
 // ABOUTME: Uses Kongregate-style simple exponential cost and linear profit growth
 
-import type { ScamDefinition } from './types';
+import type { ScamDefinition, ScamState, ScamTier } from './types';
 import { getTierBase } from '../economy/constants';
 import { SPEED_BOT_BONUS } from '../bots/constants';
+import { TIER_1_SCAMS } from './definitions';
+import { TIER_2_SCAMS } from './tier2';
+import { TIER_3_SCAMS } from './tier3';
+import { TIER_4_SCAMS } from './tier4';
+import { TIER_5_SCAMS } from './tier5';
 
 /**
  * Milestone levels and their one-time bonus multipliers.
@@ -311,6 +316,35 @@ export function getTierUnlockCost(tier: number): number {
  */
 export function calculateNextTierUnlockCost(currentTier: number): number {
   return getTierUnlockCost(currentTier + 1);
+}
+
+/**
+ * Scam arrays grouped by tier for tier-gate checks.
+ */
+const SCAMS_BY_TIER: Record<number, ScamDefinition[]> = {
+  1: TIER_1_SCAMS,
+  2: TIER_2_SCAMS,
+  3: TIER_3_SCAMS,
+  4: TIER_4_SCAMS,
+  5: TIER_5_SCAMS,
+};
+
+/**
+ * Checks whether every scam in a tier has been unlocked.
+ * Used to gate progression: tier N+1 requires all tier N scams unlocked.
+ * Nonexistent tiers (e.g. tier 0) are considered fully unlocked so tier 1 is never gated.
+ *
+ * @param tier - The tier to check
+ * @param scamsState - Map of scam IDs to their runtime state
+ * @returns true if all scams in the tier are unlocked
+ */
+export function isTierFullyUnlocked(
+  tier: ScamTier | number,
+  scamsState: Record<string, ScamState>
+): boolean {
+  const tierScams = SCAMS_BY_TIER[tier];
+  if (!tierScams || tierScams.length === 0) return true;
+  return tierScams.every((scamDef) => scamsState[scamDef.id]?.isUnlocked === true);
 }
 
 /**

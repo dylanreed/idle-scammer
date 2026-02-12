@@ -7,5 +7,6 @@ export type { TutorialSaveData } from './types';
 export {
   TUTORIAL_IDS,
   TUTORIAL_SEQUENCE,
+  PRESTIGE_TUTORIAL_SEQUENCES,
   DEFAULT_TUTORIAL_SAVE_DATA,
 } from './types';

@@ -9,6 +9,7 @@ import { useBotStore } from '../bots/botStore';
 import { useSkillStore } from '../skills/skillStore';
 import { useTutorialStore } from '../tutorial/tutorialStore';
 import { useCryptoStore } from '../crypto/cryptoStore';
+import { useOriginStore } from '../origin/originStore';
 import type { PrestigeResult, PrestigeBonus, PerformanceMetrics } from './types';
 import { calculateCleanEscapeResult, calculateSnitchResult } from './calculations';
 
@@ -78,6 +79,9 @@ export function fullReset(): void {
 
   // Reset tutorial/progressive disclosure state (back to first-run experience)
   useTutorialStore.getState().reset();
+
+  // Reset origin selection (back to origin choice screen)
+  useOriginStore.getState().reset();
 }
 
 /**
@@ -185,8 +189,8 @@ export function executePrestige(choice: 'clean-escape' | 'snitch'): PrestigeResu
     useGameStore.getState().addBots(1);
   }
 
-  // Mark that the player has completed a prestige (for progressive disclosure)
-  useTutorialStore.getState().markPrestiged();
+  // Increment prestige count for progressive disclosure gating
+  useTutorialStore.getState().incrementPrestige();
 
   return result;
 }

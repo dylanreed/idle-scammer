@@ -9,12 +9,13 @@ import type { BotAssignmentMap } from '../bots/types';
 import type { SkillSaveData } from '../skills/types';
 import type { TutorialSaveData } from '../tutorial/types';
 import type { CryptoSaveData } from '../crypto/types';
+import type { OriginSaveData } from '../origin/types';
 
 /**
  * Current save data format version.
  * Increment when changing SaveData structure (requires migration logic).
  */
-export const SAVE_VERSION = 10;
+export const SAVE_VERSION = 12;
 
 /**
  * AsyncStorage key for game save data.
@@ -63,4 +64,7 @@ export interface SaveData {
 
   /** Crypto market, projects, and NFT state */
   crypto?: CryptoSaveData;
+
+  /** Origin backstory selection */
+  origin?: OriginSaveData;
 }

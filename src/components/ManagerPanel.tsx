@@ -97,14 +97,14 @@ export function ManagerPanel({
             >
               <TerminalText
                 size="sm"
-                color={COLORS.terminalGreenDim}
+                color={COLORS.textSecondary}
                 style={styles.managersLabel}
               >
                 {`${chevron} TIER ${tier} MANAGERS`}
               </TerminalText>
             </Pressable>
-            {!isCollapsed && <CRTFrame style={styles.managersSection}>
-              <TerminalText size="sm" color={COLORS.terminalGreenDim}>
+            {!isCollapsed && <CRTFrame style={styles.managersSection} accentColor={COLORS.gold}>
+              <TerminalText size="sm" color={COLORS.textSecondary}>
                 {'Managers automate your scams'}
               </TerminalText>
               <View style={styles.managersList}>
@@ -172,7 +172,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: SPACING.xs,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.terminalGreenDim + '40',
+    borderBottomColor: COLORS.borderSecondary,
   },
   managerPortrait: {
     width: 40,

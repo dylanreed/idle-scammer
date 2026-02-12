@@ -25,13 +25,8 @@ describe('ResourceHUD', () => {
 
     it('renders inside a CRTFrame', () => {
       render(<ResourceHUD resources={mockResources} testID="resource-hud" />);
-      // CRTFrame adds scanlines by default
-      expect(screen.getByTestId('crt-scanlines')).toBeTruthy();
-    });
-
-    it('can disable CRT scanlines', () => {
-      render(<ResourceHUD resources={mockResources} showScanlines={false} testID="resource-hud" />);
-      expect(screen.queryByTestId('crt-scanlines')).toBeNull();
+      // CRTFrame renders as a panel (scanlines removed in visual refresh)
+      expect(screen.getByTestId('resource-hud')).toBeTruthy();
     });
   });
 
@@ -45,7 +40,7 @@ describe('ResourceHUD', () => {
     });
 
     it('hides trust, bots, skill points, and crypto before first prestige', () => {
-      render(<ResourceHUD resources={mockResources} hasPrestiged={false} />);
+      render(<ResourceHUD resources={mockResources} prestigeCount={0} />);
 
       // bots value (100) should not be visible
       expect(screen.queryByText('100')).toBeNull();
@@ -74,7 +69,7 @@ describe('ResourceHUD', () => {
 
   describe('post-prestige resource display', () => {
     it('displays money, heat, bots, skill points, and trust after prestige', () => {
-      render(<ResourceHUD resources={mockResources} hasPrestiged={true} />);
+      render(<ResourceHUD resources={mockResources} prestigeCount={2} />);
 
       expect(screen.getByText('1K')).toBeTruthy();     // money
       expect(screen.getByText('25')).toBeTruthy();     // heat
@@ -84,25 +79,25 @@ describe('ResourceHUD', () => {
     });
 
     it('hides crypto when trust is below threshold', () => {
-      render(<ResourceHUD resources={mockResources} hasPrestiged={true} />);
+      render(<ResourceHUD resources={mockResources} prestigeCount={1} />);
 
-      // crypto is 500, but trust is 1 (below threshold of 21), so not shown
+      // crypto is 500, but trust is 1 (below threshold of 150), so not shown
       expect(screen.queryByText('500')).toBeNull();
     });
 
     it('shows crypto when trust meets threshold', () => {
       const highTrustResources: GameResources = {
         ...mockResources,
-        trust: 21,
+        trust: 150,
       };
-      render(<ResourceHUD resources={highTrustResources} hasPrestiged={true} />);
+      render(<ResourceHUD resources={highTrustResources} prestigeCount={1} />);
 
-      // crypto is 500 and trust >= 21, so crypto should be visible
+      // crypto is 500 and trust >= 150, so crypto should be visible
       expect(screen.getByText('500')).toBeTruthy();
     });
 
     it('updates when resources change', () => {
-      const { rerender } = render(<ResourceHUD resources={mockResources} hasPrestiged={true} />);
+      const { rerender } = render(<ResourceHUD resources={mockResources} prestigeCount={1} />);
 
       expect(screen.getByText('1K')).toBeTruthy();
 
@@ -111,7 +106,7 @@ describe('ResourceHUD', () => {
         money: 2000000,
       };
 
-      rerender(<ResourceHUD resources={updatedResources} hasPrestiged={true} />);
+      rerender(<ResourceHUD resources={updatedResources} prestigeCount={1} />);
 
       expect(screen.getByText('2M')).toBeTruthy();
     });
@@ -127,7 +122,7 @@ describe('ResourceHUD', () => {
         snitchCount: 0,
       };
 
-      render(<ResourceHUD resources={zeroResources} hasPrestiged={true} />);
+      render(<ResourceHUD resources={zeroResources} prestigeCount={2} />);
 
       // 5 resources shown (all except crypto), 4 are zero (trust is 1)
       const zeros = screen.getAllByText('0');
@@ -145,12 +140,41 @@ describe('ResourceHUD', () => {
         snitchCount: 0,
       };
 
-      render(<ResourceHUD resources={largeResources} hasPrestiged={true} />);
+      render(<ResourceHUD resources={largeResources} prestigeCount={2} />);
 
       expect(screen.getByText('1.23T')).toBeTruthy();  // money
       expect(screen.getByText('50M')).toBeTruthy();    // bots
-      // crypto (10B) is visible because trust (100) meets the threshold (21)
-      expect(screen.getByText('10B')).toBeTruthy();
+      // crypto (10B) is hidden because trust (100) is below the threshold (150)
+      expect(screen.queryByText('10B')).toBeNull();
+    });
+
+    it('shows bots and trust at prestigeCount=1', () => {
+      const resources: GameResources = {
+        ...mockResources,
+        bots: 42,
+        trust: 7,
+      };
+      render(<ResourceHUD resources={resources} prestigeCount={1} />);
+
+      expect(screen.getByText('42')).toBeTruthy();   // bots
+      expect(screen.getByText('7')).toBeTruthy();    // trust
+    });
+
+    it('hides skill points at prestigeCount=1, shows at prestigeCount=2', () => {
+      const resources: GameResources = {
+        ...mockResources,
+        skillPoints: 15,
+      };
+
+      const { rerender } = render(<ResourceHUD resources={resources} prestigeCount={1} />);
+
+      // skillPoints requires prestigeCount >= 2, so 15 should not be visible
+      expect(screen.queryByText('15')).toBeNull();
+
+      rerender(<ResourceHUD resources={resources} prestigeCount={2} />);
+
+      // Now skillPoints should be visible
+      expect(screen.getByText('15')).toBeTruthy();
     });
   });
 
@@ -176,6 +200,27 @@ describe('ResourceHUD', () => {
 
       const container = screen.getByTestId('resource-row');
       expect(container).toBeTruthy();
+    });
+  });
+
+  describe('per-second rate display', () => {
+    it('passes moneyPerSecond to money ResourceIcon', () => {
+      render(
+        <ResourceHUD resources={mockResources} moneyPerSecond={150} testID="resource-hud" />
+      );
+      expect(screen.getByText('+$150/s')).toBeTruthy();
+    });
+
+    it('does not show rate when moneyPerSecond is not provided', () => {
+      render(<ResourceHUD resources={mockResources} testID="resource-hud" />);
+      expect(screen.queryByTestId('resource-rate')).toBeNull();
+    });
+
+    it('does not show rate when moneyPerSecond is 0', () => {
+      render(
+        <ResourceHUD resources={mockResources} moneyPerSecond={0} testID="resource-hud" />
+      );
+      expect(screen.queryByTestId('resource-rate')).toBeNull();
     });
   });
 

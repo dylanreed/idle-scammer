@@ -58,7 +58,7 @@ const CURSOR = '\u2588'; // Full block character
  */
 export function TerminalText({
   children,
-  color = COLORS.terminalGreen,
+  color = COLORS.textPrimary,
   size = 'md',
   animate = false,
   style,
@@ -138,9 +138,5 @@ export function TerminalText({
 const styles = StyleSheet.create({
   text: {
     fontFamily: FONTS.mono,
-    // Slight text shadow for CRT glow effect
-    textShadowColor: COLORS.terminalGreenDim,
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 2,
   },
 });

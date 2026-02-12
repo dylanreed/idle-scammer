@@ -172,7 +172,7 @@ describe('SaveManager', () => {
       };
       const scams: ScamStateMap = {};
       const managers: ManagerStateMap = {};
-      const tutorials = { hasPrestiged: true, seen: ['trust-intro'] };
+      const tutorials = { hasPrestiged: true, seen: ['trust-intro'], prestigeCount: 2 };
 
       const result = createSaveData(resources, scams, managers, {}, {}, undefined, {}, tutorials);
 
@@ -194,7 +194,7 @@ describe('SaveManager', () => {
 
       const result = createSaveData(resources, scams, managers);
 
-      expect(result.tutorials).toEqual({ hasPrestiged: false, seen: [] });
+      expect(result.tutorials).toEqual({ hasPrestiged: false, seen: [], prestigeCount: 0 });
     });
 
     it('should default ascensions to empty object', () => {
@@ -356,11 +356,11 @@ describe('SaveManager', () => {
         botAssignments: {},
         skills: { passiveRanks: {}, unlockedAbilities: [], cooldowns: {}, activeDurations: {} },
         ascensions: {},
-        tutorials: { hasPrestiged: true, seen: ['trust-intro', 'bots-intro'] },
+        tutorials: { hasPrestiged: true, seen: ['trust-intro', 'bots-intro'], prestigeCount: 3 },
       };
 
       const { tutorials } = applySaveData(saveData);
-      expect(tutorials).toEqual({ hasPrestiged: true, seen: ['trust-intro', 'bots-intro'] });
+      expect(tutorials).toEqual({ hasPrestiged: true, seen: ['trust-intro', 'bots-intro'], prestigeCount: 3 });
     });
 
     it('should default tutorials to empty when missing from save', () => {
@@ -385,7 +385,7 @@ describe('SaveManager', () => {
       } as unknown as SaveData;
 
       const { tutorials } = applySaveData(saveData);
-      expect(tutorials).toEqual({ hasPrestiged: false, seen: [] });
+      expect(tutorials).toEqual({ hasPrestiged: false, seen: [], prestigeCount: 0 });
     });
 
     it('should default ascensions to empty when missing from save', () => {
@@ -701,6 +701,7 @@ describe('SaveManager', () => {
       expect(result.tutorials).toEqual({
         hasPrestiged: false,
         seen: [],
+        prestigeCount: 0,
       });
       // Existing data preserved
       expect(result.resources.money).toBe(10000);
@@ -751,8 +752,8 @@ describe('SaveManager', () => {
       expect(result.resources.crypto).toBe(8);
       expect(result.resources.trust).toBe(7);
       expect(result.resources.snitchCount).toBe(1);
-      // Other fields preserved
-      expect(result.tutorials).toEqual({ hasPrestiged: true, seen: ['trust-intro'] });
+      // Other fields preserved (v11->v12 adds prestigeCount: hasPrestiged=true -> 1)
+      expect(result.tutorials).toEqual({ hasPrestiged: true, seen: ['trust-intro'], prestigeCount: 1 });
       expect(result.scams['nigerian-prince-emails'].level).toBe(20);
     });
 
@@ -798,7 +799,7 @@ describe('SaveManager', () => {
       // Existing data preserved
       expect(result.resources.money).toBe(12000);
       expect(result.resources.trust).toBe(25);
-      expect(result.tutorials).toEqual({ hasPrestiged: true, seen: ['trust-intro', 'bots-intro', 'skill-points-intro'] });
+      expect(result.tutorials).toEqual({ hasPrestiged: true, seen: ['trust-intro', 'bots-intro', 'skill-points-intro'], prestigeCount: 1 });
     });
 
     it('should preserve existing crypto data during v9->v10 migration', () => {
@@ -864,7 +865,210 @@ describe('SaveManager', () => {
       const result = migrateIfNeeded(v7SaveDataWithTutorials);
 
       expect(result.version).toBe(SAVE_VERSION);
-      expect(result.tutorials).toEqual({ hasPrestiged: true, seen: ['trust-intro'] });
+      expect(result.tutorials).toEqual({ hasPrestiged: true, seen: ['trust-intro'], prestigeCount: 1 });
+    });
+
+    it('should migrate v10 save data to v11 with default origin', () => {
+      const v10SaveData = {
+        version: 10,
+        savedAt: Date.now(),
+        resources: {
+          money: 15000,
+          heat: 30,
+          bots: 100,
+          skillPoints: 20,
+          crypto: 5,
+          trust: 30,
+          snitchCount: 1,
+        },
+        scams: {},
+        managers: {},
+        employees: {},
+        botAssignments: {},
+        skills: { passiveRanks: {}, unlockedAbilities: [], cooldowns: {}, activeDurations: {} },
+        ascensions: {},
+        tutorials: { hasPrestiged: true, seen: ['trust-intro', 'bots-intro'] },
+        crypto: {
+          market: { exchangeRate: 1000, seed: 42, activeEvent: null, eventTicksRemaining: 0, totalTicks: 0 },
+          activeProjects: [],
+          completedProjects: [],
+          ownedNFTs: [],
+          collections: [],
+        },
+      } as unknown as SaveData;
+
+      const result = migrateIfNeeded(v10SaveData);
+
+      expect(result.version).toBe(SAVE_VERSION);
+      expect(result.origin).toBeDefined();
+      expect(result.origin!.selectedOrigin).toBeNull();
+      // Existing data preserved
+      expect(result.resources.money).toBe(15000);
+      expect(result.resources.trust).toBe(30);
+      expect(result.tutorials).toEqual({ hasPrestiged: true, seen: ['trust-intro', 'bots-intro'], prestigeCount: 1 });
+    });
+
+    it('should preserve existing origin data during v10->v11 migration', () => {
+      const v10SaveDataWithOrigin = {
+        version: 10,
+        savedAt: Date.now(),
+        resources: {
+          money: 5000,
+          heat: 20,
+          bots: 10,
+          skillPoints: 15,
+          crypto: 10,
+          trust: 10,
+          snitchCount: 0,
+        },
+        scams: {},
+        managers: {},
+        employees: {},
+        botAssignments: {},
+        skills: { passiveRanks: {}, unlockedAbilities: [], cooldowns: {}, activeDurations: {} },
+        ascensions: {},
+        tutorials: { hasPrestiged: false, seen: [] },
+        crypto: {
+          market: { exchangeRate: 1000, seed: 42, activeEvent: null, eventTicksRemaining: 0, totalTicks: 0 },
+          activeProjects: [],
+          completedProjects: [],
+          ownedNFTs: [],
+          collections: [],
+        },
+        origin: { selectedOrigin: 'moms-basement' },
+      } as unknown as SaveData;
+
+      const result = migrateIfNeeded(v10SaveDataWithOrigin);
+
+      expect(result.version).toBe(SAVE_VERSION);
+      expect(result.origin!.selectedOrigin).toBe('moms-basement');
+    });
+
+    it('should migrate v11 data to v12 by adding prestigeCount to tutorials (hasPrestiged=true)', () => {
+      const v11SaveData = {
+        version: 11,
+        savedAt: Date.now(),
+        resources: {
+          money: 20000,
+          heat: 40,
+          bots: 50,
+          skillPoints: 30,
+          crypto: 15,
+          trust: 35,
+          snitchCount: 2,
+        },
+        scams: {},
+        managers: {},
+        employees: {},
+        botAssignments: {},
+        skills: { passiveRanks: {}, unlockedAbilities: [], cooldowns: {}, activeDurations: {} },
+        ascensions: { 'nigerian-prince-emails': 2 },
+        tutorials: { hasPrestiged: true, seen: ['trust-intro', 'bots-intro'] },
+        crypto: {
+          market: { exchangeRate: 1000, seed: 42, activeEvent: null, eventTicksRemaining: 0, totalTicks: 0 },
+          activeProjects: [],
+          completedProjects: [],
+          ownedNFTs: [],
+          collections: [],
+        },
+        origin: { selectedOrigin: 'moms-basement' },
+      } as unknown as SaveData;
+
+      const result = migrateIfNeeded(v11SaveData);
+
+      expect(result.version).toBe(SAVE_VERSION);
+      // hasPrestiged is true, so prestigeCount defaults to 1
+      expect(result.tutorials).toEqual({
+        hasPrestiged: true,
+        seen: ['trust-intro', 'bots-intro'],
+        prestigeCount: 1,
+      });
+      // Existing data preserved
+      expect(result.resources.money).toBe(20000);
+      expect(result.ascensions).toEqual({ 'nigerian-prince-emails': 2 });
+      expect(result.origin!.selectedOrigin).toBe('moms-basement');
+    });
+
+    it('should migrate v11 data to v12 by adding prestigeCount to tutorials (hasPrestiged=false)', () => {
+      const v11SaveData = {
+        version: 11,
+        savedAt: Date.now(),
+        resources: {
+          money: 500,
+          heat: 5,
+          bots: 2,
+          skillPoints: 0,
+          crypto: 0,
+          trust: 1,
+          snitchCount: 0,
+        },
+        scams: {},
+        managers: {},
+        employees: {},
+        botAssignments: {},
+        skills: { passiveRanks: {}, unlockedAbilities: [], cooldowns: {}, activeDurations: {} },
+        ascensions: {},
+        tutorials: { hasPrestiged: false, seen: [] },
+        crypto: {
+          market: { exchangeRate: 1000, seed: 42, activeEvent: null, eventTicksRemaining: 0, totalTicks: 0 },
+          activeProjects: [],
+          completedProjects: [],
+          ownedNFTs: [],
+          collections: [],
+        },
+        origin: { selectedOrigin: null },
+      } as unknown as SaveData;
+
+      const result = migrateIfNeeded(v11SaveData);
+
+      expect(result.version).toBe(SAVE_VERSION);
+      // hasPrestiged is false, so prestigeCount defaults to 0
+      expect(result.tutorials).toEqual({
+        hasPrestiged: false,
+        seen: [],
+        prestigeCount: 0,
+      });
+    });
+
+    it('should preserve existing prestigeCount during v11->v12 migration', () => {
+      const v11SaveDataWithPrestigeCount = {
+        version: 11,
+        savedAt: Date.now(),
+        resources: {
+          money: 10000,
+          heat: 20,
+          bots: 30,
+          skillPoints: 15,
+          crypto: 10,
+          trust: 20,
+          snitchCount: 1,
+        },
+        scams: {},
+        managers: {},
+        employees: {},
+        botAssignments: {},
+        skills: { passiveRanks: {}, unlockedAbilities: [], cooldowns: {}, activeDurations: {} },
+        ascensions: {},
+        tutorials: { hasPrestiged: true, seen: ['trust-intro'], prestigeCount: 5 },
+        crypto: {
+          market: { exchangeRate: 1000, seed: 42, activeEvent: null, eventTicksRemaining: 0, totalTicks: 0 },
+          activeProjects: [],
+          completedProjects: [],
+          ownedNFTs: [],
+          collections: [],
+        },
+        origin: { selectedOrigin: 'script-kiddie' },
+      } as unknown as SaveData;
+
+      const result = migrateIfNeeded(v11SaveDataWithPrestigeCount);
+
+      expect(result.version).toBe(SAVE_VERSION);
+      // Existing prestigeCount should be preserved, not overwritten
+      expect(result.tutorials).toEqual({
+        hasPrestiged: true,
+        seen: ['trust-intro'],
+        prestigeCount: 5,
+      });
     });
 
     it('should handle sequential migrations v0 -> v1 -> v2', () => {

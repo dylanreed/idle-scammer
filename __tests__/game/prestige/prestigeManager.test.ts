@@ -8,6 +8,7 @@ import { useEmployeeStore, getInitialEmployeeState } from '../../../src/game/emp
 import { useManagerStore, getInitialManagerState } from '../../../src/game/managers/managerStore';
 import { useBotStore } from '../../../src/game/bots/botStore';
 import { useTutorialStore } from '../../../src/game/tutorial/tutorialStore';
+import { useOriginStore } from '../../../src/game/origin/originStore';
 import { SNITCH_TRUST_PERCENT } from '../../../src/game/prestige/constants';
 import { calculatePerformanceTrustGain, calculateStartingSkillPoints } from '../../../src/game/prestige/calculations';
 import type { GameResources } from '../../../src/game/types';
@@ -22,6 +23,7 @@ describe('Prestige Manager', () => {
     useManagerStore.setState(useManagerStore.getInitialState());
     useBotStore.setState(useBotStore.getInitialState());
     useTutorialStore.getState().reset();
+    useOriginStore.getState().reset();
   });
 
   /**
@@ -321,35 +323,83 @@ describe('Prestige Manager', () => {
 
     it('should mark hasPrestiged in tutorial store on first prestige', () => {
       expect(useTutorialStore.getState().hasPrestiged).toBe(false);
+      expect(useTutorialStore.getState().prestigeCount).toBe(0);
 
       executePrestige('clean-escape');
 
       expect(useTutorialStore.getState().hasPrestiged).toBe(true);
+      expect(useTutorialStore.getState().prestigeCount).toBe(1);
     });
 
     it('should mark hasPrestiged on snitch prestige too', () => {
       expect(useTutorialStore.getState().hasPrestiged).toBe(false);
+      expect(useTutorialStore.getState().prestigeCount).toBe(0);
 
       executePrestige('snitch');
 
       expect(useTutorialStore.getState().hasPrestiged).toBe(true);
+      expect(useTutorialStore.getState().prestigeCount).toBe(1);
     });
 
     it('should keep hasPrestiged true on subsequent prestiges', () => {
       executePrestige('clean-escape');
       expect(useTutorialStore.getState().hasPrestiged).toBe(true);
+      expect(useTutorialStore.getState().prestigeCount).toBe(1);
 
       executePrestige('clean-escape');
       expect(useTutorialStore.getState().hasPrestiged).toBe(true);
+      expect(useTutorialStore.getState().prestigeCount).toBe(2);
+    });
+
+    it('should increment prestigeCount on multiple prestiges', () => {
+      expect(useTutorialStore.getState().prestigeCount).toBe(0);
+
+      executePrestige('clean-escape');
+      expect(useTutorialStore.getState().prestigeCount).toBe(1);
+
+      executePrestige('snitch');
+      expect(useTutorialStore.getState().prestigeCount).toBe(2);
+
+      executePrestige('clean-escape');
+      expect(useTutorialStore.getState().prestigeCount).toBe(3);
     });
 
     it('should reset tutorial state on fullReset', () => {
       executePrestige('clean-escape');
       expect(useTutorialStore.getState().hasPrestiged).toBe(true);
+      expect(useTutorialStore.getState().prestigeCount).toBe(1);
 
       fullReset();
       expect(useTutorialStore.getState().hasPrestiged).toBe(false);
+      expect(useTutorialStore.getState().prestigeCount).toBe(0);
       expect(useTutorialStore.getState().seen).toEqual([]);
+    });
+
+    it('should preserve origin across prestige (clean-escape)', () => {
+      setupMidGameState();
+      useOriginStore.getState().selectOrigin('moms-basement');
+
+      executePrestige('clean-escape');
+
+      expect(useOriginStore.getState().selectedOrigin).toBe('moms-basement');
+    });
+
+    it('should preserve origin across prestige (snitch)', () => {
+      setupMidGameState();
+      useOriginStore.getState().selectOrigin('internet-cafe');
+
+      executePrestige('snitch');
+
+      expect(useOriginStore.getState().selectedOrigin).toBe('internet-cafe');
+    });
+
+    it('should clear origin on fullReset', () => {
+      useOriginStore.getState().selectOrigin('stolen-phone');
+      expect(useOriginStore.getState().selectedOrigin).toBe('stolen-phone');
+
+      fullReset();
+
+      expect(useOriginStore.getState().selectedOrigin).toBeNull();
     });
 
     it('should handle multiple consecutive prestiges with varying trust gains', () => {
@@ -368,6 +418,8 @@ describe('Prestige Manager', () => {
       expect(result2.previousTrust).toBe(75 + expectedGain1);
       // Trust gain varies by run performance
       expect(result2.newTrust).toBeGreaterThan(result2.previousTrust);
+      // Two prestiges should increment prestigeCount to 2
+      expect(useTutorialStore.getState().prestigeCount).toBe(2);
     });
   });
 });

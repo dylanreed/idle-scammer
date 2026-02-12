@@ -17,6 +17,7 @@ import { useBotStore } from '../bots/botStore';
 import { useSkillStore } from '../skills/skillStore';
 import { useTutorialStore } from '../tutorial/tutorialStore';
 import { useCryptoStore } from '../crypto/cryptoStore';
+import { useOriginStore } from '../origin/originStore';
 import { COLORS } from '../../components/theme';
 
 interface GameProviderProps {
@@ -44,7 +45,7 @@ export function GameProvider({ children }: GameProviderProps): React.ReactElemen
           const migrated = migrateIfNeeded(rawSave);
 
           // Extract state from save
-          const { resources, scams, managers, employees, botAssignments, skills, ascensions, tutorials, crypto } = applySaveData(migrated);
+          const { resources, scams, managers, employees, botAssignments, skills, ascensions, tutorials, crypto, origin } = applySaveData(migrated);
 
           // Hydrate all stores
           useGameStore.getState().hydrate(resources);
@@ -56,6 +57,7 @@ export function GameProvider({ children }: GameProviderProps): React.ReactElemen
           useSkillStore.getState().hydrate(skills);
           useTutorialStore.getState().hydrate(tutorials);
           useCryptoStore.getState().hydrate(crypto);
+          useOriginStore.getState().hydrate(origin);
 
           // Calculate offline earnings
           const timers = reconstructActiveTimers(scams, managers);
@@ -177,8 +179,9 @@ function performSave() {
   const ascensions = useGameStore.getState().ascensions;
   const tutorials = useTutorialStore.getState().toSaveData();
   const crypto = useCryptoStore.getState().toSaveData();
+  const origin = useOriginStore.getState().toSaveData();
 
-  const saveData = createSaveData(resources, scams, managers, employees, botAssignments, skills, ascensions, tutorials, crypto);
+  const saveData = createSaveData(resources, scams, managers, employees, botAssignments, skills, ascensions, tutorials, crypto, origin);
   saveGame(saveData).catch((error) => {
     console.warn('[GameProvider] Auto-save failed:', error);
   });
@@ -192,7 +195,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.background,
   },
   loadingText: {
-    color: COLORS.terminalGreen,
+    color: COLORS.textPrimary,
     fontFamily: 'monospace',
     fontSize: 16,
   },

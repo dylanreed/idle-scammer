@@ -81,7 +81,7 @@ function ChoicePhase({
       <TerminalText size="lg" color={COLORS.warningRed} animate>
         {'HEAT CRITICAL'}
       </TerminalText>
-      <TerminalText size="sm" color={COLORS.terminalGreenDim} style={styles.subtext}>
+      <TerminalText size="sm" color={COLORS.textSecondary} style={styles.subtext}>
         {'The feds are closing in. Choose your exit strategy.'}
       </TerminalText>
 
@@ -111,7 +111,7 @@ function ChoicePhase({
           >
             {'CLEAN ESCAPE'}
           </PixelButton>
-          <TerminalText size="sm" color={COLORS.terminalGreenDim} style={styles.choiceSubtext}>
+          <TerminalText size="sm" color={COLORS.textSecondary} style={styles.choiceSubtext}>
             {'Trust Reward / Lose Everything'}
           </TerminalText>
         </View>
@@ -124,7 +124,7 @@ function ChoicePhase({
           >
             {'SNITCH'}
           </PixelButton>
-          <TerminalText size="sm" color={COLORS.terminalGreenDim} style={styles.choiceSubtext}>
+          <TerminalText size="sm" color={COLORS.textSecondary} style={styles.choiceSubtext}>
             {'-50% Trust / Keep 10% Resources'}
           </TerminalText>
         </View>
@@ -177,7 +177,7 @@ function ResultPhase({
 
       {/* Clean escape: reset message */}
       {isCleanEscape && (
-        <TerminalText size="sm" color={COLORS.terminalGreenDim} style={styles.resetMessage}>
+        <TerminalText size="sm" color={COLORS.textSecondary} style={styles.resetMessage}>
           {'ALL RESOURCES RESET'}
         </TerminalText>
       )}
@@ -185,7 +185,7 @@ function ResultPhase({
       {/* Snitch: bonuses kept */}
       {!isCleanEscape && result.bonuses && result.bonuses.length > 0 && (
         <View style={styles.bonusList} testID="prestige-bonuses">
-          <TerminalText size="sm" color={COLORS.terminalGreenDim} style={styles.bonusHeader}>
+          <TerminalText size="sm" color={COLORS.textSecondary} style={styles.bonusHeader}>
             {'Resources kept:'}
           </TerminalText>
           {result.bonuses
@@ -194,7 +194,7 @@ function ResultPhase({
               <TerminalText
                 key={bonus.type}
                 size="sm"
-                color={COLORS.terminalGreenDim}
+                color={COLORS.textSecondary}
               >
                 {`  ${BONUS_TYPE_LABELS[bonus.type] ?? bonus.type}: ${formatNumber(bonus.amount)}`}
               </TerminalText>

@@ -28,8 +28,8 @@ export interface OpsPanelProps {
   /** Called when the player voluntarily prestiges */
   onPrestige: () => void;
 
-  /** Whether the player has completed at least one prestige (shows Bot Network + Escape Plan) */
-  hasPrestiged?: boolean;
+  /** How many times the player has prestiged (gates Bot Network + Escape Plan at >= 1) */
+  prestigeCount?: number;
 
   /** Set of tier numbers that are currently collapsed (shared with ScamListPanel) */
   collapsedTiers: Set<ScamTier>;
@@ -53,7 +53,7 @@ export function OpsPanel({
   isManagerHired,
   onHireManager,
   onPrestige,
-  hasPrestiged = false,
+  prestigeCount = 0,
   collapsedTiers,
   onToggleTier,
   testID,
@@ -84,7 +84,7 @@ export function OpsPanel({
       testID={testID}
     >
       {/* Bot Network Section (hidden until first prestige) */}
-      {hasPrestiged && (
+      {prestigeCount >= 1 && (
         <>
           <Pressable
             testID="ops-section-bots"
@@ -92,7 +92,7 @@ export function OpsPanel({
           >
             <TerminalText
               size="md"
-              color={COLORS.terminalGreen}
+              color={COLORS.textPrimary}
               style={styles.sectionHeader}
             >
               {`${botsCollapsed ? '▶' : '▼'} BOT NETWORK`}
@@ -109,7 +109,7 @@ export function OpsPanel({
       >
         <TerminalText
           size="md"
-          color={COLORS.terminalGreen}
+          color={COLORS.textPrimary}
           style={styles.sectionHeader}
         >
           {`${managersCollapsed ? '▶' : '▼'} MANAGERS`}
@@ -128,12 +128,12 @@ export function OpsPanel({
       )}
 
       {/* Escape Plan (hidden until first prestige) */}
-      {hasPrestiged && (
-        <CRTFrame testID="prestige-section">
-          <TerminalText size="md" color={COLORS.terminalGreen}>
+      {prestigeCount >= 1 && (
+        <CRTFrame testID="prestige-section" accentColor={COLORS.gold}>
+          <TerminalText size="md" color={COLORS.textPrimary}>
             {'ESCAPE PLAN'}
           </TerminalText>
-          <TerminalText size="sm" color={COLORS.terminalGreenDim}>
+          <TerminalText size="sm" color={COLORS.textSecondary}>
             {'Cash out your trust and start fresh.'}
           </TerminalText>
           <PixelButton
@@ -156,7 +156,7 @@ const styles = StyleSheet.create({
   content: {
     paddingHorizontal: SPACING.md,
     paddingBottom: SPACING.xl,
-    gap: SPACING.md,
+    gap: 20,
   },
   sectionHeader: {
     marginTop: SPACING.sm,

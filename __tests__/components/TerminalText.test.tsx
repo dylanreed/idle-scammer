@@ -20,14 +20,14 @@ describe('TerminalText', () => {
   });
 
   describe('colors', () => {
-    it('uses terminal green by default', () => {
-      render(<TerminalText testID="terminal-text">Green Text</TerminalText>);
+    it('uses primary text color by default', () => {
+      render(<TerminalText testID="terminal-text">Default Text</TerminalText>);
       const text = screen.getByTestId('terminal-text');
       const style = text.props.style;
       const flatStyle = Array.isArray(style)
         ? Object.assign({}, ...style.filter(Boolean))
         : style;
-      expect(flatStyle.color).toBe(COLORS.terminalGreen);
+      expect(flatStyle.color).toBe(COLORS.textPrimary);
     });
 
     it('accepts custom color', () => {

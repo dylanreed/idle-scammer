@@ -1,5 +1,5 @@
 // ABOUTME: Integration tests for the TrustCoin crypto tutorial modal
-// ABOUTME: Verifies modal appears at trust >= 21, respects hasSeen, and dismiss marks seen
+// ABOUTME: Verifies modal appears at trust >= 150, respects hasSeen, and dismiss marks seen
 
 import React from 'react';
 import { render, screen, fireEvent, act } from '@testing-library/react-native';
@@ -13,6 +13,7 @@ import { useSkillStore } from '../../src/game/skills/skillStore';
 import { useTutorialStore } from '../../src/game/tutorial/tutorialStore';
 import { useCryptoStore } from '../../src/game/crypto/cryptoStore';
 import { TUTORIAL_IDS } from '../../src/game/tutorial/types';
+import { useOriginStore } from '../../src/game/origin/originStore';
 
 // Mock the assets module to avoid requiring image files
 jest.mock('../../src/game/assets', () => ({
@@ -46,15 +47,16 @@ describe('GameScreen crypto tutorial modal', () => {
     jest.useFakeTimers();
     resetAllStores();
     jest.clearAllMocks();
+    useOriginStore.getState().selectOrigin('moms-basement');
   });
 
   afterEach(() => {
     jest.useRealTimers();
   });
 
-  it('should show crypto tutorial modal when trust reaches 21', () => {
-    // Set trust to 21 (the crypto unlock threshold)
-    useGameStore.getState().addTrust(20); // trust starts at 1, so 1 + 20 = 21
+  it('should show crypto tutorial modal when trust reaches 150', () => {
+    // Set trust to 150 (the crypto unlock threshold)
+    useGameStore.getState().addTrust(149); // trust starts at 1, so 1 + 149 = 150
 
     render(<GameScreen />);
     tickGameLoop();
@@ -63,7 +65,7 @@ describe('GameScreen crypto tutorial modal', () => {
     expect(screen.getByTestId('crypto-tutorial-modal')).toBeTruthy();
   });
 
-  it('should not show crypto tutorial modal when trust is below 21', () => {
+  it('should not show crypto tutorial modal when trust is below 150', () => {
     // Trust starts at 1, don't add any
     render(<GameScreen />);
     tickGameLoop();
@@ -72,8 +74,8 @@ describe('GameScreen crypto tutorial modal', () => {
   });
 
   it('should not show crypto tutorial modal when already seen', () => {
-    // Set trust to 21 but mark the tutorial as already seen
-    useGameStore.getState().addTrust(20);
+    // Set trust to 150 but mark the tutorial as already seen
+    useGameStore.getState().addTrust(149);
     useTutorialStore.getState().markSeen(TUTORIAL_IDS.CRYPTO_INTRO);
 
     render(<GameScreen />);
@@ -83,7 +85,7 @@ describe('GameScreen crypto tutorial modal', () => {
   });
 
   it('should mark crypto tutorial as seen when dismissed', () => {
-    useGameStore.getState().addTrust(20);
+    useGameStore.getState().addTrust(149);
 
     render(<GameScreen />);
     tickGameLoop();

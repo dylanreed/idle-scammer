@@ -40,6 +40,9 @@ export interface SkillsPanelProps {
   /** Called when player activates an ability */
   onActivateAbility: (abilityId: string) => void;
 
+  /** Whether to show passive skill categories (default: true). When false, only SP counter and abilities render. */
+  showPassives?: boolean;
+
   /** Test ID for testing */
   testID?: string;
 }
@@ -56,6 +59,7 @@ export function SkillsPanel({
   onAllocateSkill,
   onUnlockAbility,
   onActivateAbility,
+  showPassives = true,
   testID,
 }: SkillsPanelProps): React.ReactElement {
   const [collapsedCategories, setCollapsedCategories] = useState<Set<SkillCategory>>(new Set());
@@ -82,7 +86,7 @@ export function SkillsPanel({
       testID={testID}
     >
       {/* SP Counter */}
-      <CRTFrame style={styles.spCounter} testID="sp-counter">
+      <CRTFrame style={styles.spCounter} testID="sp-counter" accentColor={COLORS.accent}>
         <TerminalText size="sm" color={COLORS.gold}>
           {'SKILL POINTS'}
         </TerminalText>
@@ -91,8 +95,8 @@ export function SkillsPanel({
         </TerminalText>
       </CRTFrame>
 
-      {/* Passive Skills by Category */}
-      {CATEGORIES.map((category) => {
+      {/* Passive Skills by Category (gated by showPassives prop) */}
+      {showPassives && CATEGORIES.map((category) => {
         const skills = SKILLS_BY_CATEGORY[category];
         const isCollapsed = collapsedCategories.has(category);
 
@@ -103,7 +107,7 @@ export function SkillsPanel({
               style={styles.categoryHeader}
               testID={`category-${category}`}
             >
-              <TerminalText size="md" color={COLORS.terminalGreen}>
+              <TerminalText size="md" color={COLORS.textPrimary}>
                 {`${isCollapsed ? '>' : 'v'} ${CATEGORY_NAMES[category]}`}
               </TerminalText>
               <TerminalText size="sm" color={COLORS.textDim}>
@@ -195,7 +199,7 @@ function PassiveSkillRow({
   return (
     <CRTFrame style={styles.skillRow} testID={`skill-${skill.id}`}>
       <View style={styles.skillInfo}>
-        <TerminalText size="sm" color={COLORS.terminalGreen}>
+        <TerminalText size="sm" color={COLORS.textPrimary}>
           {skill.name}
         </TerminalText>
         <TerminalText size="sm" color={COLORS.textDim}>
@@ -337,7 +341,7 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: SPACING.sm,
-    gap: SPACING.sm,
+    gap: SPACING.md,
   },
   spCounter: {
     alignItems: 'center',

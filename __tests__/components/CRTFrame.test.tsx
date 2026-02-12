@@ -1,5 +1,5 @@
-// ABOUTME: Tests for CRTFrame component - CRT monitor styled container
-// ABOUTME: Verifies rendering, styling, and scanline overlay functionality
+// ABOUTME: Tests for CRTFrame component - pixel art panel container
+// ABOUTME: Verifies rendering, styling, accent color, and custom styles
 
 import React from 'react';
 import { render, screen } from '@testing-library/react-native';
@@ -42,14 +42,13 @@ describe('CRTFrame', () => {
 
     const frame = screen.getByTestId('crt-frame');
     const style = frame.props.style;
-    // Check that borderRadius is applied (could be flattened array)
     const flatStyle = Array.isArray(style)
       ? Object.assign({}, ...style)
       : style;
     expect(flatStyle.borderRadius).toBeGreaterThan(0);
   });
 
-  it('has green border for CRT effect', () => {
+  it('has solid border', () => {
     render(
       <CRTFrame testID="crt-frame">
         <Text>Content</Text>
@@ -59,45 +58,38 @@ describe('CRTFrame', () => {
     const frame = screen.getByTestId('crt-frame');
     const style = frame.props.style;
     const flatStyle = Array.isArray(style)
-      ? Object.assign({}, ...style)
+      ? Object.assign({}, ...style.filter(Boolean))
       : style;
-    expect(flatStyle.borderColor).toBe(COLORS.terminalGreenDim);
-    expect(flatStyle.borderWidth).toBeGreaterThan(0);
+    expect(flatStyle.borderColor).toBe(COLORS.border);
+    expect(flatStyle.borderWidth).toBe(3);
+    expect(flatStyle.borderStyle).toBe('solid');
   });
 
-  it('shows scanlines when showScanlines is true', () => {
+  it('does not render scanlines (removed in visual refresh)', () => {
     render(
       <CRTFrame testID="crt-frame" showScanlines={true}>
         <Text>Content</Text>
       </CRTFrame>
     );
 
-    // Scanline overlay should be rendered
-    const scanlines = screen.getByTestId('crt-scanlines');
-    expect(scanlines).toBeTruthy();
-  });
-
-  it('hides scanlines when showScanlines is false', () => {
-    render(
-      <CRTFrame testID="crt-frame" showScanlines={false}>
-        <Text>Content</Text>
-      </CRTFrame>
-    );
-
-    // Scanline overlay should not be rendered
+    // Scanline overlay is no longer rendered
     expect(screen.queryByTestId('crt-scanlines')).toBeNull();
   });
 
-  it('shows scanlines by default', () => {
+  it('applies accent color to top border when provided', () => {
     render(
-      <CRTFrame testID="crt-frame">
+      <CRTFrame testID="crt-frame" accentColor="#ff0000">
         <Text>Content</Text>
       </CRTFrame>
     );
 
-    // Scanlines should be visible by default
-    const scanlines = screen.getByTestId('crt-scanlines');
-    expect(scanlines).toBeTruthy();
+    const frame = screen.getByTestId('crt-frame');
+    const style = frame.props.style;
+    const flatStyle = Array.isArray(style)
+      ? Object.assign({}, ...style.filter(Boolean))
+      : style;
+    expect(flatStyle.borderTopColor).toBe('#ff0000');
+    expect(flatStyle.borderTopWidth).toBe(4);
   });
 
   it('applies custom style when provided', () => {
@@ -110,7 +102,7 @@ describe('CRTFrame', () => {
     const frame = screen.getByTestId('crt-frame');
     const style = frame.props.style;
     const flatStyle = Array.isArray(style)
-      ? Object.assign({}, ...style)
+      ? Object.assign({}, ...style.filter(Boolean))
       : style;
     expect(flatStyle.marginTop).toBe(100);
   });

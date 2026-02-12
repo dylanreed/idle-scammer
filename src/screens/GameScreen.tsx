@@ -48,11 +48,17 @@ import { useSkillStore } from '../game/skills/skillStore';
 import { getSkillRankCost } from '../game/skills/calculations';
 import { ALL_ACTIVE_ABILITIES } from '../game/skills/abilities';
 import { useTutorialStore } from '../game/tutorial/tutorialStore';
-import { TUTORIAL_IDS, TUTORIAL_SEQUENCE } from '../game/tutorial/types';
+import { TUTORIAL_IDS, PRESTIGE_TUTORIAL_SEQUENCES } from '../game/tutorial/types';
 import { TutorialModal } from '../components/TutorialModal';
 import { useCryptoStore } from '../game/crypto/cryptoStore';
 import { MARKET_TICK_INTERVAL_MS } from '../game/crypto/constants';
 import { CryptoPanel } from '../components/CryptoPanel';
+import { useOriginStore } from '../game/origin/originStore';
+import { OriginSelectModal } from '../components/OriginSelectModal';
+import { FloatingNumber } from '../components/FloatingNumber';
+import { triggerHaptic } from '../utils/haptics';
+import { formatNumber } from '../utils/formatters';
+import type { OriginId } from '../game/origin/types';
 
 /**
  * Tutorial modal content for each post-first-prestige introduction.
@@ -77,6 +83,20 @@ const TUTORIAL_CONTENT: Record<string, { title: string; body: string[] }> = {
     body: [
       'Each prestige run, you start with Skill Points based on your Trust level. Spend them on passive skills and active abilities.',
       'Skills reset every prestige \u2014 choose wisely each run. More Trust = more SP = more powerful builds.',
+    ],
+  },
+  [TUTORIAL_IDS.SKILL_ABILITIES_INTRO]: {
+    title: 'ABILITIES \u2014 Active Powers',
+    body: [
+      'You\u2019ve unlocked active abilities! These are powerful one-shot or timed effects you can trigger during a run.',
+      'Spend SP to unlock abilities, then activate them when you need a burst of speed, profit, or heat relief.',
+    ],
+  },
+  [TUTORIAL_IDS.PASSIVE_SKILLS_INTRO]: {
+    title: 'PASSIVE SKILLS \u2014 Build Your Tree',
+    body: [
+      'The passive skill tree is now available! Four categories of persistent upgrades that last until prestige.',
+      'Tech, Social, Finance, and Stealth \u2014 each category boosts a different aspect of your scam empire.',
     ],
   },
   [TUTORIAL_IDS.CRYPTO_INTRO]: {
@@ -140,10 +160,20 @@ export function GameScreen(): React.ReactElement {
   const skillAbilities = useSkillStore((state) => state.abilities);
 
   // Get tutorial/progressive disclosure state
-  const hasPrestiged = useTutorialStore((state) => state.hasPrestiged);
+  const prestigeCount = useTutorialStore((state) => state.prestigeCount);
+  const hasPrestiged = prestigeCount >= 1;
 
-  // Tutorial modal sequence state (post-first-prestige introduction)
+  // Get origin state
+  const selectedOrigin = useOriginStore((state) => state.selectedOrigin);
+
+  // Intro modal + origin select state (shown when no origin is selected)
+  // Initialize from current store state so the modal appears on the first render
+  const [showIntroModal, setShowIntroModal] = useState(() => selectedOrigin === null);
+  const [showOriginSelect, setShowOriginSelect] = useState(false);
+
+  // Tutorial modal sequence state (post-prestige introduction, per-prestige-level)
   const [activeTutorialIndex, setActiveTutorialIndex] = useState<number | null>(null);
+  const [activeTutorialSequence, setActiveTutorialSequence] = useState<readonly string[]>([]);
 
   // Standalone crypto tutorial modal (triggers at trust >= 21, independent of prestige sequence)
   const [showCryptoTutorial, setShowCryptoTutorial] = useState(false);
@@ -155,6 +185,10 @@ export function GameScreen(): React.ReactElement {
 
   // Reset confirmation state
   const [showResetConfirm, setShowResetConfirm] = useState(false);
+
+  // Floating reward numbers state
+  const [floatingNumbers, setFloatingNumbers] = useState<{ id: number; value: string; color: string }[]>([]);
+  const floatingIdRef = useRef(0);
 
   // Shared collapse state for tier sections (scam list + manager panel)
   const [collapsedTiers, setCollapsedTiers] = useState<Set<ScamTier>>(new Set());
@@ -195,27 +229,39 @@ export function GameScreen(): React.ReactElement {
   }
 
   /**
-   * Compute the skill-based duration multiplier from passive + active effects.
-   * Overclock reduces duration, Zero Day active ability speeds up.
+   * Helper to get origin bonuses from the origin store.
+   * Returns all-zero bonuses when no origin is selected.
+   */
+  function getOriginModifiers() {
+    return useOriginStore.getState().getOriginBonuses();
+  }
+
+  /**
+   * Compute the skill-based duration multiplier from passive + active effects + origin.
+   * Overclock reduces duration, Zero Day active ability speeds up, origin may reduce further.
    */
   function getSkillDurationParams() {
     const { bonuses, effects } = getSkillModifiers();
+    const originBonuses = getOriginModifiers();
     return {
-      skillDurationMultiplier: 1 - bonuses.durationReduction,
+      skillDurationMultiplier: 1 - bonuses.durationReduction - originBonuses.durationReduction,
       activeSpeedMultiplier: effects.speedMultiplier,
     };
   }
 
   /**
-   * Compute the skill-based reward multiplier from passive + active effects.
-   * Silver Tongue applies to all scams; Creative Accounting to money.
+   * Compute the skill-based reward multiplier from passive + active effects + origin.
+   * Silver Tongue applies to all scams; Creative Accounting to money; origin may boost rewards.
    */
   function getSkillRewardParams() {
     const { bonuses, effects } = getSkillModifiers();
+    const originBonuses = getOriginModifiers();
     // Silver Tongue (rewardBonus) applies to all scam types
     let skillRewardMultiplier = 1 + bonuses.rewardBonus;
     // Creative Accounting (moneyBonus) applies to all scams
     skillRewardMultiplier *= (1 + bonuses.moneyBonus);
+    // Origin reward bonus
+    skillRewardMultiplier *= (1 + originBonuses.rewardBonus);
     return {
       skillRewardMultiplier,
       activeRewardMultiplier: effects.rewardMultiplier,
@@ -262,15 +308,26 @@ export function GameScreen(): React.ReactElement {
       // Award money
       addMoney(reward);
 
+      // Spawn floating reward number
+      const floatId = ++floatingIdRef.current;
+      setFloatingNumbers((prev) => [
+        ...prev,
+        { id: floatId, value: `+$${formatNumber(reward)}`, color: COLORS.gold },
+      ]);
+
       // Add heat from the scam (unless VPN Tunnel is active)
       if (!activeEffects.zeroHeatGain) {
         const totalBots = useGameStore.getState().resources.bots;
         const unassignedBots = useBotStore.getState().getAvailableBots(totalBots);
         const heatMultiplier = 1 / (1 + IDLE_BOT_HEAT_REDUCTION * unassignedBots);
-        const skillHeatGainMultiplier = 1 - skillBonuses.heatGainReduction;
+        const originBonuses = getOriginModifiers();
+        const skillHeatGainMultiplier = (1 - skillBonuses.heatGainReduction) * (1 - originBonuses.heatGainReduction);
         const heat = calculateHeatFromScam(definition, skillHeatGainMultiplier) * heatMultiplier;
         addHeat(heat);
       }
+
+      // Haptic feedback on scam completion
+      triggerHaptic('medium');
 
       // Generate fractional bots from scam completion
       addBots(BOT_GENERATION_RATES[definition.tier]);
@@ -282,6 +339,7 @@ export function GameScreen(): React.ReactElement {
       const currentHeat = useGameStore.getState().resources.heat;
       if (isPrestigeForced(currentHeat, skillBonuses.heatThresholdBonus) && !showPrestigeRef.current) {
         showPrestigeRef.current = true;
+        triggerHaptic('heavy');
         setShowPrestige(true);
         setPrestigePhase('choice');
         setPrestigeResult(undefined);
@@ -351,7 +409,8 @@ export function GameScreen(): React.ReactElement {
         const totalEmployees = useEmployeeStore.getState().getAllEmployeeStates()
           .reduce((sum, e) => sum + e.count, 0);
         if (totalEmployees > 0) {
-          const skillHeatGainMultiplier = 1 - skillBonuses.heatGainReduction;
+          const originBonuses = getOriginModifiers();
+          const skillHeatGainMultiplier = (1 - skillBonuses.heatGainReduction) * (1 - originBonuses.heatGainReduction);
           const employeeHeat = calculateEmployeeHeat(totalEmployees, deltaSeconds) * skillHeatGainMultiplier;
           addHeat(employeeHeat);
         }
@@ -375,9 +434,9 @@ export function GameScreen(): React.ReactElement {
       // Tick NFT collection hype decay and shill boost
       useCryptoStore.getState().tickCollections(result.deltaMs);
 
-      // Trigger crypto tutorial when trust first reaches 21
+      // Trigger crypto tutorial when trust first reaches 150 (Tier 3 access)
       const currentTrust = useGameStore.getState().resources.trust;
-      if (currentTrust >= 21 && !useTutorialStore.getState().hasSeen(TUTORIAL_IDS.CRYPTO_INTRO)) {
+      if (currentTrust >= 150 && !useTutorialStore.getState().hasSeen(TUTORIAL_IDS.CRYPTO_INTRO)) {
         setShowCryptoTutorial(true);
       }
     },
@@ -460,6 +519,35 @@ export function GameScreen(): React.ReactElement {
     return undefined;
   }, [scams, resources.money, resources.trust]);
 
+  // Calculate aggregate money income per second from all auto-managed running scams
+  const moneyPerSecond = useMemo(() => {
+    let totalPerSec = 0;
+    for (const timer of engineState.activeTimers) {
+      const def = getScamDefinition(timer.scamId);
+      if (!def) continue;
+      const scamState = scams[timer.scamId];
+      if (!scamState) continue;
+      const durationSec = timer.duration / 1000;
+      if (durationSec <= 0) continue;
+      const rawBotBonuses = useBotStore.getState().getScamBotBonuses(timer.scamId);
+      const skillBonuses = useSkillStore.getState().getSkillBonuses();
+      const amplifiedProfitBonus = rawBotBonuses.profitBonus * (1 + skillBonuses.botProfitAmplifier);
+      const { rewardBonus: rawRewardBonus } = useEmployeeStore.getState().getScamBonuses(timer.scamId);
+      const activeEffects = useSkillStore.getState().getActiveEffects();
+      const employeeRewardBonus = rawRewardBonus * activeEffects.employeeBonusMultiplier;
+      const skillRewardBase = 1 + skillBonuses.rewardBonus;
+      const moneyBonus = 1 + skillBonuses.moneyBonus;
+      const originBonuses = useOriginStore.getState().getOriginBonuses();
+      const skillRewardMultiplier = skillRewardBase * moneyBonus * (1 + originBonuses.rewardBonus);
+      const reward = calculateScamReward(
+        def, scamState.level, resources.trust, amplifiedProfitBonus, employeeRewardBonus,
+        skillRewardMultiplier, activeEffects.rewardMultiplier
+      );
+      totalPerSec += reward / durationSec;
+    }
+    return totalPerSec;
+  }, [engineState.activeTimers, scams, resources.trust]);
+
   /**
    * Handle starting a scam
    */
@@ -509,6 +597,7 @@ export function GameScreen(): React.ReactElement {
       }
 
       unlockScam(scamId);
+      triggerHaptic('medium');
     },
     [resources.money, scams, addMoney, unlockScam]
   );
@@ -541,6 +630,7 @@ export function GameScreen(): React.ReactElement {
         const milestoneBonus = calculateMilestoneBonus(definition, newLevel, resources.trust);
         if (milestoneBonus > 0) {
           addMoney(milestoneBonus);
+          triggerHaptic('medium');
           console.log(`🎉 MILESTONE L${newLevel}! Bonus: $${milestoneBonus}`);
         }
       }
@@ -608,6 +698,7 @@ export function GameScreen(): React.ReactElement {
       // Deduct cost and hire
       addMoney(-cost);
       hireManager(managerId);
+      triggerHaptic('medium');
 
       // Auto-start the scam if not already running
       const definition = getScamDefinition(scamId);
@@ -640,6 +731,7 @@ export function GameScreen(): React.ReactElement {
 
       addMoney(-cost);
       hireEmployee(employeeId);
+      triggerHaptic('medium');
     },
     [resources.money, resources.trust, resources.snitchCount, addMoney, hireEmployee]
   );
@@ -738,6 +830,7 @@ export function GameScreen(): React.ReactElement {
    */
   const handlePrestigeChoice = useCallback(
     (choice: 'clean-escape' | 'snitch') => {
+      triggerHaptic('heavy');
       const result = executePrestige(choice);
       setPrestigeResult(result);
       setPrestigePhase('result');
@@ -747,25 +840,28 @@ export function GameScreen(): React.ReactElement {
 
   /**
    * Handle prestige continue - hide modal and restart the game loop.
-   * On first prestige (previousTrust was 1), triggers tutorial modal sequence.
+   * Looks up per-prestige tutorial sequences and triggers if not already seen.
    */
   const handlePrestigeContinue = useCallback(() => {
-    const wasFirstPrestige = prestigeResult?.previousTrust === 1;
+    // Read the current prestige count (already incremented by executePrestige)
+    const currentPrestigeCount = useTutorialStore.getState().prestigeCount;
 
     setShowPrestige(false);
     showPrestigeRef.current = false;
     setPrestigePhase('choice');
     setPrestigeResult(undefined);
 
-    // Trigger tutorial sequence on first prestige if not already seen
-    if (wasFirstPrestige && !useTutorialStore.getState().hasSeen(TUTORIAL_SEQUENCE[0])) {
+    // Look up tutorial sequence for this prestige milestone
+    const sequence = PRESTIGE_TUTORIAL_SEQUENCES[currentPrestigeCount];
+    if (sequence && sequence.length > 0 && !useTutorialStore.getState().hasSeen(sequence[0])) {
+      setActiveTutorialSequence(sequence);
       setActiveTutorialIndex(0);
     }
 
     // Stop and restart the game loop for a clean slate
     stop();
     start();
-  }, [stop, start, prestigeResult]);
+  }, [stop, start]);
 
   /**
    * Handle dismissing a tutorial modal - mark as seen and advance to next, or close.
@@ -774,17 +870,17 @@ export function GameScreen(): React.ReactElement {
     if (activeTutorialIndex === null) return;
 
     // Mark current tutorial as seen
-    const currentId = TUTORIAL_SEQUENCE[activeTutorialIndex];
+    const currentId = activeTutorialSequence[activeTutorialIndex];
     useTutorialStore.getState().markSeen(currentId);
 
     // Advance to next tutorial or close
     const nextIndex = activeTutorialIndex + 1;
-    if (nextIndex < TUTORIAL_SEQUENCE.length) {
+    if (nextIndex < activeTutorialSequence.length) {
       setActiveTutorialIndex(nextIndex);
     } else {
       setActiveTutorialIndex(null);
     }
-  }, [activeTutorialIndex]);
+  }, [activeTutorialIndex, activeTutorialSequence]);
 
   /**
    * Handle dismissing the crypto tutorial modal
@@ -798,12 +894,30 @@ export function GameScreen(): React.ReactElement {
    * Handle full game reset - wipe everything including trust
    */
   const handleResetConfirm = useCallback(() => {
+    triggerHaptic('heavy');
     setShowResetConfirm(false);
     setActiveTutorialIndex(null);
     fullReset();
+    setShowIntroModal(true);
     stop();
     start();
   }, [stop, start]);
+
+  /**
+   * Handle continuing from intro modal to origin select
+   */
+  const handleIntroContinue = useCallback(() => {
+    setShowIntroModal(false);
+    setShowOriginSelect(true);
+  }, []);
+
+  /**
+   * Handle origin selection from origin modal
+   */
+  const handleOriginSelect = useCallback((originId: OriginId) => {
+    useOriginStore.getState().selectOrigin(originId);
+    setShowOriginSelect(false);
+  }, []);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -811,7 +925,7 @@ export function GameScreen(): React.ReactElement {
 
       {/* Header */}
       <View style={styles.header}>
-        <TerminalText size="lg" color={COLORS.terminalGreen}>
+        <TerminalText size="lg" color={COLORS.textPrimary}>
           {'IDLE SCAMMER v0.1'}
         </TerminalText>
         {!showResetConfirm ? (
@@ -849,14 +963,29 @@ export function GameScreen(): React.ReactElement {
       </View>
 
       {/* Resource HUD */}
-      <ResourceHUD
-        resources={resources}
-        heatMax={MAX_HEAT + (useSkillStore.getState().getSkillBonuses().heatThresholdBonus)}
-        hasPrestiged={hasPrestiged}
-        compact
-        style={styles.hud}
-        testID="resource-hud"
-      />
+      <View>
+        <ResourceHUD
+          resources={resources}
+          heatMax={MAX_HEAT + (useSkillStore.getState().getSkillBonuses().heatThresholdBonus)}
+          prestigeCount={prestigeCount}
+          moneyPerSecond={moneyPerSecond}
+          compact
+          style={styles.hud}
+          testID="resource-hud"
+        />
+        {/* Floating reward numbers */}
+        {floatingNumbers.map((fn) => (
+          <FloatingNumber
+            key={fn.id}
+            value={fn.value}
+            color={fn.color}
+            onComplete={() =>
+              setFloatingNumbers((prev) => prev.filter((n) => n.id !== fn.id))
+            }
+            testID={`floating-${fn.id}`}
+          />
+        ))}
+      </View>
 
       {/* Three-column layout (wide) or tabbed layout (narrow) */}
       <ResponsiveLayout
@@ -877,7 +1006,7 @@ export function GameScreen(): React.ReactElement {
           />
         }
         skillsContent={
-          hasPrestiged ? (
+          prestigeCount >= 2 ? (
             <SkillsPanel
               skillPoints={resources.skillPoints}
               passiveRanks={passiveRanks}
@@ -885,12 +1014,13 @@ export function GameScreen(): React.ReactElement {
               onAllocateSkill={handleAllocateSkill}
               onUnlockAbility={handleUnlockAbility}
               onActivateAbility={handleActivateAbility}
+              showPassives={prestigeCount >= 3}
               testID="skills-panel"
             />
           ) : undefined
         }
         cryptoContent={
-          resources.trust >= 21 ? (
+          resources.trust >= 150 ? (
             <CryptoPanel testID="crypto-panel" />
           ) : undefined
         }
@@ -901,7 +1031,7 @@ export function GameScreen(): React.ReactElement {
             isManagerHired={isManagerHired}
             onHireManager={handleHireManager}
             onPrestige={handleVoluntaryPrestige}
-            hasPrestiged={hasPrestiged}
+            prestigeCount={prestigeCount}
             collapsedTiers={collapsedTiers}
             onToggleTier={toggleTier}
             testID="ops-panel"
@@ -919,12 +1049,12 @@ export function GameScreen(): React.ReactElement {
         onContinue={handlePrestigeContinue}
       />
 
-      {/* Tutorial modal sequence (after first prestige) */}
-      {activeTutorialIndex !== null && TUTORIAL_CONTENT[TUTORIAL_SEQUENCE[activeTutorialIndex]] && (
+      {/* Tutorial modal sequence (after prestige milestones) */}
+      {activeTutorialIndex !== null && TUTORIAL_CONTENT[activeTutorialSequence[activeTutorialIndex]] && (
         <TutorialModal
           visible={true}
-          title={TUTORIAL_CONTENT[TUTORIAL_SEQUENCE[activeTutorialIndex]].title}
-          body={TUTORIAL_CONTENT[TUTORIAL_SEQUENCE[activeTutorialIndex]].body}
+          title={TUTORIAL_CONTENT[activeTutorialSequence[activeTutorialIndex]].title}
+          body={TUTORIAL_CONTENT[activeTutorialSequence[activeTutorialIndex]].body}
           onContinue={handleTutorialContinue}
           testID="tutorial-modal"
         />
@@ -940,6 +1070,28 @@ export function GameScreen(): React.ReactElement {
           testID="crypto-tutorial-modal"
         />
       )}
+
+      {/* Intro modal (shown on fresh start or after full reset) */}
+      {showIntroModal && (
+        <TutorialModal
+          visible={true}
+          title="WELCOME TO THE UNDERGROUND"
+          body={[
+            'Every empire starts somewhere pathetic.',
+            'Before the millions, before the Lambos, before the feds... there was just you, a screen, and a dream.',
+            'But first \u2014 where did it all begin?',
+          ]}
+          onContinue={handleIntroContinue}
+          testID="intro-modal"
+        />
+      )}
+
+      {/* Origin select modal (shown after intro modal) */}
+      <OriginSelectModal
+        visible={showOriginSelect}
+        onSelect={handleOriginSelect}
+        testID="origin-select-modal"
+      />
     </SafeAreaView>
   );
 }

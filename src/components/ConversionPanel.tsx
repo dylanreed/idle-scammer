@@ -52,7 +52,7 @@ export function ConversionPanel({
     <View style={styles.container} testID={testID}>
       {/* Buy Section */}
       <View style={styles.section}>
-        <TerminalText size="sm" color={COLORS.terminalGreen}>
+        <TerminalText size="sm" color={COLORS.textPrimary}>
           {'BUY TRUSTCOIN'}
         </TerminalText>
         <View style={styles.inputRow}>
@@ -80,7 +80,7 @@ export function ConversionPanel({
           </PixelButton>
         </View>
         {buyNum > 0 && (
-          <TerminalText size="sm" color={COLORS.terminalGreenDim}>
+          <TerminalText size="sm" color={COLORS.textSecondary}>
             {`\u2192 ${buyQuote.toFixed(4)} $TRUST`}
           </TerminalText>
         )}
@@ -88,7 +88,7 @@ export function ConversionPanel({
 
       {/* Sell Section */}
       <View style={styles.section}>
-        <TerminalText size="sm" color={COLORS.terminalGreen}>
+        <TerminalText size="sm" color={COLORS.textPrimary}>
           {'SELL TRUSTCOIN'}
         </TerminalText>
         <View style={styles.inputRow}>
@@ -116,7 +116,7 @@ export function ConversionPanel({
           </PixelButton>
         </View>
         {sellNum > 0 && (
-          <TerminalText size="sm" color={COLORS.terminalGreenDim}>
+          <TerminalText size="sm" color={COLORS.textSecondary}>
             {`\u2192 $${sellQuote.toFixed(2)}`}
           </TerminalText>
         )}
@@ -140,7 +140,7 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     borderWidth: 1,
-    borderColor: COLORS.terminalGreen,
+    borderColor: COLORS.accent,
     color: COLORS.terminalGreen,
     fontFamily: 'monospace',
     fontSize: 14,

@@ -100,11 +100,11 @@ export function CryptoPanel({ testID }: CryptoPanelProps): React.ReactElement {
   }, []);
 
   return (
-    <CRTFrame testID={testID} style={styles.frame}>
+    <CRTFrame testID={testID} style={styles.frame} accentColor={COLORS.secondary}>
       <ScrollView nestedScrollEnabled showsVerticalScrollIndicator={false}>
         <View style={styles.content}>
           {/* Header */}
-          <TerminalText size="lg" color={COLORS.terminalGreen}>
+          <TerminalText size="lg" color={COLORS.textPrimary}>
             {'TRUSTCOIN EXCHANGE'}
           </TerminalText>
 
@@ -143,7 +143,7 @@ export function CryptoPanel({ testID }: CryptoPanelProps): React.ReactElement {
 
           {/* NFT Section */}
           <CRTFrame showScanlines={false} style={styles.section}>
-            <TerminalText size="md" color={COLORS.terminalGreen}>
+            <TerminalText size="md" color={COLORS.textPrimary}>
               {'NFT MARKETPLACE'}
             </TerminalText>
 

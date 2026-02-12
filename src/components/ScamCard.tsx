@@ -216,7 +216,7 @@ export function ScamCard({
   const managerPortrait = hasManager && manager ? getManagerPortrait(manager.id) : undefined;
 
   return (
-    <CRTFrame testID={testID} style={styles.card}>
+    <CRTFrame testID={testID} style={styles.card} accentColor={COLORS.primary}>
       {/* Header with icon, name, level, and manager portrait */}
       <View style={styles.header}>
         {scamIcon && (
@@ -230,7 +230,7 @@ export function ScamCard({
           {scamDefinition.name}
         </TerminalText>
         {status !== 'locked' && (
-          <TerminalText size="sm" color={COLORS.terminalGreenDim}>
+          <TerminalText size="sm" color={COLORS.textSecondary}>
             {`Lvl ${level}`}
           </TerminalText>
         )}
@@ -244,7 +244,7 @@ export function ScamCard({
       </View>
 
       {/* Description */}
-      <TerminalText size="sm" color={COLORS.terminalGreenDim} style={styles.description}>
+      <TerminalText size="sm" color={COLORS.textSecondary} style={styles.description}>
         {scamDefinition.description}
       </TerminalText>
 
@@ -357,7 +357,7 @@ export function ScamCard({
                 : `${employeeDefinition.name} x${employeeCount}`}
             </TerminalText>
             {(employeeSpeedBonus > 0 || employeeRewardBonus > 0) && (
-              <TerminalText size="sm" color={COLORS.terminalGreenDim}>
+              <TerminalText size="sm" color={COLORS.textSecondary}>
                 {`Speed +${Math.round(employeeSpeedBonus * 100)}% / Reward +${Math.round(employeeRewardBonus * 100)}%`}
               </TerminalText>
             )}
@@ -388,7 +388,7 @@ export function ScamCard({
       {status !== 'locked' && scamState && scamState.timesCompleted > 0 && (
         <TerminalText
           size="sm"
-          color={COLORS.terminalGreenFaded}
+          color={COLORS.textDim}
           style={styles.completedCount}
         >
           {`Completed: ${formatNumber(scamState.timesCompleted)}x`}
@@ -400,7 +400,7 @@ export function ScamCard({
 
 const styles = StyleSheet.create({
   card: {
-    marginBottom: SPACING.md,
+    marginBottom: SPACING.cardGap,
   },
   header: {
     flexDirection: 'row',
@@ -452,7 +452,7 @@ const styles = StyleSheet.create({
     marginTop: SPACING.sm,
     paddingTop: SPACING.sm,
     borderTopWidth: 1,
-    borderTopColor: COLORS.terminalGreenDim + '40',
+    borderTopColor: COLORS.borderSecondary,
   },
   employeeHeader: {
     flexDirection: 'row',

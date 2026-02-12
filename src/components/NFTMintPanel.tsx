@@ -30,7 +30,7 @@ export function NFTMintPanel({
 
   return (
     <View style={styles.container} testID={testID}>
-      <TerminalText size="sm" color={COLORS.terminalGreen}>
+      <TerminalText size="sm" color={COLORS.textPrimary}>
         {`CREATE COLLECTION (${collectionCount}/${MAX_COLLECTIONS})`}
       </TerminalText>
       <View style={styles.inputRow}>
@@ -73,7 +73,7 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     borderWidth: 1,
-    borderColor: COLORS.terminalGreen,
+    borderColor: COLORS.accent,
     color: COLORS.terminalGreen,
     fontFamily: 'monospace',
     fontSize: 14,

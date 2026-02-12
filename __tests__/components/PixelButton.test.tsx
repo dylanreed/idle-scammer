@@ -42,7 +42,7 @@ describe('PixelButton', () => {
   });
 
   describe('variants', () => {
-    it('renders primary variant with terminal green', () => {
+    it('renders primary variant with primary color border', () => {
       render(
         <PixelButton onPress={() => {}} variant="primary" testID="pixel-button">
           Primary
@@ -54,10 +54,10 @@ describe('PixelButton', () => {
       const flatStyle = Array.isArray(style)
         ? Object.assign({}, ...style.filter(Boolean))
         : style;
-      expect(flatStyle.borderColor).toBe(COLORS.terminalGreen);
+      expect(flatStyle.borderColor).toBe(COLORS.primary);
     });
 
-    it('renders danger variant with spray paint pink', () => {
+    it('renders danger variant with warning red', () => {
       render(
         <PixelButton onPress={() => {}} variant="danger" testID="pixel-button">
           Danger
@@ -69,7 +69,7 @@ describe('PixelButton', () => {
       const flatStyle = Array.isArray(style)
         ? Object.assign({}, ...style.filter(Boolean))
         : style;
-      expect(flatStyle.borderColor).toBe(COLORS.hotPink);
+      expect(flatStyle.borderColor).toBe(COLORS.warningRed);
     });
 
     it('renders gold variant with gold color', () => {
@@ -99,7 +99,7 @@ describe('PixelButton', () => {
       const flatStyle = Array.isArray(style)
         ? Object.assign({}, ...style.filter(Boolean))
         : style;
-      expect(flatStyle.borderColor).toBe(COLORS.terminalGreen);
+      expect(flatStyle.borderColor).toBe(COLORS.primary);
     });
   });
 

@@ -138,6 +138,33 @@ describe('ResourceIcon', () => {
     });
   });
 
+  describe('per-second rate display', () => {
+    it('does not show rate when perSecond is not provided', () => {
+      render(<ResourceIcon resourceKey="money" value={1000} testID="resource-icon" />);
+      expect(screen.queryByTestId('resource-rate')).toBeNull();
+    });
+
+    it('shows per-second rate when perSecond is provided', () => {
+      render(<ResourceIcon resourceKey="money" value={1000} perSecond={50} testID="resource-icon" />);
+      expect(screen.getByTestId('resource-rate')).toBeTruthy();
+    });
+
+    it('formats the rate with /s suffix', () => {
+      render(<ResourceIcon resourceKey="money" value={1000} perSecond={50} testID="resource-icon" />);
+      expect(screen.getByText('+$50/s')).toBeTruthy();
+    });
+
+    it('formats large rates with number suffixes', () => {
+      render(<ResourceIcon resourceKey="money" value={1000} perSecond={2500} testID="resource-icon" />);
+      expect(screen.getByText('+$2.5K/s')).toBeTruthy();
+    });
+
+    it('does not show rate when perSecond is 0', () => {
+      render(<ResourceIcon resourceKey="money" value={1000} perSecond={0} testID="resource-icon" />);
+      expect(screen.queryByTestId('resource-rate')).toBeNull();
+    });
+  });
+
   describe('all resource types', () => {
     const resourceKeys = ['money', 'heat', 'bots', 'skillPoints', 'crypto', 'trust'] as const;
 

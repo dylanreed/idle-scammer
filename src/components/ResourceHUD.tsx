@@ -38,8 +38,8 @@ const ALWAYS_HIDDEN_RESOURCES: Set<ResourceKey> = new Set([]);
 /**
  * Props for the ResourceHUD component
  */
-/** Minimum trust level required to see the crypto resource */
-const CRYPTO_TRUST_THRESHOLD = 21;
+/** Minimum trust level required to see the crypto resource (Tier 3 access) */
+const CRYPTO_TRUST_THRESHOLD = 150;
 
 export interface ResourceHUDProps {
   /** Current game resources to display */
@@ -48,11 +48,14 @@ export interface ResourceHUDProps {
   /** Maximum heat threshold (100 + Ghost Protocol bonus). Shown as "heat/max" when provided. */
   heatMax?: number;
 
-  /** Whether the player has completed at least one prestige (shows all resources when true) */
-  hasPrestiged?: boolean;
+  /** How many times the player has prestiged (gates which resources are shown) */
+  prestigeCount?: number;
 
   /** Whether to show in compact mode without labels (default: true) */
   compact?: boolean;
+
+  /** Money income per second to display on the money resource icon */
+  moneyPerSecond?: number;
 
   /** Whether to show CRT scanline effect (default: true) */
   showScanlines?: boolean;
@@ -72,7 +75,8 @@ export interface ResourceHUDProps {
 export function ResourceHUD({
   resources,
   heatMax,
-  hasPrestiged = false,
+  prestigeCount = 0,
+  moneyPerSecond,
   compact = true,
   showScanlines = true,
   style,
@@ -80,8 +84,13 @@ export function ResourceHUD({
 }: ResourceHUDProps): React.ReactElement {
   const visibleResources = RESOURCE_ORDER.filter((key) => {
     if (ALWAYS_HIDDEN_RESOURCES.has(key)) return false;
-    if (!hasPrestiged && !PRE_PRESTIGE_RESOURCES.has(key)) return false;
-    // Crypto is only visible once the player has enough trust (Tier 3 access)
+    // Pre-prestige: only money + heat
+    if (prestigeCount < 1 && !PRE_PRESTIGE_RESOURCES.has(key)) return false;
+    // Bots + trust: prestige 1+
+    if ((key === 'bots' || key === 'trust') && prestigeCount < 1) return false;
+    // Skill points: prestige 2+
+    if (key === 'skillPoints' && prestigeCount < 2) return false;
+    // Crypto: trust threshold (Tier 3 access)
     if (key === 'crypto' && resources.trust < CRYPTO_TRUST_THRESHOLD) return false;
     return true;
   });
@@ -104,6 +113,7 @@ export function ResourceHUD({
             resourceKey={resourceKey}
             value={resources[resourceKey]}
             maxValue={resourceKey === 'heat' ? heatMax : undefined}
+            perSecond={resourceKey === 'money' ? moneyPerSecond : undefined}
             showLabel={!compact}
             style={styles.resourceItem}
           />

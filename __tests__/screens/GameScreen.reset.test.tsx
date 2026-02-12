@@ -7,6 +7,8 @@ import { GameScreen } from '../../src/screens/GameScreen';
 import { useGameStore } from '../../src/game/store';
 import { useScamStore } from '../../src/game/scams/scamStore';
 import { useManagerStore } from '../../src/game/managers/managerStore';
+import { useTutorialStore } from '../../src/game/tutorial/tutorialStore';
+import { useOriginStore } from '../../src/game/origin/originStore';
 
 // Mock the assets module to avoid requiring image files
 jest.mock('../../src/game/assets', () => ({
@@ -22,6 +24,7 @@ describe('GameScreen reset button', () => {
     useScamStore.setState(useScamStore.getInitialState());
     useManagerStore.setState(useManagerStore.getInitialState());
     jest.clearAllMocks();
+    useOriginStore.getState().selectOrigin('moms-basement');
   });
 
   afterEach(() => {
@@ -81,6 +84,9 @@ describe('GameScreen reset button', () => {
     expect(resources.heat).toBe(0);
     expect(resources.crypto).toBe(0);
     expect(resources.skillPoints).toBe(0);
+
+    // Prestige count should also reset to 0
+    expect(useTutorialStore.getState().prestigeCount).toBe(0);
   });
 
   it('should reset scam states on confirm', () => {
@@ -122,5 +128,38 @@ describe('GameScreen reset button', () => {
 
     // Should still see START button for Nigerian Prince (always unlocked)
     expect(screen.queryByText('START')).toBeTruthy();
+  });
+
+  it('should show intro modal after full reset so player re-selects origin', () => {
+    render(<GameScreen />);
+    act(() => { jest.advanceTimersByTime(100); });
+
+    // Verify no intro modal before reset (origin was pre-selected in beforeEach)
+    expect(screen.queryByTestId('intro-modal')).toBeNull();
+
+    // Trigger full reset
+    fireEvent.press(screen.getByTestId('reset-btn'));
+    fireEvent.press(screen.getByTestId('reset-confirm-btn'));
+    act(() => { jest.advanceTimersByTime(200); });
+
+    // Origin should be cleared
+    expect(useOriginStore.getState().selectedOrigin).toBeNull();
+
+    // Intro modal should re-appear for origin re-selection
+    expect(screen.getByTestId('intro-modal')).toBeTruthy();
+  });
+
+  it('should clear origin in store after full reset', () => {
+    // Verify origin is set before reset
+    expect(useOriginStore.getState().selectedOrigin).toBe('moms-basement');
+
+    render(<GameScreen />);
+    act(() => { jest.advanceTimersByTime(100); });
+
+    fireEvent.press(screen.getByTestId('reset-btn'));
+    fireEvent.press(screen.getByTestId('reset-confirm-btn'));
+    act(() => { jest.advanceTimersByTime(200); });
+
+    expect(useOriginStore.getState().selectedOrigin).toBeNull();
   });
 });

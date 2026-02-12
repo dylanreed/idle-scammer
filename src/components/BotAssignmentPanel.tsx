@@ -47,21 +47,21 @@ export function BotAssignmentPanel({ testID }: BotAssignmentPanelProps): React.R
   const unlockedScams = ALL_SCAMS.filter((s) => scams[s.id]?.isUnlocked);
 
   return (
-    <CRTFrame testID={testID}>
+    <CRTFrame testID={testID} accentColor={COLORS.accent}>
       {/* Summary */}
-      <TerminalText size="sm" color={COLORS.terminalGreenDim} testID="bot-summary">
+      <TerminalText size="sm" color={COLORS.textSecondary} testID="bot-summary">
         {`Total: ${wholeBots} | Deployed: ${deployed} | Idle: ${idle}`}
       </TerminalText>
 
       {/* Heat reduction info */}
       {idle > 0 && (
-        <TerminalText size="sm" color={COLORS.terminalGreenDim} testID="bot-heat-info">
+        <TerminalText size="sm" color={COLORS.textSecondary} testID="bot-heat-info">
           {`Idle bots reduce heat by ${Math.round(IDLE_BOT_HEAT_REDUCTION * idle * 100)}%`}
         </TerminalText>
       )}
 
       {wholeBots === 0 && (
-        <TerminalText size="sm" color={COLORS.terminalGreenDim}>
+        <TerminalText size="sm" color={COLORS.textSecondary}>
           {'No bots available'}
         </TerminalText>
       )}
@@ -76,14 +76,14 @@ export function BotAssignmentPanel({ testID }: BotAssignmentPanelProps): React.R
 
         return (
           <View key={scamDef.id} style={styles.scamRow} testID={`bot-row-${scamDef.id}`}>
-            <TerminalText size="sm" color={COLORS.terminalGreen} style={styles.scamName}>
+            <TerminalText size="sm" color={COLORS.textSecondary} style={styles.scamName}>
               {scamDef.name}
             </TerminalText>
 
             <View style={styles.assignmentControls}>
               {/* Speed assignment */}
               <View style={styles.roleGroup}>
-                <TerminalText size="sm" color={COLORS.terminalGreenDim}>
+                <TerminalText size="sm" color={COLORS.textSecondary}>
                   {'SPD'}
                 </TerminalText>
                 <PixelButton
@@ -111,7 +111,7 @@ export function BotAssignmentPanel({ testID }: BotAssignmentPanelProps): React.R
 
               {/* Profit assignment */}
               <View style={styles.roleGroup}>
-                <TerminalText size="sm" color={COLORS.terminalGreenDim}>
+                <TerminalText size="sm" color={COLORS.textSecondary}>
                   {'PROFIT'}
                 </TerminalText>
                 <PixelButton
@@ -151,7 +151,7 @@ export function BotAssignmentPanel({ testID }: BotAssignmentPanelProps): React.R
 
             {/* Show bonus percentages if any bots assigned */}
             {(bonuses.speedBonus > 0 || bonuses.profitBonus > 0) && (
-              <TerminalText size="sm" color={COLORS.terminalGreenDim} testID={`bot-bonus-${scamDef.id}`}>
+              <TerminalText size="sm" color={COLORS.textSecondary} testID={`bot-bonus-${scamDef.id}`}>
                 {`SPD +${Math.round(bonuses.speedBonus * 100)}% | PROFIT +${Math.round(bonuses.profitBonus * 100)}%`}
               </TerminalText>
             )}
@@ -166,7 +166,7 @@ const styles = StyleSheet.create({
   scamRow: {
     paddingVertical: SPACING.xs,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.terminalGreenDim + '40',
+    borderBottomColor: COLORS.borderSecondary,
   },
   scamName: {
     marginBottom: SPACING.xs,

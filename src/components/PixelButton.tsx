@@ -11,6 +11,7 @@ import {
   PressableStateCallbackType,
 } from 'react-native';
 import { COLORS, FONTS, FONT_SIZES, SPACING, BORDER_RADIUS } from './theme';
+import { triggerHaptic } from '../utils/haptics';
 
 /**
  * Button variant types that determine the color scheme
@@ -44,9 +45,9 @@ export interface PixelButtonProps {
  * Map variant names to their corresponding border colors
  */
 const VARIANT_COLORS: Record<PixelButtonVariant, string> = {
-  primary: COLORS.terminalGreen,
-  secondary: COLORS.terminalGreenDim,
-  danger: COLORS.hotPink,
+  primary: COLORS.primary,
+  secondary: COLORS.secondary,
+  danger: COLORS.warningRed,
   gold: COLORS.gold,
 };
 
@@ -54,9 +55,9 @@ const VARIANT_COLORS: Record<PixelButtonVariant, string> = {
  * Map variant names to their corresponding text colors
  */
 const VARIANT_TEXT_COLORS: Record<PixelButtonVariant, string> = {
-  primary: COLORS.terminalGreen,
-  secondary: COLORS.terminalGreenDim,
-  danger: COLORS.hotPink,
+  primary: COLORS.textPrimary,
+  secondary: COLORS.textSecondary,
+  danger: COLORS.textPrimary,
   gold: COLORS.gold,
 };
 
@@ -101,10 +102,15 @@ export function PixelButton({
     [borderColor, disabled, style]
   );
 
+  const handlePress = useCallback(() => {
+    triggerHaptic('light');
+    onPress();
+  }, [onPress]);
+
   return (
     <Pressable
       testID={testID}
-      onPress={onPress}
+      onPress={handlePress}
       disabled={disabled}
       style={getButtonStyle}
       accessibilityRole="button"
@@ -148,7 +154,7 @@ const styles = StyleSheet.create({
   },
   disabled: {
     opacity: 0.5,
-    borderColor: COLORS.terminalGreenFaded,
+    borderColor: COLORS.borderSecondary,
   },
   text: {
     fontFamily: FONTS.mono,

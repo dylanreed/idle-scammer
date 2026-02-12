@@ -108,7 +108,7 @@ const styles = StyleSheet.create({
   track: {
     backgroundColor: COLORS.background,
     borderWidth: 1,
-    borderColor: COLORS.terminalGreenDim,
+    borderColor: COLORS.border,
     borderRadius: BORDER_RADIUS.sm,
     height: 20,
     overflow: 'hidden',

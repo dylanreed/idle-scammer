@@ -61,10 +61,10 @@ export function ProjectCard({
   return (
     <View style={styles.card} testID={testID}>
       <View style={styles.header}>
-        <TerminalText size="sm" color={COLORS.terminalGreen}>
+        <TerminalText size="sm" color={COLORS.textPrimary}>
           {name}
         </TerminalText>
-        <TerminalText size="sm" color={COLORS.terminalGreenDim}>
+        <TerminalText size="sm" color={COLORS.textSecondary}>
           {`${project.investedAmount.toFixed(2)} invested`}
         </TerminalText>
       </View>
@@ -89,7 +89,7 @@ export function ProjectCard({
 const styles = StyleSheet.create({
   card: {
     borderWidth: 1,
-    borderColor: COLORS.terminalGreenDim,
+    borderColor: COLORS.borderSecondary,
     padding: SPACING.sm,
     gap: SPACING.xs,
   },

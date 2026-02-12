@@ -42,7 +42,7 @@ export function MarketDisplay({
   return (
     <View style={styles.container} testID={testID}>
       <View style={styles.rateRow}>
-        <TerminalText size="sm" color={COLORS.terminalGreenDim}>
+        <TerminalText size="sm" color={COLORS.textSecondary}>
           {'1 TRUSTCOIN ='}
         </TerminalText>
         <TerminalText size="md" color={COLORS.terminalGreen}>

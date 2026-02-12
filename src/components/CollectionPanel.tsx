@@ -50,14 +50,14 @@ export function CollectionPanel({
   return (
     <View style={styles.container} testID={testID}>
       {collections.length === 0 ? (
-        <TerminalText size="sm" color={COLORS.terminalGreenDim}>
+        <TerminalText size="sm" color={COLORS.textSecondary}>
           {'No collections yet. Create one to start minting!'}
         </TerminalText>
       ) : (
         collections.map((collection) => (
           <View key={collection.id} style={[styles.card, collection.isRugged && styles.ruggedCard]}>
             <View style={styles.header}>
-              <TerminalText size="sm" color={collection.isRugged ? COLORS.warningRed : COLORS.terminalGreen}>
+              <TerminalText size="sm" color={collection.isRugged ? COLORS.warningRed : COLORS.textPrimary}>
                 {collection.name}
               </TerminalText>
               {collection.isRugged && (
@@ -71,12 +71,12 @@ export function CollectionPanel({
               <>
                 <HypeBar hype={collection.hype} />
 
-                <TerminalText size="sm" color={COLORS.terminalGreenDim}>
+                <TerminalText size="sm" color={COLORS.textSecondary}>
                   {`Floor: ${(collection.hype * BASE_FLOOR_PRICE_PER_HYPE).toFixed(4)} $TRUST`}
                 </TerminalText>
 
                 <View style={styles.shillerRow}>
-                  <TerminalText size="sm" color={COLORS.terminalGreenDim}>
+                  <TerminalText size="sm" color={COLORS.textSecondary}>
                     {`Shillers: ${collection.shillers}`}
                   </TerminalText>
                   <View style={styles.shillerButtons}>
@@ -118,7 +118,7 @@ export function CollectionPanel({
             )}
 
             {collection.isRugged && collection.rugPullValue > 0 && (
-              <TerminalText size="sm" color={COLORS.terminalGreenDim}>
+              <TerminalText size="sm" color={COLORS.textSecondary}>
                 {`Drained: ${collection.rugPullValue.toFixed(2)} $TRUST`}
               </TerminalText>
             )}
@@ -135,7 +135,7 @@ const styles = StyleSheet.create({
   },
   card: {
     borderWidth: 1,
-    borderColor: COLORS.terminalGreenDim,
+    borderColor: COLORS.borderSecondary,
     padding: SPACING.sm,
     gap: SPACING.xs,
   },

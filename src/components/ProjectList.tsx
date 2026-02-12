@@ -41,7 +41,7 @@ export function ProjectList({
 
   return (
     <View style={styles.container} testID={testID}>
-      <TerminalText size="sm" color={COLORS.terminalGreen}>
+      <TerminalText size="sm" color={COLORS.textPrimary}>
         {`INVESTMENTS (${activeProjects.length}/${MAX_ACTIVE_PROJECTS})`}
       </TerminalText>
 
@@ -59,7 +59,7 @@ export function ProjectList({
       {/* Available Project Types */}
       {!atCap && (
         <View style={styles.availableSection}>
-          <TerminalText size="sm" color={COLORS.terminalGreenDim}>
+          <TerminalText size="sm" color={COLORS.textSecondary}>
             {'INVEST IN:'}
           </TerminalText>
           {PROJECT_DEFINITIONS.map((def) => {
@@ -69,10 +69,10 @@ export function ProjectList({
             return (
               <View key={def.id} style={styles.investRow}>
                 <View style={styles.investInfo}>
-                  <TerminalText size="sm" color={COLORS.terminalGreen}>
+                  <TerminalText size="sm" color={COLORS.textPrimary}>
                     {def.name}
                   </TerminalText>
-                  <TerminalText size="sm" color={COLORS.terminalGreenDim}>
+                  <TerminalText size="sm" color={COLORS.textSecondary}>
                     {`${def.risk.toUpperCase()} \u2022 ${def.minReturn}x-${def.maxReturn}x \u2022 ${Math.round(def.durationMs / 1000)}s`}
                   </TerminalText>
                 </View>
@@ -121,7 +121,7 @@ const styles = StyleSheet.create({
   },
   investRow: {
     borderWidth: 1,
-    borderColor: COLORS.terminalGreenDim,
+    borderColor: COLORS.borderSecondary,
     padding: SPACING.sm,
     gap: SPACING.xs,
   },
@@ -136,7 +136,7 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     borderWidth: 1,
-    borderColor: COLORS.terminalGreen,
+    borderColor: COLORS.accent,
     color: COLORS.terminalGreen,
     fontFamily: 'monospace',
     fontSize: 12,

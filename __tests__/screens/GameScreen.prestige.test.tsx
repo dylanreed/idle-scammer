@@ -8,6 +8,8 @@ import { useGameStore } from '../../src/game/store';
 import { useScamStore } from '../../src/game/scams/scamStore';
 import { useManagerStore } from '../../src/game/managers/managerStore';
 import { MAX_HEAT } from '../../src/game/prestige/constants';
+import { useTutorialStore } from '../../src/game/tutorial/tutorialStore';
+import { useOriginStore } from '../../src/game/origin/originStore';
 
 // Mock the assets module to avoid requiring image files
 jest.mock('../../src/game/assets', () => ({
@@ -48,7 +50,9 @@ describe('GameScreen prestige integration', () => {
     useGameStore.setState(useGameStore.getInitialState());
     useScamStore.setState(useScamStore.getInitialState());
     useManagerStore.setState(useManagerStore.getInitialState());
+    useTutorialStore.getState().reset();
     jest.clearAllMocks();
+    useOriginStore.getState().selectOrigin('moms-basement');
   });
 
   afterEach(() => {

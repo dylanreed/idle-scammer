@@ -51,6 +51,9 @@ export interface ResourceIconProps {
   /** Whether to show the resource label below the value (default: false) */
   showLabel?: boolean;
 
+  /** Per-second rate to display below the value (e.g. money income per second) */
+  perSecond?: number;
+
   /** Additional styles for the container */
   style?: StyleProp<ViewStyle>;
 
@@ -67,6 +70,7 @@ export function ResourceIcon({
   resourceKey,
   value,
   maxValue,
+  perSecond,
   showLabel = false,
   style,
   testID,
@@ -97,6 +101,11 @@ export function ResourceIcon({
       </Text>
       {showLabel && (
         <Text style={[styles.label, { color }]}>{label}</Text>
+      )}
+      {perSecond != null && perSecond > 0 && (
+        <Text testID="resource-rate" style={styles.rate}>
+          {`+$${formatNumber(perSecond)}/s`}
+        </Text>
       )}
     </View>
   );
@@ -136,5 +145,11 @@ const styles = StyleSheet.create({
     fontSize: 10,
     marginTop: 2,
     opacity: 0.8,
+  },
+  rate: {
+    fontFamily: FONTS.mono,
+    fontSize: 9,
+    color: COLORS.terminalGreenDim,
+    marginTop: 1,
   },
 });

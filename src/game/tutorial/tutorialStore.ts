@@ -9,7 +9,10 @@ import { DEFAULT_TUTORIAL_SAVE_DATA } from './types';
  * Actions available on the tutorial store
  */
 export interface TutorialStoreActions {
-  /** Mark that the player has completed their first prestige */
+  /** Increment prestige count and set hasPrestiged flag */
+  incrementPrestige: () => void;
+
+  /** @deprecated Use incrementPrestige() instead. Kept for backward compatibility. */
   markPrestiged: () => void;
 
   /** Mark a tutorial modal as seen/dismissed */
@@ -33,6 +36,7 @@ export interface TutorialStoreActions {
  */
 export interface TutorialStoreState extends TutorialStoreActions {
   hasPrestiged: boolean;
+  prestigeCount: number;
   seen: string[];
 }
 
@@ -43,10 +47,18 @@ export interface TutorialStoreState extends TutorialStoreActions {
  */
 export const useTutorialStore = create<TutorialStoreState>()((set, get) => ({
   hasPrestiged: false,
+  prestigeCount: 0,
   seen: [],
 
+  incrementPrestige: () => {
+    set((state) => ({
+      prestigeCount: state.prestigeCount + 1,
+      hasPrestiged: true,
+    }));
+  },
+
   markPrestiged: () => {
-    set({ hasPrestiged: true });
+    get().incrementPrestige();
   },
 
   markSeen: (id: string) => {
@@ -63,6 +75,7 @@ export const useTutorialStore = create<TutorialStoreState>()((set, get) => ({
   hydrate: (data: TutorialSaveData) => {
     set({
       hasPrestiged: data.hasPrestiged,
+      prestigeCount: data.prestigeCount ?? (data.hasPrestiged ? 1 : 0),
       seen: [...data.seen],
     });
   },
@@ -70,12 +83,17 @@ export const useTutorialStore = create<TutorialStoreState>()((set, get) => ({
   reset: () => {
     set({
       hasPrestiged: DEFAULT_TUTORIAL_SAVE_DATA.hasPrestiged,
+      prestigeCount: DEFAULT_TUTORIAL_SAVE_DATA.prestigeCount,
       seen: [...DEFAULT_TUTORIAL_SAVE_DATA.seen],
     });
   },
 
   toSaveData: (): TutorialSaveData => {
-    const { hasPrestiged, seen } = get();
-    return { hasPrestiged, seen: [...seen] };
+    const { prestigeCount, seen } = get();
+    return {
+      hasPrestiged: prestigeCount >= 1,
+      prestigeCount,
+      seen: [...seen],
+    };
   },
 }));

@@ -58,7 +58,7 @@ const defaultProps: OpsPanelProps = {
 
 const prestigedProps: OpsPanelProps = {
   ...defaultProps,
-  hasPrestiged: true,
+  prestigeCount: 1,
 };
 
 describe('OpsPanel', () => {
@@ -97,19 +97,19 @@ describe('OpsPanel', () => {
 
   describe('pre-prestige visibility', () => {
     it('hides Bot Network section before first prestige', () => {
-      render(<OpsPanel {...defaultProps} hasPrestiged={false} />);
+      render(<OpsPanel {...defaultProps} prestigeCount={0} />);
       expect(screen.queryByTestId('ops-section-bots')).toBeNull();
       expect(screen.queryByTestId('bot-assignment-panel')).toBeNull();
     });
 
     it('hides Escape Plan before first prestige', () => {
-      render(<OpsPanel {...defaultProps} hasPrestiged={false} />);
+      render(<OpsPanel {...defaultProps} prestigeCount={0} />);
       expect(screen.queryByTestId('prestige-section')).toBeNull();
       expect(screen.queryByTestId('flee-button')).toBeNull();
     });
 
     it('still shows Managers section before first prestige', () => {
-      render(<OpsPanel {...defaultProps} hasPrestiged={false} />);
+      render(<OpsPanel {...defaultProps} prestigeCount={0} />);
       expect(screen.getByTestId('ops-section-managers')).toBeTruthy();
       expect(screen.getByTestId('manager-panel')).toBeTruthy();
     });

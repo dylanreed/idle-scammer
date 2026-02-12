@@ -13,6 +13,8 @@ import type { TutorialSaveData } from '../tutorial/types';
 import { DEFAULT_TUTORIAL_SAVE_DATA } from '../tutorial/types';
 import type { CryptoSaveData } from '../crypto/types';
 import { DEFAULT_CRYPTO_SAVE_DATA } from '../crypto/types';
+import type { OriginSaveData } from '../origin/types';
+import { DEFAULT_ORIGIN_SAVE_DATA } from '../origin/types';
 import type { ScamTimer } from '../engine/types';
 import { ALL_MANAGERS } from '../managers/definitions';
 import { ALL_SCAMS } from '../scams/definitions';
@@ -50,7 +52,8 @@ export function createSaveData(
   skills: SkillSaveData = EMPTY_SKILL_SAVE_DATA,
   ascensions: AscensionMap = {},
   tutorials: TutorialSaveData = DEFAULT_TUTORIAL_SAVE_DATA,
-  crypto: CryptoSaveData = DEFAULT_CRYPTO_SAVE_DATA
+  crypto: CryptoSaveData = DEFAULT_CRYPTO_SAVE_DATA,
+  origin: OriginSaveData = DEFAULT_ORIGIN_SAVE_DATA
 ): SaveData {
   return {
     version: SAVE_VERSION,
@@ -64,6 +67,7 @@ export function createSaveData(
     ascensions,
     tutorials,
     crypto,
+    origin,
   };
 }
 
@@ -84,6 +88,7 @@ export function applySaveData(saveData: SaveData): {
   ascensions: AscensionMap;
   tutorials: TutorialSaveData;
   crypto: CryptoSaveData;
+  origin: OriginSaveData;
 } {
   return {
     resources: saveData.resources,
@@ -95,6 +100,7 @@ export function applySaveData(saveData: SaveData): {
     ascensions: saveData.ascensions ?? {},
     tutorials: saveData.tutorials ?? DEFAULT_TUTORIAL_SAVE_DATA,
     crypto: saveData.crypto ?? DEFAULT_CRYPTO_SAVE_DATA,
+    origin: saveData.origin ?? DEFAULT_ORIGIN_SAVE_DATA,
   };
 }
 
@@ -200,6 +206,28 @@ export function migrateIfNeeded(saveData: SaveData): SaveData {
       ...migrated,
       version: 10,
       crypto: (migrated as SaveData).crypto ?? DEFAULT_CRYPTO_SAVE_DATA,
+    };
+  }
+
+  // Migration from version 10 to version 11: add origin field
+  if (migrated.version < 11) {
+    migrated = {
+      ...migrated,
+      version: 11,
+      origin: (migrated as SaveData).origin ?? DEFAULT_ORIGIN_SAVE_DATA,
+    };
+  }
+
+  // Migration from version 11 to version 12: add prestigeCount to tutorials
+  if (migrated.version < 12) {
+    const tutorials = (migrated as SaveData).tutorials ?? DEFAULT_TUTORIAL_SAVE_DATA;
+    migrated = {
+      ...migrated,
+      version: 12,
+      tutorials: {
+        ...tutorials,
+        prestigeCount: (tutorials as TutorialSaveData).prestigeCount ?? (tutorials.hasPrestiged ? 1 : 0),
+      },
     };
   }
 

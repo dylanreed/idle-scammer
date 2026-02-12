@@ -8,6 +8,7 @@ import { useGameStore } from '../../src/game/store';
 import { useScamStore } from '../../src/game/scams/scamStore';
 import { useManagerStore } from '../../src/game/managers/managerStore';
 import { useEmployeeStore } from '../../src/game/employees/employeeStore';
+import { useOriginStore } from '../../src/game/origin/originStore';
 
 // Mock the assets module to avoid requiring image files
 jest.mock('../../src/game/assets', () => ({
@@ -24,6 +25,7 @@ describe('GameScreen rebalance integration', () => {
     useManagerStore.setState(useManagerStore.getInitialState());
     useEmployeeStore.setState(useEmployeeStore.getInitialState());
     jest.clearAllMocks();
+    useOriginStore.getState().selectOrigin('moms-basement');
   });
 
   afterEach(() => {

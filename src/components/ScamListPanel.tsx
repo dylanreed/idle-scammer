@@ -148,7 +148,7 @@ export function ScamListPanel({
               <Pressable testID={`tier-header-${tier}`} disabled>
                 <TerminalText
                   size="md"
-                  color={COLORS.terminalGreenDim}
+                  color={COLORS.textSecondary}
                   style={styles.sectionTitle}
                 >
                   {`🔒 TIER ${tier}: ${TIER_NAMES[tier]}`}
@@ -190,7 +190,7 @@ export function ScamListPanel({
             >
               <TerminalText
                 size="md"
-                color={COLORS.terminalGreenDim}
+                color={COLORS.textSecondary}
                 style={styles.sectionTitle}
               >
                 {`${chevron} TIER ${tier}: ${TIER_NAMES[tier]}`}
@@ -198,7 +198,7 @@ export function ScamListPanel({
               {!isCollapsed && (
                 <TerminalText
                   size="sm"
-                  color={COLORS.terminalGreenFaded}
+                  color={COLORS.textDim}
                   style={styles.classifiedStamp}
                 >
                   {'// CLASSIFIED'}

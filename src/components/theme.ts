@@ -2,24 +2,38 @@
 // ABOUTME: Defines colors, fonts, spacing, and other visual constants used throughout the app
 
 /**
- * Color palette: "Fluorescent Grime" — spreadsheet aesthetics + graffiti
- * in a shady internet cafe. CRT phosphor greens, spray paint pinks,
- * and highlighter yellows on green-tinted near-black backgrounds.
+ * Color palette: Pixel art game UI — dark navy backgrounds, warm accent colors,
+ * with legacy terminal green kept for money/success indicators.
  */
 export const COLORS = {
-  /** Primary dark background - green-tinted near-black */
-  background: '#0a0e0a',
+  /** Primary dark background - near-black so cards pop */
+  background: '#0d1117',
 
-  /** Secondary background - worn desk surface */
-  backgroundSecondary: '#141a14',
+  /** Secondary background - panel backgrounds */
+  backgroundSecondary: '#16213e',
 
-  /** Tertiary background - spreadsheet gridline tone */
-  backgroundTertiary: '#2a3a2a',
+  /** Tertiary background - accent panels */
+  backgroundTertiary: '#0f3460',
 
-  /** Primary terminal green - warm CRT phosphor */
+  /** Primary action color - warm red-pink */
+  primary: '#e94560',
+
+  /** Secondary accent - purple */
+  secondary: '#533483',
+
+  /** Info/highlight accent - cyan */
+  accent: '#00b4d8',
+
+  /** Main text color - near-white */
+  textPrimary: '#edf2f4',
+
+  /** Dimmed text for secondary info */
+  textSecondary: '#8d99ae',
+
+  /** Terminal green - kept for money/success indicators */
   terminalGreen: '#00ff41',
 
-  /** Dimmed terminal green for secondary text */
+  /** Dimmed terminal green for secondary money text */
   terminalGreenDim: '#00b33c',
 
   /** Very dim green for disabled/inactive states */
@@ -37,20 +51,23 @@ export const COLORS = {
   /** Trust resource blue / cyan accent */
   trustBlue: '#41ffff',
 
-  /** Default text color (CRT phosphor green) */
-  text: '#00ff41',
+  /** Default text color (near-white for readability) */
+  text: '#edf2f4',
 
   /** Dim text for secondary information */
-  textDim: '#008c2e',
+  textDim: '#8d99ae',
 
-  /** Border color for CRT frames */
-  border: '#00ff41',
+  /** Border color for panels */
+  border: '#0f3460',
 
   /** Subtle border for inner elements */
-  borderDim: '#004d2a',
+  borderDim: '#16213e',
 
-  /** Glow effect color (CRT phosphor green with alpha applied via shadow) */
-  glow: '#00ff41',
+  /** Secondary border for inner dividers within panels */
+  borderSecondary: '#1a1a2e',
+
+  /** Glow effect color (subtle dark shadow instead of green phosphor) */
+  glow: '#000000',
 } as const;
 
 /**
@@ -99,6 +116,9 @@ export const SPACING = {
 
   /** Extra large spacing - 32px */
   xl: 32,
+
+  /** Standardized gap between game cards */
+  cardGap: 20,
 } as const;
 
 /**
@@ -120,34 +140,34 @@ export const BORDER_RADIUS = {
 } as const;
 
 /**
- * Shadow/glow effects for that CRT phosphor glow.
- * These are configured for React Native's shadow properties.
+ * Shadow effects for pixel art panels.
+ * Subtle dark drop shadows instead of green phosphor glow.
  */
 export const SHADOWS = {
-  /** Subtle green glow for borders */
+  /** Subtle shadow for panels */
   glowSm: {
-    shadowColor: COLORS.glow,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.5,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
     shadowRadius: 4,
     elevation: 4,
   },
 
-  /** Medium green glow for active elements */
+  /** Medium shadow for active/elevated elements */
   glowMd: {
-    shadowColor: COLORS.glow,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.7,
-    shadowRadius: 8,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.4,
+    shadowRadius: 6,
     elevation: 8,
   },
 
-  /** Strong green glow for focused/highlighted elements */
+  /** Strong shadow for modal overlays and focused elements */
   glowLg: {
-    shadowColor: COLORS.glow,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.9,
-    shadowRadius: 16,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.5,
+    shadowRadius: 10,
     elevation: 16,
   },
 } as const;

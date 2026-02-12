@@ -37,7 +37,7 @@ export function TutorialModal({
   return (
     <View style={styles.overlay} testID={testID ?? 'tutorial-modal'}>
       <CRTFrame style={styles.content}>
-        <TerminalText size="lg" color={COLORS.terminalGreen} animate>
+        <TerminalText size="lg" color={COLORS.textPrimary} animate>
           {title}
         </TerminalText>
 
@@ -46,7 +46,7 @@ export function TutorialModal({
             <TerminalText
               key={index}
               size="sm"
-              color={COLORS.terminalGreenDim}
+              color={COLORS.textSecondary}
               style={styles.paragraph}
             >
               {paragraph}

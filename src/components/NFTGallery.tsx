@@ -40,11 +40,11 @@ export function NFTGallery({
 }: NFTGalleryProps): React.ReactElement {
   return (
     <View style={styles.container} testID={testID}>
-      <TerminalText size="sm" color={COLORS.terminalGreen}>
+      <TerminalText size="sm" color={COLORS.textPrimary}>
         {`MY NFTs (${ownedNFTs.length})`}
       </TerminalText>
       {ownedNFTs.length === 0 ? (
-        <TerminalText size="sm" color={COLORS.terminalGreenDim}>
+        <TerminalText size="sm" color={COLORS.textSecondary}>
           {'No NFTs yet. Mint some in a collection!'}
         </TerminalText>
       ) : (
@@ -61,7 +61,7 @@ export function NFTGallery({
                   <TerminalText size="sm" color={rarityColor}>
                     {`[${nft.rarity.toUpperCase()}]`}
                   </TerminalText>
-                  <TerminalText size="sm" color={COLORS.terminalGreenDim}>
+                  <TerminalText size="sm" color={COLORS.textSecondary}>
                     {collection?.name ?? 'Unknown'}
                   </TerminalText>
                 </View>
@@ -99,7 +99,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: SPACING.xs,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.terminalGreenDim,
+    borderBottomColor: COLORS.borderSecondary,
   },
   nftInfo: {
     flexDirection: 'row',

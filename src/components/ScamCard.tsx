@@ -234,9 +234,6 @@ export function ScamCard({
         style={styles.header}
         testID={testID ? `${testID}-header` : undefined}
       >
-        <TerminalText size="sm" color={COLORS.textDim} style={styles.chevron}>
-          {isCollapsed ? '▶' : '▼'}
-        </TerminalText>
         {scamIcon && (
           <Image
             source={scamIcon}
@@ -245,7 +242,7 @@ export function ScamCard({
           />
         )}
         <TerminalText size="lg" style={styles.name}>
-          {scamDefinition.name}
+          {`${isCollapsed ? '▶' : '▼'} ${scamDefinition.name}`}
         </TerminalText>
         {status !== 'locked' && (
           <TerminalText size="sm" color={COLORS.textSecondary}>
@@ -444,9 +441,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: SPACING.xs,
-  },
-  chevron: {
-    marginRight: SPACING.xs,
   },
   scamIcon: {
     width: 48,

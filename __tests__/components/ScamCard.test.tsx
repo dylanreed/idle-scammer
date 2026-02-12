@@ -75,7 +75,7 @@ describe('ScamCard', () => {
   describe('basic rendering', () => {
     it('should render scam name', () => {
       render(<ScamCard {...createDefaultProps()} />);
-      expect(screen.getByText('Test Scam')).toBeTruthy();
+      expect(screen.getByText('▼ Test Scam')).toBeTruthy();
     });
 
     it('should render scam description', () => {

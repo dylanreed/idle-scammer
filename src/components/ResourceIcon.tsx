@@ -14,7 +14,6 @@ import { getResourceIcon } from '../game/assets';
  */
 const RESOURCE_COLORS: Record<ResourceKey, string> = {
   money: COLORS.gold,
-  reputation: COLORS.hotPink,
   heat: COLORS.warningRed,
   bots: COLORS.terminalGreen,
   skillPoints: COLORS.trustBlue,
@@ -28,7 +27,6 @@ const RESOURCE_COLORS: Record<ResourceKey, string> = {
  */
 const RESOURCE_LABELS: Record<ResourceKey, string> = {
   money: 'MONEY',
-  reputation: 'REP',
   heat: 'HEAT',
   bots: 'BOTS',
   skillPoints: 'SP',

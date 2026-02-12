@@ -31,7 +31,7 @@ jest.mock('../../src/game/bots/botStore', () => ({
 jest.mock('../../src/game/store', () => ({
   useGameStore: jest.fn((selector) => {
     const state = {
-      resources: { bots: 5, money: 1000, heat: 0, reputation: 0, skillPoints: 0, crypto: 0, trust: 1, snitchCount: 0 },
+      resources: { bots: 5, money: 1000, heat: 0, skillPoints: 0, crypto: 0, trust: 1, snitchCount: 0 },
     };
     return selector(state);
   }),
@@ -110,7 +110,7 @@ describe('BotAssignmentPanel', () => {
 
     (useGameStore as jest.Mock).mockImplementation((selector: Function) => {
       const state = {
-        resources: { bots: 5, money: 1000, heat: 0, reputation: 0, skillPoints: 0, crypto: 0, trust: 1, snitchCount: 0 },
+        resources: { bots: 5, money: 1000, heat: 0, skillPoints: 0, crypto: 0, trust: 1, snitchCount: 0 },
       };
       return selector(state);
     });
@@ -412,7 +412,7 @@ describe('BotAssignmentPanel', () => {
     it('shows "No bots available" message when total bots is 0', () => {
       (useGameStore as jest.Mock).mockImplementation((selector: Function) => {
         const state = {
-          resources: { bots: 0, money: 1000, heat: 0, reputation: 0, skillPoints: 0, crypto: 0, trust: 1, snitchCount: 0 },
+          resources: { bots: 0, money: 1000, heat: 0, skillPoints: 0, crypto: 0, trust: 1, snitchCount: 0 },
         };
         return selector(state);
       });

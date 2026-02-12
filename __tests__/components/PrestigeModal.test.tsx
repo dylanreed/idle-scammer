@@ -11,7 +11,6 @@ import { calculateStartingSkillPoints } from '../../src/game/prestige/calculatio
 
 const mockResources: GameResources = {
   money: 50000,
-  reputation: 100,
   heat: 100,
   bots: 25,
   skillPoints: 5,
@@ -34,7 +33,6 @@ const snitchResult: PrestigeResult = {
   bonuses: [
     { type: 'money', amount: 5000 },
     { type: 'bots', amount: 2 },
-    { type: 'reputation', amount: 10 },
     { type: 'crypto', amount: 0.35 },
     { type: 'skill-points', amount: 0 },
   ],
@@ -109,7 +107,7 @@ describe('PrestigeModal', () => {
 
     it('should display current resource summary', () => {
       render(<PrestigeModal {...createDefaultProps()} />);
-      // Should show current money, bots, reputation, crypto, trust
+      // Should show current money, bots, crypto, trust
       expect(screen.getByTestId('prestige-resource-summary')).toBeTruthy();
     });
 

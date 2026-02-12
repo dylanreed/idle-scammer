@@ -101,7 +101,6 @@ describe('Engine Types', () => {
         elapsedMs: 3600000, // 1 hour
         earnings: {
           money: 1000,
-          reputation: 50,
           heat: 10,
           bots: 100,
           skillPoints: 5,
@@ -120,7 +119,6 @@ describe('Engine Types', () => {
         elapsedMs: 0,
         earnings: {
           money: 0,
-          reputation: 0,
           heat: 0,
           bots: 0,
           skillPoints: 0,
@@ -140,7 +138,6 @@ describe('Engine Types', () => {
         elapsedMs: 28800000, // 8 hours max
         earnings: {
           money: 50000,
-          reputation: 200,
           heat: 50,
           bots: 5000,
           skillPoints: 20,

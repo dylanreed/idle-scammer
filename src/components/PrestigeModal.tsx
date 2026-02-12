@@ -33,7 +33,6 @@ export interface PrestigeModalProps {
 const BONUS_TYPE_LABELS: Record<string, string> = {
   money: 'Money',
   bots: 'Bots',
-  reputation: 'Reputation',
   crypto: 'Crypto',
   'skill-points': 'Skill Points',
 };
@@ -93,9 +92,6 @@ function ChoicePhase({
         </TerminalText>
         <TerminalText size="sm" color={COLORS.terminalGreenDim}>
           {`Bots: ${formatNumber(resources.bots)}`}
-        </TerminalText>
-        <TerminalText size="sm" color={COLORS.terminalGreenDim}>
-          {`Reputation: ${formatNumber(resources.reputation)}`}
         </TerminalText>
         <TerminalText size="sm" color={COLORS.terminalGreenDim}>
           {`Crypto: ${formatNumber(resources.crypto)}`}

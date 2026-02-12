@@ -61,7 +61,6 @@ describe('GameScreen reset button', () => {
     useGameStore.getState().addMoney(50000);
     useGameStore.getState().addTrust(20);
     useGameStore.getState().addBots(100);
-    useGameStore.getState().addReputation(50);
     useGameStore.getState().addHeat(30);
     useGameStore.getState().addCrypto(5);
     useGameStore.getState().addSkillPoints(10);
@@ -79,7 +78,6 @@ describe('GameScreen reset button', () => {
     expect(resources.money).toBe(0);
     expect(resources.trust).toBe(1);
     expect(resources.bots).toBe(0);
-    expect(resources.reputation).toBe(0);
     expect(resources.heat).toBe(0);
     expect(resources.crypto).toBe(0);
     expect(resources.skillPoints).toBe(0);

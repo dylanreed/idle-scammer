@@ -280,7 +280,6 @@ describe('Game Loop', () => {
 
       // Should have all earning types
       expect(progress.earnings).toHaveProperty('money');
-      expect(progress.earnings).toHaveProperty('reputation');
       expect(progress.earnings).toHaveProperty('heat');
       expect(progress.earnings).toHaveProperty('bots');
       expect(progress.earnings).toHaveProperty('skillPoints');

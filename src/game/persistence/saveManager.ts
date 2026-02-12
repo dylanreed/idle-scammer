@@ -177,6 +177,17 @@ export function migrateIfNeeded(saveData: SaveData): SaveData {
     };
   }
 
+  // Migration from version 8 to version 9: remove reputation resource
+  if (migrated.version < 9) {
+    const resources = { ...migrated.resources } as Record<string, unknown>;
+    delete resources.reputation;
+    migrated = {
+      ...migrated,
+      version: 9,
+      resources: resources as GameResources,
+    };
+  }
+
   return migrated;
 }
 

@@ -96,16 +96,6 @@ describe('Prestige Types', () => {
       expect(bonus.amount).toBe(100);
     });
 
-    it('should support reputation bonus type', () => {
-      const bonus: PrestigeBonus = {
-        type: 'reputation',
-        amount: 25,
-      };
-
-      expect(bonus.type).toBe('reputation');
-      expect(bonus.amount).toBe(25);
-    });
-
     it('should support crypto bonus type', () => {
       const bonus: PrestigeBonus = {
         type: 'crypto',
@@ -132,14 +122,12 @@ describe('Prestige Types', () => {
       const validTypes: PrestigeBonusType[] = [
         'money',
         'bots',
-        'reputation',
         'crypto',
         'skill-points',
       ];
 
       expect(validTypes).toContain('money');
       expect(validTypes).toContain('bots');
-      expect(validTypes).toContain('reputation');
       expect(validTypes).toContain('crypto');
       expect(validTypes).toContain('skill-points');
     });

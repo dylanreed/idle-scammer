@@ -14,10 +14,10 @@ export const MAX_HEAT = 100;
  * Heat per completion scales with log10(baseCost), so cheap scams
  * barely register while expensive scams attract serious attention.
  */
-export const MIN_HEAT_PER_COMPLETION = 0.005;
-export const MAX_HEAT_PER_COMPLETION = 0.5;
+export const MIN_HEAT_PER_COMPLETION = 0.3;
+export const MAX_HEAT_PER_COMPLETION = 2.0;
 export const MIN_HEAT_LOG_COST = 1;  // log10(10) - cheapest scam
-export const MAX_HEAT_LOG_COST = 36; // log10(~10^36) - most expensive scam with ratio 5
+export const MAX_HEAT_LOG_COST = 12; // log10(~10^12) - covers actual game range ($10 to $1T)
 
 /**
  * Tier discount multipliers for heat generation.
@@ -84,7 +84,7 @@ export const SNITCH_EMPLOYEE_COST_PENALTY = 0.01;
 
 /**
  * Percentage of resources kept when snitching.
- * The feds give you a cut, but at what cost to your reputation?
+ * The feds give you a cut, but at what cost to your trust?
  */
 export const SNITCH_RESOURCE_KEEP_PERCENT = 0.1;
 

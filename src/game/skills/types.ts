@@ -114,8 +114,8 @@ export interface SkillBonuses {
   /** Recruitment Drive: fraction to reduce employee cost (e.g., 0.40 = 40% cheaper) */
   employeeCostDiscount: number;
 
-  /** Hype Machine: fraction to increase reputation gain (e.g., 0.75 = 75% more rep) */
-  reputationBonus: number;
+  /** Hype Machine: fraction to increase trust gain from clean escapes (e.g., 0.75 = 75% more trust) */
+  trustGainBonus: number;
 
   /** Creative Accounting: fraction to increase money from scams (e.g., 0.45 = 45% more) */
   moneyBonus: number;

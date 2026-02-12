@@ -126,7 +126,6 @@ export function calculateOfflineProgress(
 
   const earnings: OfflineEarnings = {
     money: 0,
-    reputation: 0,
     heat: 0,
     bots: 0,
     skillPoints: 0,
@@ -155,8 +154,6 @@ export function calculateOfflineProgress(
 
           if (scamDef.resourceType === 'money') {
             earnings.money += totalReward;
-          } else if (scamDef.resourceType === 'reputation') {
-            earnings.reputation += totalReward;
           } else if (scamDef.resourceType === 'crypto') {
             earnings.crypto += totalReward;
           }

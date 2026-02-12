@@ -76,16 +76,14 @@ export function getManagerPortrait(managerId: string): ImageSourcePropType | und
  * - bots: bots (cute robot face)
  * - trust: trust (golden handshake)
  * - crypto: crypto (gold coin)
- * - reputation: purple_brain (sparkly brain)
- * - skillPoints: purple_brain (reused - skills = brainpower)
- * - heat: undefined (no icon yet - uses fallback)
+ * - skillPoints: purple_brain (skills = brainpower)
+ * - heat: fire (police attention)
  */
 export const RESOURCE_ICONS: Partial<Record<ResourceKey, ImageSourcePropType>> = {
   money: require('../../../assets/ui/cash.png'),
   bots: require('../../../assets/ui/bots.png'),
   trust: require('../../../assets/ui/trust.png'),
   crypto: require('../../../assets/ui/crypto.png'),
-  reputation: require('../../../assets/ui/purple_brain.png'),
   skillPoints: require('../../../assets/ui/purple_brain.png'),
   heat: require('../../../assets/ui/fire.png'),
 };

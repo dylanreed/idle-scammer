@@ -97,9 +97,6 @@ export function GameProvider({ children }: GameProviderProps): React.ReactElemen
             if (progress.earnings.heat > 0) {
               useGameStore.getState().addHeat(progress.earnings.heat);
             }
-            if (progress.earnings.reputation > 0) {
-              useGameStore.getState().addReputation(progress.earnings.reputation);
-            }
             if (progress.earnings.crypto > 0) {
               useGameStore.getState().addCrypto(progress.earnings.crypto);
             }

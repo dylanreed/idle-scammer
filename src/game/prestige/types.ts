@@ -21,7 +21,6 @@ export interface PerformanceMetrics {
 export type PrestigeBonusType =
   | 'money'
   | 'bots'
-  | 'reputation'
   | 'crypto'
   | 'skill-points';
 

@@ -14,7 +14,6 @@ import type { GameResources, ResourceKey } from '../game/types';
  */
 const RESOURCE_ORDER: ResourceKey[] = [
   'money',
-  'reputation',
   'heat',
   'bots',
   'skillPoints',
@@ -28,7 +27,6 @@ const RESOURCE_ORDER: ResourceKey[] = [
  */
 const PRE_PRESTIGE_RESOURCES: Set<ResourceKey> = new Set([
   'money',
-  'reputation',
   'heat',
 ]);
 

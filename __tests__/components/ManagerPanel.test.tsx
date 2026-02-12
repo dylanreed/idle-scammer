@@ -74,7 +74,6 @@ jest.mock('../../src/game/scams/tier5', () => ({
 function createResources(overrides: Partial<GameResources> = {}): GameResources {
   return {
     money: 1000,
-    reputation: 0,
     heat: 0,
     bots: 0,
     skillPoints: 0,

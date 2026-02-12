@@ -10,8 +10,8 @@ import {
 
 describe('Persistence Types', () => {
   describe('constants', () => {
-    it('should export SAVE_VERSION at 8', () => {
-      expect(SAVE_VERSION).toBe(8);
+    it('should export SAVE_VERSION at 9', () => {
+      expect(SAVE_VERSION).toBe(9);
     });
 
     it('should export correct STORAGE_KEY', () => {
@@ -30,7 +30,6 @@ describe('Persistence Types', () => {
         savedAt: Date.now(),
         resources: {
           money: 100,
-          reputation: 10,
           heat: 5,
           bots: 50,
           skillPoints: 3,
@@ -85,7 +84,6 @@ describe('Persistence Types', () => {
         savedAt: 1234567890,
         resources: {
           money: 0,
-          reputation: 0,
           heat: 0,
           bots: 0,
           skillPoints: 0,

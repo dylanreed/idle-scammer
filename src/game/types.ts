@@ -9,9 +9,6 @@ export interface GameResources {
   /** Primary currency - buy upgrades, employees, managers */
   money: number;
 
-  /** Unlock new scam types and tiers */
-  reputation: number;
-
   /** Police attention - triggers prestige at max */
   heat: number;
 
@@ -54,9 +51,6 @@ export type AscensionMap = Record<string, number>;
 export interface GameActions {
   /** Add (or subtract with negative) money */
   addMoney: (amount: number) => void;
-
-  /** Add (or subtract with negative) reputation */
-  addReputation: (amount: number) => void;
 
   /** Add (or subtract with negative) heat */
   addHeat: (amount: number) => void;

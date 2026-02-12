@@ -43,7 +43,6 @@ export function fullReset(): void {
   // Hydrate game resources to fresh initial state (trust = 1, everything else = 0)
   useGameStore.getState().hydrate({
     money: 0,
-    reputation: 0,
     heat: 0,
     bots: 0,
     skillPoints: 0,
@@ -90,9 +89,6 @@ function applySnitchBonuses(bonuses: PrestigeBonus[]): void {
         break;
       case 'bots':
         gameStore.addBots(bonus.amount);
-        break;
-      case 'reputation':
-        gameStore.addReputation(bonus.amount);
         break;
       case 'crypto':
         gameStore.addCrypto(bonus.amount);
@@ -144,7 +140,8 @@ export function executePrestige(choice: 'clean-escape' | 'snitch'): PrestigeResu
   let result: PrestigeResult;
 
   if (choice === 'clean-escape') {
-    result = calculateCleanEscapeResult(currentTrust, metrics);
+    const trustGainBonus = useSkillStore.getState().getSkillBonuses().trustGainBonus;
+    result = calculateCleanEscapeResult(currentTrust, metrics, trustGainBonus);
 
     // Reset all stores with trust gain modifier
     useGameStore.getState().prestigeReset(result.newTrust - currentTrust);

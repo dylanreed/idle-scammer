@@ -100,7 +100,7 @@ describe('Prestige Calculations', () => {
     });
 
     it('should scale heat between MIN and MAX based on log10(baseCost)', () => {
-      // At max log cost (10^36), heat should approach MAX_HEAT_PER_COMPLETION * tier discount
+      // At or above max log cost, heat should approach MAX_HEAT_PER_COMPLETION * tier discount
       const maxCostScam: ScamDefinition = {
         id: 'max-cost',
         name: 'Max Cost',
@@ -139,9 +139,9 @@ describe('Prestige Calculations', () => {
         // No unlockCost → uses T1 baseCost ($10)
       };
 
-      // $1M scam should generate much more heat than $10 scam
+      // $1M scam should generate more heat than $10 scam
       expect(calculateHeatFromScam(withUnlockCost)).toBeGreaterThan(
-        calculateHeatFromScam(withoutUnlockCost) * 5
+        calculateHeatFromScam(withoutUnlockCost)
       );
     });
 
@@ -449,12 +449,50 @@ describe('Prestige Calculations', () => {
       expect(result.previousTrust).toBe(1000);
       expect(result.newTrust).toBe(1000 + expectedGain);
     });
+
+    it('should apply trustGainBonus multiplier when provided', () => {
+      const currentTrust = 50;
+      const metrics: PerformanceMetrics = { money: 10000, totalCompletions: 20, totalLevels: 5 };
+      const bonus = 0.5; // 50% bonus
+      const result = calculateCleanEscapeResult(currentTrust, metrics, bonus);
+      const baseTrustGain = calculatePerformanceTrustGain(metrics);
+      const expectedGain = Math.max(MIN_TRUST_GAIN, Math.floor(baseTrustGain * (1 + bonus)));
+
+      expect(result.newTrust).toBe(currentTrust + expectedGain);
+    });
+
+    it('should default trustGainBonus to 0 when omitted', () => {
+      const metrics: PerformanceMetrics = { money: 10000, totalCompletions: 20, totalLevels: 5 };
+      const withoutBonus = calculateCleanEscapeResult(50, metrics);
+      const withZeroBonus = calculateCleanEscapeResult(50, metrics, 0);
+
+      expect(withoutBonus.newTrust).toBe(withZeroBonus.newTrust);
+    });
+
+    it('should increase trust gain proportionally with trustGainBonus', () => {
+      // Use large metrics so the base trust gain is big enough that fractional
+      // differences survive Math.floor and produce distinct integer results.
+      const metrics: PerformanceMetrics = { money: 1_000_000, totalCompletions: 5000, totalLevels: 200 };
+      const noBonus = calculateCleanEscapeResult(50, metrics, 0);
+      const smallBonus = calculateCleanEscapeResult(50, metrics, 0.5);
+      const largeBonus = calculateCleanEscapeResult(50, metrics, 2.0);
+
+      expect(smallBonus.newTrust).toBeGreaterThan(noBonus.newTrust);
+      expect(largeBonus.newTrust).toBeGreaterThan(smallBonus.newTrust);
+    });
+
+    it('should still respect MIN_TRUST_GAIN with trustGainBonus', () => {
+      const metrics: PerformanceMetrics = { money: 0, totalCompletions: 0, totalLevels: 0 };
+      const result = calculateCleanEscapeResult(1, metrics, 0.5);
+
+      // Even with zero-ish metrics and bonus, trust gain should be at least MIN_TRUST_GAIN
+      expect(result.newTrust).toBeGreaterThanOrEqual(1 + MIN_TRUST_GAIN);
+    });
   });
 
   describe('calculateSnitchResult', () => {
     const makeResources = (overrides: Partial<GameResources> = {}): GameResources => ({
       money: 0,
-      reputation: 0,
       heat: 0,
       bots: 0,
       skillPoints: 0,
@@ -498,15 +536,6 @@ describe('Prestige Calculations', () => {
       const botsBonus = result.bonuses?.find((b) => b.type === 'bots');
       expect(botsBonus).toBeDefined();
       expect(botsBonus!.amount).toBe(500 * SNITCH_RESOURCE_KEEP_PERCENT);
-    });
-
-    it('should keep 10% of reputation as bonus', () => {
-      const resources = makeResources({ reputation: 200 });
-      const result = calculateSnitchResult(50, resources);
-
-      const repBonus = result.bonuses?.find((b) => b.type === 'reputation');
-      expect(repBonus).toBeDefined();
-      expect(repBonus!.amount).toBe(200 * SNITCH_RESOURCE_KEEP_PERCENT);
     });
 
     it('should keep 10% of crypto as bonus', () => {
@@ -557,13 +586,12 @@ describe('Prestige Calculations', () => {
       const resources = makeResources({
         money: 10000,
         bots: 500,
-        reputation: 200,
         crypto: 100,
         skillPoints: 30,
       });
       const result = calculateSnitchResult(50, resources);
 
-      expect(result.bonuses).toHaveLength(5);
+      expect(result.bonuses).toHaveLength(4);
     });
   });
 

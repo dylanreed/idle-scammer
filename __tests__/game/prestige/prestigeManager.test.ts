@@ -33,7 +33,6 @@ describe('Prestige Manager', () => {
     useGameStore.setState({
       resources: {
         money: 10000,
-        reputation: 500,
         heat: 100,
         bots: 5000,
         skillPoints: 50,
@@ -99,7 +98,6 @@ describe('Prestige Manager', () => {
       const resources = useGameStore.getState().resources;
       const newTrust = 75 + expectedTrustGain;
       expect(resources.money).toBe(STARTING_MONEY);
-      expect(resources.reputation).toBe(0);
       expect(resources.heat).toBe(0);
       // Bots persist across prestige
       expect(resources.bots).toBe(5000);
@@ -195,8 +193,6 @@ describe('Prestige Manager', () => {
       expect(resources.money).toBe(STARTING_MONEY + 1000);
       // Bots persist across prestige (5000) + snitch bonus (5000 * 0.1 = 500)
       expect(resources.bots).toBe(5000 + 500);
-      // Reputation: 500 * 0.1 = 50
-      expect(resources.reputation).toBe(50);
       // Crypto: 25 * 0.1 = 2.5
       expect(resources.crypto).toBeCloseTo(2.5);
       // Skill points: starting SP from trust + snitch bonus

@@ -36,7 +36,6 @@ jest.mock('../../src/components/ManagerPanel', () => ({
 
 const makeResources = (overrides: Partial<GameResources> = {}): GameResources => ({
   money: 1000,
-  reputation: 10,
   heat: 0,
   bots: 5,
   skillPoints: 0,

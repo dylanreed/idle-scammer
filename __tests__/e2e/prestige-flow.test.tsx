@@ -45,7 +45,6 @@ describe('Prestige Flow E2E', () => {
     // Give the player some resources to see them get reset
     useGameStore.getState().addMoney(10000);
     useGameStore.getState().addBots(50);
-    useGameStore.getState().addReputation(100);
 
     // Set heat above max so next scam completion triggers prestige
     useGameStore.getState().addHeat(105);
@@ -111,7 +110,6 @@ describe('Prestige Flow E2E', () => {
     expect(postResources.heat).toBe(0);
     // Bots persist across prestiges; 50 added + 0.00001 from scam completion + 1 first-prestige bot award
     expect(postResources.bots).toBeCloseTo(51.00001, 4);
-    expect(postResources.reputation).toBe(0);
   });
 
   it('should complete full snitch prestige cycle with bonuses kept', () => {

@@ -16,7 +16,6 @@ import { useEmployeeStore } from '../../../src/game/employees/employeeStore';
 
 const defaultResources: GameResources = {
   money: 1000,
-  reputation: 0,
   heat: 0,
   bots: 0,
   skillPoints: 0,

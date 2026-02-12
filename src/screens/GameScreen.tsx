@@ -190,18 +190,14 @@ export function GameScreen(): React.ReactElement {
 
   /**
    * Compute the skill-based reward multiplier from passive + active effects.
-   * Silver Tongue applies to all scams; Creative Accounting to money; Hype Machine to reputation.
+   * Silver Tongue applies to all scams; Creative Accounting to money.
    */
-  function getSkillRewardParams(resourceType: string = 'money') {
+  function getSkillRewardParams() {
     const { bonuses, effects } = getSkillModifiers();
     // Silver Tongue (rewardBonus) applies to all scam types
     let skillRewardMultiplier = 1 + bonuses.rewardBonus;
     // Creative Accounting (moneyBonus) applies to all scams
     skillRewardMultiplier *= (1 + bonuses.moneyBonus);
-    // Hype Machine (reputationBonus) stacks on top for reputation scams
-    if (resourceType === 'reputation') {
-      skillRewardMultiplier *= (1 + bonuses.reputationBonus);
-    }
     return {
       skillRewardMultiplier,
       activeRewardMultiplier: effects.rewardMultiplier,
@@ -228,8 +224,8 @@ export function GameScreen(): React.ReactElement {
       const { rewardBonus: rawRewardBonus } = useEmployeeStore.getState().getScamBonuses(timer.scamId);
       const employeeRewardBonus = rawRewardBonus * activeEffects.employeeBonusMultiplier;
 
-      // Skill reward params (resource type affects Hype Machine bonus)
-      const { skillRewardMultiplier, activeRewardMultiplier } = getSkillRewardParams(definition.resourceType);
+      // Skill reward params
+      const { skillRewardMultiplier, activeRewardMultiplier } = getSkillRewardParams();
 
       // Ascension bonus (permanent per-scam multiplier persisting through prestige)
       const ascensionCount = useGameStore.getState().getAscensionCount(timer.scamId);

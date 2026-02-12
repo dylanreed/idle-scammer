@@ -23,11 +23,10 @@ describe('Scam Types', () => {
 
   describe('ResourceType', () => {
     it('should accept valid resource types', () => {
-      const validTypes: ResourceType[] = ['money', 'bots', 'reputation', 'crypto'];
+      const validTypes: ResourceType[] = ['money', 'bots', 'crypto'];
 
       expect(validTypes).toContain('money');
       expect(validTypes).toContain('bots');
-      expect(validTypes).toContain('reputation');
       expect(validTypes).toContain('crypto');
     });
   });

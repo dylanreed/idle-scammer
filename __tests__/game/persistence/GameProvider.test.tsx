@@ -69,7 +69,6 @@ describe('GameProvider', () => {
       savedAt: Date.now() - 1000,
       resources: {
         money: 5000,
-        reputation: 100,
         heat: 50,
         bots: 200,
         skillPoints: 15,
@@ -213,7 +212,6 @@ describe('GameProvider', () => {
       savedAt: Date.now() - 60000, // 60 seconds ago
       resources: {
         money: 1000,
-        reputation: 0,
         heat: 0,
         bots: 0,
         skillPoints: 0,

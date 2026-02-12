@@ -17,7 +17,6 @@ describe('GameStore', () => {
       const resources = state.resources;
 
       expect(resources.money).toBe(STARTING_MONEY);
-      expect(resources.reputation).toBe(0);
       expect(resources.heat).toBe(0);
       expect(resources.bots).toBe(0);
       expect(resources.skillPoints).toBe(0);
@@ -29,7 +28,6 @@ describe('GameStore', () => {
       const initial = getInitialResources();
 
       expect(initial.money).toBe(STARTING_MONEY);
-      expect(initial.reputation).toBe(0);
       expect(initial.heat).toBe(0);
       expect(initial.bots).toBe(0);
       expect(initial.skillPoints).toBe(0);
@@ -63,25 +61,6 @@ describe('GameStore', () => {
       addMoney(-30);
 
       expect(useGameStore.getState().resources.money).toBe(STARTING_MONEY + 70);
-    });
-  });
-
-  describe('addReputation', () => {
-    it('should increase reputation by specified amount', () => {
-      const { addReputation } = useGameStore.getState();
-
-      addReputation(10);
-
-      expect(useGameStore.getState().resources.reputation).toBe(10);
-    });
-
-    it('should accumulate reputation', () => {
-      const { addReputation } = useGameStore.getState();
-
-      addReputation(5);
-      addReputation(15);
-
-      expect(useGameStore.getState().resources.reputation).toBe(20);
     });
   });
 
@@ -211,7 +190,6 @@ describe('GameStore', () => {
       useGameStore.setState({
         resources: {
           money: 10000,
-          reputation: 500,
           heat: 100,
           bots: 5000,
           skillPoints: 50,
@@ -228,7 +206,6 @@ describe('GameStore', () => {
 
       // These should be reset to initial values
       expect(resources.money).toBe(STARTING_MONEY);
-      expect(resources.reputation).toBe(0);
       expect(resources.heat).toBe(0);
       expect(resources.crypto).toBe(0);
 
@@ -271,7 +248,6 @@ describe('GameStore', () => {
       useGameStore.setState({
         resources: {
           money: 10000,
-          reputation: 500,
           heat: 100,
           bots: 5000,
           skillPoints: 50,
@@ -295,7 +271,6 @@ describe('GameStore', () => {
       useGameStore.setState({
         resources: {
           money: 10000,
-          reputation: 500,
           heat: 100,
           bots: 5000,
           skillPoints: 50,
@@ -323,7 +298,6 @@ describe('GameStore', () => {
       // TypeScript compilation would fail if types are wrong
       // This test verifies the structure at runtime
       expect(typeof resources.money).toBe('number');
-      expect(typeof resources.reputation).toBe('number');
       expect(typeof resources.heat).toBe('number');
       expect(typeof resources.bots).toBe('number');
       expect(typeof resources.skillPoints).toBe('number');
@@ -338,7 +312,6 @@ describe('GameStore', () => {
 
       const savedResources: GameResources = {
         money: 5000,
-        reputation: 100,
         heat: 50,
         bots: 200,
         skillPoints: 15,
@@ -362,7 +335,6 @@ describe('GameStore', () => {
       // Hydrate should replace it all
       hydrate({
         money: 42,
-        reputation: 0,
         heat: 0,
         bots: 0,
         skillPoints: 0,
@@ -379,7 +351,6 @@ describe('GameStore', () => {
 
       hydrate({
         money: 100,
-        reputation: 0,
         heat: 0,
         bots: 0,
         skillPoints: 0,
@@ -401,7 +372,6 @@ describe('GameStore', () => {
           ...getInitialResources(),
           bots: 5,
           money: 10000,
-          reputation: 500,
           heat: 100,
         },
       });
@@ -412,7 +382,6 @@ describe('GameStore', () => {
       const resources = useGameStore.getState().resources;
       expect(resources.bots).toBe(5);
       expect(resources.money).toBe(STARTING_MONEY);
-      expect(resources.reputation).toBe(0);
       expect(resources.heat).toBe(0);
     });
   });

@@ -73,16 +73,6 @@ describe('ResourceIcon', () => {
       );
     });
 
-    it('uses hotPink color for reputation', () => {
-      render(<ResourceIcon resourceKey="reputation" value={100} testID="resource-icon" />);
-      const valueText = screen.getByText('100');
-      expect(valueText.props.style).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({ color: COLORS.hotPink }),
-        ])
-      );
-    });
-
     it('uses warningRed color for heat', () => {
       render(<ResourceIcon resourceKey="heat" value={100} testID="resource-icon" />);
       const valueText = screen.getByText('100');
@@ -149,7 +139,7 @@ describe('ResourceIcon', () => {
   });
 
   describe('all resource types', () => {
-    const resourceKeys = ['money', 'reputation', 'heat', 'bots', 'skillPoints', 'crypto', 'trust'] as const;
+    const resourceKeys = ['money', 'heat', 'bots', 'skillPoints', 'crypto', 'trust'] as const;
 
     resourceKeys.forEach((key) => {
       it(`renders ${key} resource`, () => {

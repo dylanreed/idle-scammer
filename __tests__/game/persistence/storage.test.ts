@@ -26,7 +26,6 @@ describe('Storage', () => {
     savedAt: 1704067200000,
     resources: {
       money: 1000,
-      reputation: 50,
       heat: 25,
       bots: 500,
       skillPoints: 10,

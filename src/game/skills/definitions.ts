@@ -36,7 +36,7 @@ export const TECH_SKILLS: PassiveSkillDefinition[] = [
 
 /**
  * SOCIAL category: Employee & Reward skills.
- * Focused on employees and reputation.
+ * Focused on employees, rewards, and trust gain.
  */
 export const SOCIAL_SKILLS: PassiveSkillDefinition[] = [
   {
@@ -59,7 +59,7 @@ export const SOCIAL_SKILLS: PassiveSkillDefinition[] = [
     id: 'hype-machine',
     name: 'Hype Machine',
     category: 'social',
-    description: 'Increase reputation gain through viral marketing',
+    description: 'Increase trust gain from clean escapes',
     ranks: [0.10, 0.20, 0.35, 0.50, 0.75],
     maxRank: 5,
   },

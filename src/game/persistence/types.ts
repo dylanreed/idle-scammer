@@ -13,7 +13,7 @@ import type { TutorialSaveData } from '../tutorial/types';
  * Current save data format version.
  * Increment when changing SaveData structure (requires migration logic).
  */
-export const SAVE_VERSION = 8;
+export const SAVE_VERSION = 9;
 
 /**
  * AsyncStorage key for game save data.

@@ -50,7 +50,6 @@ describe('Bot Assignment Flow E2E', () => {
   const defaultProps = {
     resources: {
       money: 0,
-      reputation: 0,
       heat: 0,
       bots: 0,
       skillPoints: 0,

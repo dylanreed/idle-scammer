@@ -152,13 +152,16 @@ export function calculatePerformanceTrustGain(metrics: PerformanceMetrics): numb
 /**
  * Calculates the result of choosing a clean escape.
  * Trust gain is based on run performance, not a flat constant.
+ * Hype Machine skill amplifies trust gain via trustGainBonus.
  *
  * @param currentTrust - The player's current trust value
  * @param metrics - Run performance metrics for calculating trust gain
+ * @param trustGainBonus - Fractional bonus from Hype Machine skill (e.g., 0.75 = 75% more trust)
  * @returns PrestigeResult with trust gain and no bonuses
  */
-export function calculateCleanEscapeResult(currentTrust: number, metrics: PerformanceMetrics): PrestigeResult {
-  const trustGain = calculatePerformanceTrustGain(metrics);
+export function calculateCleanEscapeResult(currentTrust: number, metrics: PerformanceMetrics, trustGainBonus: number = 0): PrestigeResult {
+  const baseTrustGain = calculatePerformanceTrustGain(metrics);
+  const trustGain = Math.max(MIN_TRUST_GAIN, Math.floor(baseTrustGain * (1 + trustGainBonus)));
   return {
     choice: 'clean-escape',
     previousTrust: currentTrust,
@@ -198,14 +201,6 @@ export function calculateSnitchResult(
     bonuses.push({
       type: 'bots',
       amount: Math.floor(resources.bots * SNITCH_RESOURCE_KEEP_PERCENT),
-    });
-  }
-
-  // Reputation - floor for clean integer
-  if (resources.reputation > 0) {
-    bonuses.push({
-      type: 'reputation',
-      amount: Math.floor(resources.reputation * SNITCH_RESOURCE_KEEP_PERCENT),
     });
   }
 

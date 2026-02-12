@@ -28,11 +28,11 @@ describe('Prestige Constants', () => {
 
   describe('Graduated heat constants', () => {
     it('should define minimum heat per completion (cheap scams)', () => {
-      expect(MIN_HEAT_PER_COMPLETION).toBe(0.005);
+      expect(MIN_HEAT_PER_COMPLETION).toBe(0.3);
     });
 
     it('should define maximum heat per completion (expensive scams)', () => {
-      expect(MAX_HEAT_PER_COMPLETION).toBe(0.5);
+      expect(MAX_HEAT_PER_COMPLETION).toBe(2.0);
     });
 
     it('should have min < max for heat per completion', () => {
@@ -41,7 +41,7 @@ describe('Prestige Constants', () => {
 
     it('should define log cost range for interpolation', () => {
       expect(MIN_HEAT_LOG_COST).toBe(1);  // log10(10)
-      expect(MAX_HEAT_LOG_COST).toBe(36); // log10(~10^36)
+      expect(MAX_HEAT_LOG_COST).toBe(12); // log10(~10^12)
     });
   });
 

@@ -122,7 +122,6 @@ export function ScamListPanel({
   const activeSpeedMultiplier = activeEffects.speedMultiplier;
   const skillRewardBase = 1 + skillBonuses.rewardBonus; // Silver Tongue
   const moneyBonus = 1 + skillBonuses.moneyBonus; // Creative Accounting
-  const reputationBonus = 1 + skillBonuses.reputationBonus; // Hype Machine
   const activeRewardMultiplier = activeEffects.rewardMultiplier;
   const skillUpgradeCostDiscount = skillBonuses.upgradeCostDiscount;
   const skillEmployeeCostDiscount = skillBonuses.employeeCostDiscount;
@@ -234,11 +233,8 @@ export function ScamListPanel({
               const amplifiedEmpSpeed = rawEmpBonuses.speedBonus * activeEmployeeBonusMultiplier;
               const amplifiedEmpReward = rawEmpBonuses.rewardBonus * activeEmployeeBonusMultiplier;
 
-              // Compute reward multiplier based on scam resource type
-              let scamRewardMultiplier = skillRewardBase * moneyBonus;
-              if (scamDef.resourceType === 'reputation') {
-                scamRewardMultiplier = skillRewardBase * reputationBonus;
-              }
+              // Compute reward multiplier from skill bonuses
+              const scamRewardMultiplier = skillRewardBase * moneyBonus;
 
               return (
                 <ScamCard

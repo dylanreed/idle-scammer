@@ -59,7 +59,7 @@ describe('Skill Calculations', () => {
       expect(bonuses.botProfitAmplifier).toBe(0);
       expect(bonuses.rewardBonus).toBe(0);
       expect(bonuses.employeeCostDiscount).toBe(0);
-      expect(bonuses.reputationBonus).toBe(0);
+      expect(bonuses.trustGainBonus).toBe(0);
       expect(bonuses.moneyBonus).toBe(0);
       expect(bonuses.upgradeCostDiscount).toBe(0);
       expect(bonuses.passiveIncomePerSec).toBe(0);

@@ -68,7 +68,7 @@ export function computeSkillBonuses(passiveStates: Record<string, number>): Skil
     botProfitAmplifier: 0,
     rewardBonus: 0,
     employeeCostDiscount: 0,
-    reputationBonus: 0,
+    trustGainBonus: 0,
     moneyBonus: 0,
     upgradeCostDiscount: 0,
     passiveIncomePerSec: 0,
@@ -101,7 +101,7 @@ export function computeSkillBonuses(passiveStates: Record<string, number>): Skil
         bonuses.employeeCostDiscount = value;
         break;
       case 'hype-machine':
-        bonuses.reputationBonus = value;
+        bonuses.trustGainBonus = value;
         break;
       case 'creative-accounting':
         bonuses.moneyBonus = value;

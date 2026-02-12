@@ -19,7 +19,6 @@ describe('SaveManager', () => {
     it('should create SaveData from game, scam, and manager state', () => {
       const resources: GameResources = {
         money: 1000,
-        reputation: 50,
         heat: 25,
         bots: 500,
         skillPoints: 10,
@@ -60,7 +59,6 @@ describe('SaveManager', () => {
 
       const resources: GameResources = {
         money: 0,
-        reputation: 0,
         heat: 0,
         bots: 0,
         skillPoints: 0,
@@ -82,7 +80,6 @@ describe('SaveManager', () => {
     it('should handle empty scams and managers state', () => {
       const resources: GameResources = {
         money: 100,
-        reputation: 0,
         heat: 0,
         bots: 0,
         skillPoints: 0,
@@ -102,7 +99,6 @@ describe('SaveManager', () => {
     it('should handle multiple scam states', () => {
       const resources: GameResources = {
         money: 5000,
-        reputation: 100,
         heat: 50,
         bots: 1000,
         skillPoints: 25,
@@ -145,7 +141,6 @@ describe('SaveManager', () => {
     it('should include ascensions in save data', () => {
       const resources: GameResources = {
         money: 1000,
-        reputation: 50,
         heat: 25,
         bots: 500,
         skillPoints: 10,
@@ -168,7 +163,6 @@ describe('SaveManager', () => {
     it('should include tutorials in save data', () => {
       const resources: GameResources = {
         money: 1000,
-        reputation: 50,
         heat: 25,
         bots: 500,
         skillPoints: 10,
@@ -188,7 +182,6 @@ describe('SaveManager', () => {
     it('should default tutorials to empty state', () => {
       const resources: GameResources = {
         money: 1000,
-        reputation: 50,
         heat: 25,
         bots: 500,
         skillPoints: 10,
@@ -207,7 +200,6 @@ describe('SaveManager', () => {
     it('should default ascensions to empty object', () => {
       const resources: GameResources = {
         money: 1000,
-        reputation: 50,
         heat: 25,
         bots: 500,
         skillPoints: 10,
@@ -226,7 +218,6 @@ describe('SaveManager', () => {
     it('should handle multiple manager states', () => {
       const resources: GameResources = {
         money: 5000,
-        reputation: 100,
         heat: 50,
         bots: 1000,
         skillPoints: 25,
@@ -257,7 +248,6 @@ describe('SaveManager', () => {
         savedAt: Date.now(),
         resources: {
           money: 1000,
-          reputation: 50,
           heat: 25,
           bots: 500,
           skillPoints: 10,
@@ -298,7 +288,6 @@ describe('SaveManager', () => {
         savedAt: Date.now(),
         resources: {
           money: 0,
-          reputation: 0,
           heat: 0,
           bots: 0,
           skillPoints: 0,
@@ -327,7 +316,6 @@ describe('SaveManager', () => {
         savedAt: Date.now(),
         resources: {
           money: 1000,
-          reputation: 50,
           heat: 25,
           bots: 500,
           skillPoints: 10,
@@ -353,7 +341,6 @@ describe('SaveManager', () => {
         savedAt: Date.now(),
         resources: {
           money: 1000,
-          reputation: 50,
           heat: 25,
           bots: 500,
           skillPoints: 10,
@@ -380,7 +367,6 @@ describe('SaveManager', () => {
         savedAt: Date.now(),
         resources: {
           money: 0,
-          reputation: 0,
           heat: 0,
           bots: 0,
           skillPoints: 0,
@@ -406,7 +392,6 @@ describe('SaveManager', () => {
         savedAt: Date.now(),
         resources: {
           money: 0,
-          reputation: 0,
           heat: 0,
           bots: 0,
           skillPoints: 0,
@@ -431,7 +416,6 @@ describe('SaveManager', () => {
         savedAt: Date.now(),
         resources: {
           money: 999.99,
-          reputation: 0,
           heat: 0,
           bots: 0,
           skillPoints: 0,
@@ -460,7 +444,6 @@ describe('SaveManager', () => {
         savedAt: Date.now(),
         resources: {
           money: 1000,
-          reputation: 50,
           heat: 25,
           bots: 500,
           skillPoints: 10,
@@ -516,6 +499,8 @@ describe('SaveManager', () => {
       expect(result.resources.money).toBe(500);
       expect(result.resources.trust).toBe(2);
       expect(result.managers).toEqual({});
+      // v8->v9 migration strips reputation
+      expect((result.resources as Record<string, unknown>).reputation).toBeUndefined();
     });
 
     it('should migrate v1 data to v2 by adding empty managers', () => {
@@ -718,7 +703,55 @@ describe('SaveManager', () => {
       expect(result.ascensions).toEqual({ 'nigerian-prince-emails': 1 });
     });
 
-    it('should preserve existing tutorials during v7→v8 migration', () => {
+    it('should migrate v8 data to v9 by removing reputation from resources', () => {
+      const v8SaveData = {
+        version: 8,
+        savedAt: Date.now(),
+        resources: {
+          money: 5000,
+          reputation: 150,
+          heat: 30,
+          bots: 12,
+          skillPoints: 15,
+          crypto: 8,
+          trust: 7,
+          snitchCount: 1,
+        },
+        scams: {
+          'nigerian-prince-emails': {
+            scamId: 'nigerian-prince-emails',
+            level: 20,
+            isUnlocked: true,
+            timesCompleted: 200,
+          },
+        },
+        managers: {},
+        employees: {},
+        botAssignments: {},
+        skills: { passiveRanks: {}, unlockedAbilities: [], cooldowns: {}, activeDurations: {} },
+        ascensions: {},
+        tutorials: { hasPrestiged: true, seen: ['trust-intro'] },
+      } as unknown as SaveData;
+
+      const result = migrateIfNeeded(v8SaveData);
+
+      expect(result.version).toBe(SAVE_VERSION);
+      // reputation should be stripped from resources
+      expect((result.resources as Record<string, unknown>).reputation).toBeUndefined();
+      // Other resources preserved
+      expect(result.resources.money).toBe(5000);
+      expect(result.resources.heat).toBe(30);
+      expect(result.resources.bots).toBe(12);
+      expect(result.resources.skillPoints).toBe(15);
+      expect(result.resources.crypto).toBe(8);
+      expect(result.resources.trust).toBe(7);
+      expect(result.resources.snitchCount).toBe(1);
+      // Other fields preserved
+      expect(result.tutorials).toEqual({ hasPrestiged: true, seen: ['trust-intro'] });
+      expect(result.scams['nigerian-prince-emails'].level).toBe(20);
+    });
+
+    it('should preserve existing tutorials during v7->v8 migration', () => {
       const v7SaveDataWithTutorials = {
         version: 7,
         savedAt: Date.now(),
@@ -768,6 +801,8 @@ describe('SaveManager', () => {
 
       expect(result.version).toBe(SAVE_VERSION);
       expect(result.managers).toEqual({});
+      // v8->v9 migration strips reputation
+      expect((result.resources as Record<string, unknown>).reputation).toBeUndefined();
     });
   });
 

@@ -43,7 +43,6 @@ export interface EngineState {
  */
 export interface OfflineEarnings {
   money: number;
-  reputation: number;
   heat: number;
   bots: number;
   skillPoints: number;

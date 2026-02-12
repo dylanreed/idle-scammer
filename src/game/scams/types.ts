@@ -9,9 +9,9 @@ export type ScamTier = 1 | 2 | 3 | 4 | 5;
 
 /**
  * Resource types that scams can reward.
- * Most scams reward money; higher tiers reward reputation or crypto.
+ * Most scams reward money; higher tiers may reward bots or crypto.
  */
-export type ResourceType = 'money' | 'bots' | 'reputation' | 'crypto';
+export type ResourceType = 'money' | 'bots' | 'crypto';
 
 /**
  * Static definition of a scam type.

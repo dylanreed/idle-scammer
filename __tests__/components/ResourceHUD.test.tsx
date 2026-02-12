@@ -8,7 +8,6 @@ import type { GameResources } from '../../src/game/types';
 
 const mockResources: GameResources = {
   money: 1000,
-  reputation: 50,
   heat: 25,
   bots: 100,
   skillPoints: 10,
@@ -37,12 +36,11 @@ describe('ResourceHUD', () => {
   });
 
   describe('pre-prestige resource display', () => {
-    it('shows only money, reputation, and heat before first prestige', () => {
+    it('shows only money and heat before first prestige', () => {
       render(<ResourceHUD resources={mockResources} />);
 
-      // Visible: money, reputation, heat
+      // Visible: money, heat
       expect(screen.getByText('1K')).toBeTruthy();     // money
-      expect(screen.getByText('50')).toBeTruthy();     // reputation
       expect(screen.getByText('25')).toBeTruthy();     // heat
     });
 
@@ -58,7 +56,6 @@ describe('ResourceHUD', () => {
     it('handles zero values in pre-prestige mode', () => {
       const zeroResources: GameResources = {
         money: 0,
-        reputation: 0,
         heat: 0,
         bots: 0,
         skillPoints: 0,
@@ -69,18 +66,17 @@ describe('ResourceHUD', () => {
 
       render(<ResourceHUD resources={zeroResources} />);
 
-      // Only 3 resources shown (money, reputation, heat), all zero
+      // Only 2 resources shown (money, heat), all zero
       const zeros = screen.getAllByText('0');
-      expect(zeros.length).toBe(3);
+      expect(zeros.length).toBe(2);
     });
   });
 
   describe('post-prestige resource display', () => {
-    it('displays money, reputation, heat, bots, skill points, and trust after prestige', () => {
+    it('displays money, heat, bots, skill points, and trust after prestige', () => {
       render(<ResourceHUD resources={mockResources} hasPrestiged={true} />);
 
       expect(screen.getByText('1K')).toBeTruthy();     // money
-      expect(screen.getByText('50')).toBeTruthy();     // reputation
       expect(screen.getByText('25')).toBeTruthy();     // heat
       expect(screen.getByText('100')).toBeTruthy();    // bots
       expect(screen.getByText('10')).toBeTruthy();     // skillPoints
@@ -112,7 +108,6 @@ describe('ResourceHUD', () => {
     it('handles zero values in post-prestige mode', () => {
       const zeroResources: GameResources = {
         money: 0,
-        reputation: 0,
         heat: 0,
         bots: 0,
         skillPoints: 0,
@@ -123,15 +118,14 @@ describe('ResourceHUD', () => {
 
       render(<ResourceHUD resources={zeroResources} hasPrestiged={true} />);
 
-      // 6 resources shown (all except crypto), 5 are zero (trust is 1)
+      // 5 resources shown (all except crypto), 4 are zero (trust is 1)
       const zeros = screen.getAllByText('0');
-      expect(zeros.length).toBe(5);
+      expect(zeros.length).toBe(4);
     });
 
     it('handles very large values', () => {
       const largeResources: GameResources = {
         money: 1234567890123,
-        reputation: 999990000,
         heat: 100,
         bots: 50000000,
         skillPoints: 1000,
@@ -143,7 +137,6 @@ describe('ResourceHUD', () => {
       render(<ResourceHUD resources={largeResources} hasPrestiged={true} />);
 
       expect(screen.getByText('1.23T')).toBeTruthy();  // money
-      expect(screen.getByText('999.99M')).toBeTruthy(); // reputation
       expect(screen.getByText('50M')).toBeTruthy();    // bots
       // crypto (10B) should be hidden
       expect(screen.queryByText('10B')).toBeNull();
@@ -156,7 +149,6 @@ describe('ResourceHUD', () => {
 
       // Should render without labels in compact mode
       expect(screen.queryByText('MONEY')).toBeNull();
-      expect(screen.queryByText('REP')).toBeNull();
     });
 
     it('can show labels when compact is false', () => {

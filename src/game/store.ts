@@ -20,7 +20,6 @@ export const STARTING_MONEY = 0;
 export function getInitialResources(): GameResources {
   return {
     money: STARTING_MONEY,
-    reputation: 0,
     heat: 0,
     bots: 0,
     skillPoints: 0,
@@ -43,15 +42,6 @@ export const useGameStore = create<GameState>()((set, get) => ({
       resources: {
         ...state.resources,
         money: state.resources.money + amount,
-      },
-    }));
-  },
-
-  addReputation: (amount: number) => {
-    set((state) => ({
-      resources: {
-        ...state.resources,
-        reputation: state.resources.reputation + amount,
       },
     }));
   },

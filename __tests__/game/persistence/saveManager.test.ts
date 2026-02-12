@@ -165,6 +165,45 @@ describe('SaveManager', () => {
       expect(result.ascensions).toEqual(ascensions);
     });
 
+    it('should include tutorials in save data', () => {
+      const resources: GameResources = {
+        money: 1000,
+        reputation: 50,
+        heat: 25,
+        bots: 500,
+        skillPoints: 10,
+        crypto: 2.5,
+        trust: 3,
+        snitchCount: 0,
+      };
+      const scams: ScamStateMap = {};
+      const managers: ManagerStateMap = {};
+      const tutorials = { hasPrestiged: true, seen: ['trust-intro'] };
+
+      const result = createSaveData(resources, scams, managers, {}, {}, undefined, {}, tutorials);
+
+      expect(result.tutorials).toEqual(tutorials);
+    });
+
+    it('should default tutorials to empty state', () => {
+      const resources: GameResources = {
+        money: 1000,
+        reputation: 50,
+        heat: 25,
+        bots: 500,
+        skillPoints: 10,
+        crypto: 2.5,
+        trust: 3,
+        snitchCount: 0,
+      };
+      const scams: ScamStateMap = {};
+      const managers: ManagerStateMap = {};
+
+      const result = createSaveData(resources, scams, managers);
+
+      expect(result.tutorials).toEqual({ hasPrestiged: false, seen: [] });
+    });
+
     it('should default ascensions to empty object', () => {
       const resources: GameResources = {
         money: 1000,
@@ -306,6 +345,59 @@ describe('SaveManager', () => {
 
       const { ascensions } = applySaveData(saveData);
       expect(ascensions).toEqual({ 'nigerian-prince-emails': 3 });
+    });
+
+    it('should return tutorials from save data', () => {
+      const saveData: SaveData = {
+        version: SAVE_VERSION,
+        savedAt: Date.now(),
+        resources: {
+          money: 1000,
+          reputation: 50,
+          heat: 25,
+          bots: 500,
+          skillPoints: 10,
+          crypto: 2.5,
+          trust: 3,
+          snitchCount: 0,
+        },
+        scams: {},
+        managers: {},
+        employees: {},
+        botAssignments: {},
+        skills: { passiveRanks: {}, unlockedAbilities: [], cooldowns: {}, activeDurations: {} },
+        ascensions: {},
+        tutorials: { hasPrestiged: true, seen: ['trust-intro', 'bots-intro'] },
+      };
+
+      const { tutorials } = applySaveData(saveData);
+      expect(tutorials).toEqual({ hasPrestiged: true, seen: ['trust-intro', 'bots-intro'] });
+    });
+
+    it('should default tutorials to empty when missing from save', () => {
+      const saveData = {
+        version: SAVE_VERSION,
+        savedAt: Date.now(),
+        resources: {
+          money: 0,
+          reputation: 0,
+          heat: 0,
+          bots: 0,
+          skillPoints: 0,
+          crypto: 0,
+          trust: 1,
+          snitchCount: 0,
+        },
+        scams: {},
+        managers: {},
+        employees: {},
+        botAssignments: {},
+        skills: { passiveRanks: {}, unlockedAbilities: [], cooldowns: {}, activeDurations: {} },
+        ascensions: {},
+      } as unknown as SaveData;
+
+      const { tutorials } = applySaveData(saveData);
+      expect(tutorials).toEqual({ hasPrestiged: false, seen: [] });
     });
 
     it('should default ascensions to empty when missing from save', () => {
@@ -582,6 +674,77 @@ describe('SaveManager', () => {
         cooldowns: {},
         activeDurations: {},
       });
+    });
+
+    it('should migrate v7 data to v8 by adding default tutorials', () => {
+      const v7SaveData = {
+        version: 7,
+        savedAt: Date.now(),
+        resources: {
+          money: 10000,
+          reputation: 400,
+          heat: 60,
+          bots: 25,
+          skillPoints: 40,
+          crypto: 15,
+          trust: 20,
+          snitchCount: 3,
+        },
+        scams: {
+          'nigerian-prince-emails': {
+            scamId: 'nigerian-prince-emails',
+            level: 150,
+            isUnlocked: true,
+            timesCompleted: 1000,
+          },
+        },
+        managers: {},
+        employees: {},
+        botAssignments: {},
+        skills: { passiveRanks: {}, unlockedAbilities: [], cooldowns: {}, activeDurations: {} },
+        ascensions: { 'nigerian-prince-emails': 1 },
+      } as unknown as SaveData;
+
+      const result = migrateIfNeeded(v7SaveData);
+
+      expect(result.version).toBe(SAVE_VERSION);
+      expect(result.tutorials).toEqual({
+        hasPrestiged: false,
+        seen: [],
+      });
+      // Existing data preserved
+      expect(result.resources.money).toBe(10000);
+      expect(result.resources.snitchCount).toBe(3);
+      expect(result.ascensions).toEqual({ 'nigerian-prince-emails': 1 });
+    });
+
+    it('should preserve existing tutorials during v7→v8 migration', () => {
+      const v7SaveDataWithTutorials = {
+        version: 7,
+        savedAt: Date.now(),
+        resources: {
+          money: 5000,
+          reputation: 200,
+          heat: 0,
+          bots: 10,
+          skillPoints: 20,
+          crypto: 5,
+          trust: 10,
+          snitchCount: 0,
+        },
+        scams: {},
+        managers: {},
+        employees: {},
+        botAssignments: {},
+        skills: { passiveRanks: {}, unlockedAbilities: [], cooldowns: {}, activeDurations: {} },
+        ascensions: {},
+        tutorials: { hasPrestiged: true, seen: ['trust-intro'] },
+      } as unknown as SaveData;
+
+      const result = migrateIfNeeded(v7SaveDataWithTutorials);
+
+      expect(result.version).toBe(SAVE_VERSION);
+      expect(result.tutorials).toEqual({ hasPrestiged: true, seen: ['trust-intro'] });
     });
 
     it('should handle sequential migrations v0 -> v1 -> v2', () => {

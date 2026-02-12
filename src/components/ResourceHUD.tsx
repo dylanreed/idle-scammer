@@ -23,6 +23,24 @@ const RESOURCE_ORDER: ResourceKey[] = [
 ];
 
 /**
+ * Resources visible before the player's first prestige.
+ * Trust, Bots, Skill Points, and Crypto are hidden to reduce overwhelm.
+ */
+const PRE_PRESTIGE_RESOURCES: Set<ResourceKey> = new Set([
+  'money',
+  'reputation',
+  'heat',
+]);
+
+/**
+ * Resources hidden until their systems are implemented.
+ * Crypto has no game mechanic yet, so it's always hidden.
+ */
+const ALWAYS_HIDDEN_RESOURCES: Set<ResourceKey> = new Set([
+  'crypto',
+]);
+
+/**
  * Props for the ResourceHUD component
  */
 export interface ResourceHUDProps {
@@ -31,6 +49,9 @@ export interface ResourceHUDProps {
 
   /** Maximum heat threshold (100 + Ghost Protocol bonus). Shown as "heat/max" when provided. */
   heatMax?: number;
+
+  /** Whether the player has completed at least one prestige (shows all resources when true) */
+  hasPrestiged?: boolean;
 
   /** Whether to show in compact mode without labels (default: true) */
   compact?: boolean;
@@ -53,11 +74,18 @@ export interface ResourceHUDProps {
 export function ResourceHUD({
   resources,
   heatMax,
+  hasPrestiged = false,
   compact = true,
   showScanlines = true,
   style,
   testID,
 }: ResourceHUDProps): React.ReactElement {
+  const visibleResources = RESOURCE_ORDER.filter((key) => {
+    if (ALWAYS_HIDDEN_RESOURCES.has(key)) return false;
+    if (!hasPrestiged && !PRE_PRESTIGE_RESOURCES.has(key)) return false;
+    return true;
+  });
+
   return (
     <CRTFrame
       testID={testID}
@@ -70,7 +98,7 @@ export function ResourceHUD({
         contentContainerStyle={styles.scrollContent}
         testID="resource-row"
       >
-        {RESOURCE_ORDER.map((resourceKey) => (
+        {visibleResources.map((resourceKey) => (
           <ResourceIcon
             key={resourceKey}
             resourceKey={resourceKey}

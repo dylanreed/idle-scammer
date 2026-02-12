@@ -7,12 +7,13 @@ import type { ManagerState } from '../managers/types';
 import type { EmployeeState } from '../employees/types';
 import type { BotAssignmentMap } from '../bots/types';
 import type { SkillSaveData } from '../skills/types';
+import type { TutorialSaveData } from '../tutorial/types';
 
 /**
  * Current save data format version.
  * Increment when changing SaveData structure (requires migration logic).
  */
-export const SAVE_VERSION = 7;
+export const SAVE_VERSION = 8;
 
 /**
  * AsyncStorage key for game save data.
@@ -55,4 +56,7 @@ export interface SaveData {
 
   /** Per-scam ascension counts (persist across prestiges and saves) */
   ascensions: AscensionMap;
+
+  /** Tutorial/progressive disclosure state (prestige tracking, seen modals) */
+  tutorials?: TutorialSaveData;
 }

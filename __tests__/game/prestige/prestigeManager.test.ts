@@ -7,6 +7,7 @@ import { useScamStore, getInitialScamState } from '../../../src/game/scams/scamS
 import { useEmployeeStore, getInitialEmployeeState } from '../../../src/game/employees/employeeStore';
 import { useManagerStore, getInitialManagerState } from '../../../src/game/managers/managerStore';
 import { useBotStore } from '../../../src/game/bots/botStore';
+import { useTutorialStore } from '../../../src/game/tutorial/tutorialStore';
 import { SNITCH_TRUST_PERCENT } from '../../../src/game/prestige/constants';
 import { calculatePerformanceTrustGain, calculateStartingSkillPoints } from '../../../src/game/prestige/calculations';
 import type { GameResources } from '../../../src/game/types';
@@ -20,6 +21,7 @@ describe('Prestige Manager', () => {
     useEmployeeStore.setState(useEmployeeStore.getInitialState());
     useManagerStore.setState(useManagerStore.getInitialState());
     useBotStore.setState(useBotStore.getInitialState());
+    useTutorialStore.getState().reset();
   });
 
   /**
@@ -319,6 +321,39 @@ describe('Prestige Manager', () => {
       // Full reset should clear ascensions
       fullReset();
       expect(useGameStore.getState().ascensions).toEqual({});
+    });
+
+    it('should mark hasPrestiged in tutorial store on first prestige', () => {
+      expect(useTutorialStore.getState().hasPrestiged).toBe(false);
+
+      executePrestige('clean-escape');
+
+      expect(useTutorialStore.getState().hasPrestiged).toBe(true);
+    });
+
+    it('should mark hasPrestiged on snitch prestige too', () => {
+      expect(useTutorialStore.getState().hasPrestiged).toBe(false);
+
+      executePrestige('snitch');
+
+      expect(useTutorialStore.getState().hasPrestiged).toBe(true);
+    });
+
+    it('should keep hasPrestiged true on subsequent prestiges', () => {
+      executePrestige('clean-escape');
+      expect(useTutorialStore.getState().hasPrestiged).toBe(true);
+
+      executePrestige('clean-escape');
+      expect(useTutorialStore.getState().hasPrestiged).toBe(true);
+    });
+
+    it('should reset tutorial state on fullReset', () => {
+      executePrestige('clean-escape');
+      expect(useTutorialStore.getState().hasPrestiged).toBe(true);
+
+      fullReset();
+      expect(useTutorialStore.getState().hasPrestiged).toBe(false);
+      expect(useTutorialStore.getState().seen).toEqual([]);
     });
 
     it('should handle multiple consecutive prestiges with varying trust gains', () => {

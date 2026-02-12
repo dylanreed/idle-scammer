@@ -28,6 +28,9 @@ export interface OpsPanelProps {
   /** Called when the player voluntarily prestiges */
   onPrestige: () => void;
 
+  /** Whether the player has completed at least one prestige (shows Bot Network + Escape Plan) */
+  hasPrestiged?: boolean;
+
   /** Set of tier numbers that are currently collapsed (shared with ScamListPanel) */
   collapsedTiers: Set<ScamTier>;
 
@@ -50,6 +53,7 @@ export function OpsPanel({
   isManagerHired,
   onHireManager,
   onPrestige,
+  hasPrestiged = false,
   collapsedTiers,
   onToggleTier,
   testID,
@@ -79,20 +83,24 @@ export function OpsPanel({
       showsVerticalScrollIndicator={false}
       testID={testID}
     >
-      {/* Bot Network Section */}
-      <Pressable
-        testID="ops-section-bots"
-        onPress={() => toggleSection('bots')}
-      >
-        <TerminalText
-          size="md"
-          color={COLORS.terminalGreen}
-          style={styles.sectionHeader}
-        >
-          {`${botsCollapsed ? '▶' : '▼'} BOT NETWORK`}
-        </TerminalText>
-      </Pressable>
-      {!botsCollapsed && <BotAssignmentPanel testID="bot-assignment-panel" />}
+      {/* Bot Network Section (hidden until first prestige) */}
+      {hasPrestiged && (
+        <>
+          <Pressable
+            testID="ops-section-bots"
+            onPress={() => toggleSection('bots')}
+          >
+            <TerminalText
+              size="md"
+              color={COLORS.terminalGreen}
+              style={styles.sectionHeader}
+            >
+              {`${botsCollapsed ? '▶' : '▼'} BOT NETWORK`}
+            </TerminalText>
+          </Pressable>
+          {!botsCollapsed && <BotAssignmentPanel testID="bot-assignment-panel" />}
+        </>
+      )}
 
       {/* Managers Section */}
       <Pressable
@@ -119,22 +127,24 @@ export function OpsPanel({
         />
       )}
 
-      {/* Escape Plan - always visible */}
-      <CRTFrame testID="prestige-section">
-        <TerminalText size="md" color={COLORS.terminalGreen}>
-          {'ESCAPE PLAN'}
-        </TerminalText>
-        <TerminalText size="sm" color={COLORS.terminalGreenDim}>
-          {'Cash out your trust and start fresh.'}
-        </TerminalText>
-        <PixelButton
-          onPress={onPrestige}
-          variant="primary"
-          testID="flee-button"
-        >
-          {'FLEE THE COUNTRY'}
-        </PixelButton>
-      </CRTFrame>
+      {/* Escape Plan (hidden until first prestige) */}
+      {hasPrestiged && (
+        <CRTFrame testID="prestige-section">
+          <TerminalText size="md" color={COLORS.terminalGreen}>
+            {'ESCAPE PLAN'}
+          </TerminalText>
+          <TerminalText size="sm" color={COLORS.terminalGreenDim}>
+            {'Cash out your trust and start fresh.'}
+          </TerminalText>
+          <PixelButton
+            onPress={onPrestige}
+            variant="primary"
+            testID="flee-button"
+          >
+            {'FLEE THE COUNTRY'}
+          </PixelButton>
+        </CRTFrame>
+      )}
     </ScrollView>
   );
 }

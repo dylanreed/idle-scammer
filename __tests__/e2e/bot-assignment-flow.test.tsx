@@ -62,6 +62,9 @@ describe('Bot Assignment Flow E2E', () => {
     isManagerHired: jest.fn(() => false),
     onHireManager: jest.fn(),
     onPrestige: jest.fn(),
+    hasPrestiged: true,
+    collapsedTiers: new Set() as Set<import('../../src/game/scams/types').ScamTier>,
+    onToggleTier: jest.fn(),
   };
 
   beforeEach(() => {

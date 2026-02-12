@@ -1,5 +1,5 @@
 // ABOUTME: Tests for OpsPanel composition wrapper component
-// ABOUTME: Verifies BotAssignmentPanel and ManagerPanel are rendered in correct order within ScrollView
+// ABOUTME: Verifies BotAssignmentPanel and ManagerPanel rendering with progressive disclosure
 
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react-native';
@@ -57,6 +57,11 @@ const defaultProps: OpsPanelProps = {
   testID: 'ops-panel',
 };
 
+const prestigedProps: OpsPanelProps = {
+  ...defaultProps,
+  hasPrestiged: true,
+};
+
 describe('OpsPanel', () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -68,26 +73,10 @@ describe('OpsPanel', () => {
     expect(scrollView).toBeTruthy();
   });
 
-  it('contains BotAssignmentPanel', () => {
-    render(<OpsPanel {...defaultProps} />);
-    const botPanel = screen.getByTestId('bot-assignment-panel');
-    expect(botPanel).toBeTruthy();
-  });
-
-  it('contains ManagerPanel', () => {
+  it('always contains ManagerPanel', () => {
     render(<OpsPanel {...defaultProps} />);
     const managerPanel = screen.getByTestId('manager-panel');
     expect(managerPanel).toBeTruthy();
-  });
-
-  it('BotAssignmentPanel appears before ManagerPanel in the tree', () => {
-    const { toJSON } = render(<OpsPanel {...defaultProps} />);
-    const tree = JSON.stringify(toJSON());
-    const botIndex = tree.indexOf('bot-assignment-panel');
-    const managerIndex = tree.indexOf('manager-panel');
-    expect(botIndex).toBeLessThan(managerIndex);
-    expect(botIndex).toBeGreaterThan(-1);
-    expect(managerIndex).toBeGreaterThan(-1);
   });
 
   it('passes resources, scams, isManagerHired, onHireManager to ManagerPanel', () => {
@@ -107,16 +96,60 @@ describe('OpsPanel', () => {
     expect(tree.props.nestedScrollEnabled).toBe(true);
   });
 
+  describe('pre-prestige visibility', () => {
+    it('hides Bot Network section before first prestige', () => {
+      render(<OpsPanel {...defaultProps} hasPrestiged={false} />);
+      expect(screen.queryByTestId('ops-section-bots')).toBeNull();
+      expect(screen.queryByTestId('bot-assignment-panel')).toBeNull();
+    });
+
+    it('hides Escape Plan before first prestige', () => {
+      render(<OpsPanel {...defaultProps} hasPrestiged={false} />);
+      expect(screen.queryByTestId('prestige-section')).toBeNull();
+      expect(screen.queryByTestId('flee-button')).toBeNull();
+    });
+
+    it('still shows Managers section before first prestige', () => {
+      render(<OpsPanel {...defaultProps} hasPrestiged={false} />);
+      expect(screen.getByTestId('ops-section-managers')).toBeTruthy();
+      expect(screen.getByTestId('manager-panel')).toBeTruthy();
+    });
+  });
+
+  describe('post-prestige visibility', () => {
+    it('contains BotAssignmentPanel after prestige', () => {
+      render(<OpsPanel {...prestigedProps} />);
+      const botPanel = screen.getByTestId('bot-assignment-panel');
+      expect(botPanel).toBeTruthy();
+    });
+
+    it('BotAssignmentPanel appears before ManagerPanel in the tree', () => {
+      const { toJSON } = render(<OpsPanel {...prestigedProps} />);
+      const tree = JSON.stringify(toJSON());
+      const botIndex = tree.indexOf('bot-assignment-panel');
+      const managerIndex = tree.indexOf('manager-panel');
+      expect(botIndex).toBeLessThan(managerIndex);
+      expect(botIndex).toBeGreaterThan(-1);
+      expect(managerIndex).toBeGreaterThan(-1);
+    });
+
+    it('shows Escape Plan after prestige', () => {
+      render(<OpsPanel {...prestigedProps} />);
+      expect(screen.getByTestId('prestige-section')).toBeTruthy();
+      expect(screen.getByTestId('flee-button')).toBeTruthy();
+    });
+  });
+
   describe('voluntary prestige button', () => {
-    it('renders a FLEE THE COUNTRY button', () => {
-      render(<OpsPanel {...defaultProps} />);
+    it('renders a FLEE THE COUNTRY button when prestiged', () => {
+      render(<OpsPanel {...prestigedProps} />);
       expect(screen.getByTestId('flee-button')).toBeTruthy();
       expect(screen.getByText('FLEE THE COUNTRY')).toBeTruthy();
     });
 
     it('calls onPrestige when pressed', () => {
       const mockOnPrestige = jest.fn();
-      render(<OpsPanel {...defaultProps} onPrestige={mockOnPrestige} />);
+      render(<OpsPanel {...prestigedProps} onPrestige={mockOnPrestige} />);
 
       fireEvent.press(screen.getByTestId('flee-button'));
       expect(mockOnPrestige).toHaveBeenCalledTimes(1);
@@ -125,21 +158,21 @@ describe('OpsPanel', () => {
 
   describe('collapsible sections', () => {
     it('renders BOT NETWORK section header with expand chevron', () => {
-      render(<OpsPanel {...defaultProps} />);
+      render(<OpsPanel {...prestigedProps} />);
       const header = screen.getByTestId('ops-section-bots');
       expect(header).toBeTruthy();
       expect(screen.getByText(/▼.*BOT NETWORK/)).toBeTruthy();
     });
 
     it('renders MANAGERS section header with expand chevron', () => {
-      render(<OpsPanel {...defaultProps} />);
+      render(<OpsPanel {...prestigedProps} />);
       const header = screen.getByTestId('ops-section-managers');
       expect(header).toBeTruthy();
       expect(screen.getByText(/▼.*MANAGERS/)).toBeTruthy();
     });
 
     it('hides BotAssignmentPanel when BOT NETWORK header is pressed', () => {
-      render(<OpsPanel {...defaultProps} />);
+      render(<OpsPanel {...prestigedProps} />);
 
       // Initially visible
       expect(screen.getByTestId('bot-assignment-panel')).toBeTruthy();
@@ -153,7 +186,7 @@ describe('OpsPanel', () => {
     });
 
     it('hides ManagerPanel when MANAGERS header is pressed', () => {
-      render(<OpsPanel {...defaultProps} />);
+      render(<OpsPanel {...prestigedProps} />);
 
       // Initially visible
       expect(screen.getByTestId('manager-panel')).toBeTruthy();
@@ -167,7 +200,7 @@ describe('OpsPanel', () => {
     });
 
     it('toggles back to expanded when pressed again', () => {
-      render(<OpsPanel {...defaultProps} />);
+      render(<OpsPanel {...prestigedProps} />);
 
       // Collapse bots section
       fireEvent.press(screen.getByTestId('ops-section-bots'));
@@ -180,7 +213,7 @@ describe('OpsPanel', () => {
     });
 
     it('collapsing one section does not affect the other', () => {
-      render(<OpsPanel {...defaultProps} />);
+      render(<OpsPanel {...prestigedProps} />);
 
       // Collapse only bots
       fireEvent.press(screen.getByTestId('ops-section-bots'));
@@ -190,8 +223,8 @@ describe('OpsPanel', () => {
       expect(screen.getByTestId('manager-panel')).toBeTruthy();
     });
 
-    it('ESCAPE PLAN section is always visible (not collapsible)', () => {
-      render(<OpsPanel {...defaultProps} />);
+    it('ESCAPE PLAN section is visible when both collapsible sections are collapsed', () => {
+      render(<OpsPanel {...prestigedProps} />);
 
       // Collapse both sections
       fireEvent.press(screen.getByTestId('ops-section-bots'));

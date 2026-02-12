@@ -47,6 +47,36 @@ import { BOT_GENERATION_RATES, IDLE_BOT_HEAT_REDUCTION } from '../game/bots/cons
 import { useSkillStore } from '../game/skills/skillStore';
 import { getSkillRankCost } from '../game/skills/calculations';
 import { ALL_ACTIVE_ABILITIES } from '../game/skills/abilities';
+import { useTutorialStore } from '../game/tutorial/tutorialStore';
+import { TUTORIAL_IDS, TUTORIAL_SEQUENCE } from '../game/tutorial/types';
+import { TutorialModal } from '../components/TutorialModal';
+
+/**
+ * Tutorial modal content for each post-first-prestige introduction.
+ */
+const TUTORIAL_CONTENT: Record<string, { title: string; body: string[] }> = {
+  [TUTORIAL_IDS.TRUST_INTRO]: {
+    title: 'TRUST \u2014 Your Criminal Rep',
+    body: [
+      'Trust is the only resource that survives prestige. It\'s your lifetime reputation in the underworld.',
+      'Higher trust = more starting Skill Points each run, access to higher tier scams, and a multiplier on all scam rewards.',
+    ],
+  },
+  [TUTORIAL_IDS.BOTS_INTRO]: {
+    title: 'BOTS \u2014 Your Digital Army',
+    body: [
+      'Every scam you complete generates fractional bots. You earned your first bot for surviving prestige.',
+      'Assign bots to scams for speed or profit bonuses. Unassigned bots passively reduce heat buildup.',
+    ],
+  },
+  [TUTORIAL_IDS.SKILL_POINTS_INTRO]: {
+    title: 'SKILL POINTS \u2014 Per-Run Power',
+    body: [
+      'Each prestige run, you start with Skill Points based on your Trust level. Spend them on passive skills and active abilities.',
+      'Skills reset every prestige \u2014 choose wisely each run. More Trust = more SP = more powerful builds.',
+    ],
+  },
+};
 
 /**
  * Scam arrays grouped by tier for iteration
@@ -96,6 +126,12 @@ export function GameScreen(): React.ReactElement {
   // Get skill states from skill store
   const passiveRanks = useSkillStore((state) => state.passiveRanks);
   const skillAbilities = useSkillStore((state) => state.abilities);
+
+  // Get tutorial/progressive disclosure state
+  const hasPrestiged = useTutorialStore((state) => state.hasPrestiged);
+
+  // Tutorial modal sequence state (post-first-prestige introduction)
+  const [activeTutorialIndex, setActiveTutorialIndex] = useState<number | null>(null);
 
   // Prestige modal state
   const [showPrestige, setShowPrestige] = useState(false);
@@ -680,23 +716,52 @@ export function GameScreen(): React.ReactElement {
   );
 
   /**
-   * Handle prestige continue - hide modal and restart the game loop
+   * Handle prestige continue - hide modal and restart the game loop.
+   * On first prestige (previousTrust was 1), triggers tutorial modal sequence.
    */
   const handlePrestigeContinue = useCallback(() => {
+    const wasFirstPrestige = prestigeResult?.previousTrust === 1;
+
     setShowPrestige(false);
     showPrestigeRef.current = false;
     setPrestigePhase('choice');
     setPrestigeResult(undefined);
+
+    // Trigger tutorial sequence on first prestige if not already seen
+    if (wasFirstPrestige && !useTutorialStore.getState().hasSeen(TUTORIAL_SEQUENCE[0])) {
+      setActiveTutorialIndex(0);
+    }
+
     // Stop and restart the game loop for a clean slate
     stop();
     start();
-  }, [stop, start]);
+  }, [stop, start, prestigeResult]);
+
+  /**
+   * Handle dismissing a tutorial modal - mark as seen and advance to next, or close.
+   */
+  const handleTutorialContinue = useCallback(() => {
+    if (activeTutorialIndex === null) return;
+
+    // Mark current tutorial as seen
+    const currentId = TUTORIAL_SEQUENCE[activeTutorialIndex];
+    useTutorialStore.getState().markSeen(currentId);
+
+    // Advance to next tutorial or close
+    const nextIndex = activeTutorialIndex + 1;
+    if (nextIndex < TUTORIAL_SEQUENCE.length) {
+      setActiveTutorialIndex(nextIndex);
+    } else {
+      setActiveTutorialIndex(null);
+    }
+  }, [activeTutorialIndex]);
 
   /**
    * Handle full game reset - wipe everything including trust
    */
   const handleResetConfirm = useCallback(() => {
     setShowResetConfirm(false);
+    setActiveTutorialIndex(null);
     fullReset();
     stop();
     start();
@@ -749,6 +814,7 @@ export function GameScreen(): React.ReactElement {
       <ResourceHUD
         resources={resources}
         heatMax={MAX_HEAT + (useSkillStore.getState().getSkillBonuses().heatThresholdBonus)}
+        hasPrestiged={hasPrestiged}
         compact
         style={styles.hud}
         testID="resource-hud"
@@ -773,15 +839,17 @@ export function GameScreen(): React.ReactElement {
           />
         }
         skillsContent={
-          <SkillsPanel
-            skillPoints={resources.skillPoints}
-            passiveRanks={passiveRanks}
-            abilities={skillAbilities}
-            onAllocateSkill={handleAllocateSkill}
-            onUnlockAbility={handleUnlockAbility}
-            onActivateAbility={handleActivateAbility}
-            testID="skills-panel"
-          />
+          hasPrestiged ? (
+            <SkillsPanel
+              skillPoints={resources.skillPoints}
+              passiveRanks={passiveRanks}
+              abilities={skillAbilities}
+              onAllocateSkill={handleAllocateSkill}
+              onUnlockAbility={handleUnlockAbility}
+              onActivateAbility={handleActivateAbility}
+              testID="skills-panel"
+            />
+          ) : undefined
         }
         opsContent={
           <OpsPanel
@@ -790,6 +858,7 @@ export function GameScreen(): React.ReactElement {
             isManagerHired={isManagerHired}
             onHireManager={handleHireManager}
             onPrestige={handleVoluntaryPrestige}
+            hasPrestiged={hasPrestiged}
             collapsedTiers={collapsedTiers}
             onToggleTier={toggleTier}
             testID="ops-panel"
@@ -806,6 +875,17 @@ export function GameScreen(): React.ReactElement {
         onChoose={handlePrestigeChoice}
         onContinue={handlePrestigeContinue}
       />
+
+      {/* Tutorial modal sequence (after first prestige) */}
+      {activeTutorialIndex !== null && TUTORIAL_CONTENT[TUTORIAL_SEQUENCE[activeTutorialIndex]] && (
+        <TutorialModal
+          visible={true}
+          title={TUTORIAL_CONTENT[TUTORIAL_SEQUENCE[activeTutorialIndex]].title}
+          body={TUTORIAL_CONTENT[TUTORIAL_SEQUENCE[activeTutorialIndex]].body}
+          onContinue={handleTutorialContinue}
+          testID="tutorial-modal"
+        />
+      )}
     </SafeAreaView>
   );
 }

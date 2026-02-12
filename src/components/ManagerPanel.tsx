@@ -77,10 +77,12 @@ export function ManagerPanel({
         const accessible = isTierAccessible(tier, resources.trust);
         if (!accessible) return null;
 
-        // Filter managers that belong to this tier's scams
-        const tierManagers = ALL_MANAGERS.filter((mgr) =>
-          tierScams.some((s) => s.id === mgr.scamId)
-        );
+        // Filter managers that belong to this tier's scams and whose scam is unlocked
+        const tierManagers = ALL_MANAGERS.filter((mgr) => {
+          if (!tierScams.some((s) => s.id === mgr.scamId)) return false;
+          const scamState = scams[mgr.scamId];
+          return scamState?.isUnlocked ?? false;
+        });
 
         if (tierManagers.length === 0) return null;
 
@@ -110,8 +112,6 @@ export function ManagerPanel({
                   const hired = isManagerHired(manager.id);
                   const dynamicManagerCost = getManagerCostForScam(manager.scamId);
                   const canAfford = resources.money >= dynamicManagerCost;
-                  const scamState = scams[manager.scamId];
-                  const scamUnlocked = scamState?.isUnlocked ?? false;
 
                   const portrait = getManagerPortrait(manager.id);
                   return (
@@ -134,7 +134,7 @@ export function ManagerPanel({
                           {hired ? '✓ HIRED' : `$${formatNumber(dynamicManagerCost)}`}
                         </TerminalText>
                       </View>
-                      {!hired && scamUnlocked && (
+                      {!hired && (
                         <PixelButton
                           onPress={() => onHireManager(manager.id, dynamicManagerCost, manager.scamId)}
                           disabled={!canAfford}
@@ -142,11 +142,6 @@ export function ManagerPanel({
                         >
                           HIRE
                         </PixelButton>
-                      )}
-                      {!hired && !scamUnlocked && (
-                        <TerminalText size="sm" color={COLORS.terminalGreenDim}>
-                          {'LOCKED'}
-                        </TerminalText>
                       )}
                     </View>
                   );

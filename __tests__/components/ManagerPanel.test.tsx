@@ -188,7 +188,7 @@ describe('ManagerPanel', () => {
       expect(screen.getByText('$500')).toBeTruthy();
     });
 
-    it('shows "LOCKED" for managers whose scam is not unlocked', () => {
+    it('hides managers whose scam is not unlocked', () => {
       render(
         <ManagerPanel
           resources={createResources()}
@@ -198,7 +198,28 @@ describe('ManagerPanel', () => {
         />
       );
 
-      expect(screen.getByText('LOCKED')).toBeTruthy();
+      // Manager 1 (scam-1 unlocked) is shown, Manager 2 (scam-2 locked) is hidden
+      expect(screen.getByText('Test Manager 1')).toBeTruthy();
+      expect(screen.queryByText('Test Manager 2')).toBeNull();
+      // Only one HIRE button
+      expect(screen.getAllByText('HIRE').length).toBe(1);
+    });
+
+    it('shows no tier section when all scams in tier are locked', () => {
+      render(
+        <ManagerPanel
+          resources={createResources()}
+          scams={createScamStates({
+            'scam-1': { isUnlocked: false },
+            'scam-2': { isUnlocked: false },
+          })}
+          isManagerHired={defaultIsManagerHired}
+          onHireManager={defaultOnHireManager}
+        />
+      );
+
+      // No tier header should appear since there are no managers to show
+      expect(screen.queryByText(/TIER 1 MANAGERS/)).toBeNull();
     });
   });
 

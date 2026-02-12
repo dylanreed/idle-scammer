@@ -9,6 +9,8 @@ import type { ManagerStateMap } from '../managers/managerStore';
 import type { EmployeeStateMap } from '../employees/employeeStore';
 import type { BotAssignmentMap } from '../bots/types';
 import type { SkillSaveData } from '../skills/types';
+import type { TutorialSaveData } from '../tutorial/types';
+import { DEFAULT_TUTORIAL_SAVE_DATA } from '../tutorial/types';
 import type { ScamTimer } from '../engine/types';
 import { ALL_MANAGERS } from '../managers/definitions';
 import { ALL_SCAMS } from '../scams/definitions';
@@ -44,7 +46,8 @@ export function createSaveData(
   employees: EmployeeStateMap = {},
   botAssignments: BotAssignmentMap = {},
   skills: SkillSaveData = EMPTY_SKILL_SAVE_DATA,
-  ascensions: AscensionMap = {}
+  ascensions: AscensionMap = {},
+  tutorials: TutorialSaveData = DEFAULT_TUTORIAL_SAVE_DATA
 ): SaveData {
   return {
     version: SAVE_VERSION,
@@ -56,6 +59,7 @@ export function createSaveData(
     botAssignments,
     skills,
     ascensions,
+    tutorials,
   };
 }
 
@@ -74,6 +78,7 @@ export function applySaveData(saveData: SaveData): {
   botAssignments: BotAssignmentMap;
   skills: SkillSaveData;
   ascensions: AscensionMap;
+  tutorials: TutorialSaveData;
 } {
   return {
     resources: saveData.resources,
@@ -83,6 +88,7 @@ export function applySaveData(saveData: SaveData): {
     botAssignments: saveData.botAssignments ?? {},
     skills: saveData.skills ?? EMPTY_SKILL_SAVE_DATA,
     ascensions: saveData.ascensions ?? {},
+    tutorials: saveData.tutorials ?? DEFAULT_TUTORIAL_SAVE_DATA,
   };
 }
 
@@ -159,6 +165,15 @@ export function migrateIfNeeded(saveData: SaveData): SaveData {
       ...migrated,
       version: 7,
       ascensions: (migrated as SaveData).ascensions ?? {},
+    };
+  }
+
+  // Migration from version 7 to version 8: add tutorials field
+  if (migrated.version < 8) {
+    migrated = {
+      ...migrated,
+      version: 8,
+      tutorials: (migrated as SaveData).tutorials ?? DEFAULT_TUTORIAL_SAVE_DATA,
     };
   }
 

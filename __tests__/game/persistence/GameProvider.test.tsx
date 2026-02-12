@@ -98,6 +98,8 @@ describe('GameProvider', () => {
       },
       employees: {},
       botAssignments: {},
+      skills: { passiveRanks: {}, unlockedAbilities: [], cooldowns: {}, activeDurations: {} },
+      ascensions: {},
     };
 
     mockStorage.loadGame.mockResolvedValue(savedData);
@@ -235,6 +237,8 @@ describe('GameProvider', () => {
       },
       employees: {},
       botAssignments: {},
+      skills: { passiveRanks: {}, unlockedAbilities: [], cooldowns: {}, activeDurations: {} },
+      ascensions: {},
     };
 
     mockStorage.loadGame.mockResolvedValue(savedData);

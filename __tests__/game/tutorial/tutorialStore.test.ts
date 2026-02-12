@@ -101,7 +101,7 @@ describe('Tutorial store', () => {
     });
 
     it('should not share reference with input data', () => {
-      const inputSeen = [TUTORIAL_IDS.TRUST_INTRO];
+      const inputSeen: string[] = [TUTORIAL_IDS.TRUST_INTRO];
       useTutorialStore.getState().hydrate({
         hasPrestiged: true,
         seen: inputSeen,

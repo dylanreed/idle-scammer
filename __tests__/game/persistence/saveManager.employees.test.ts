@@ -59,6 +59,8 @@ describe('Employee Persistence', () => {
           'email-copywriter': { employeeId: 'email-copywriter', count: 5 },
         },
         botAssignments: {},
+        skills: { passiveRanks: {}, unlockedAbilities: [], cooldowns: {}, activeDurations: {} },
+        ascensions: {},
       };
 
       const { employees } = applySaveData(saveData);

@@ -272,6 +272,7 @@ describe('SaveManager', () => {
         employees: {},
         botAssignments: {},
         skills: { passiveRanks: {}, unlockedAbilities: [], cooldowns: {}, activeDurations: {} },
+        ascensions: {},
       };
 
       const { resources, scams, managers, botAssignments } = applySaveData(saveData);
@@ -300,6 +301,7 @@ describe('SaveManager', () => {
         employees: {},
         botAssignments: {},
         skills: { passiveRanks: {}, unlockedAbilities: [], cooldowns: {}, activeDurations: {} },
+        ascensions: {},
       };
 
       const { resources, scams, managers, botAssignments } = applySaveData(saveData);
@@ -427,6 +429,8 @@ describe('SaveManager', () => {
         managers: {},
         employees: {},
         botAssignments: {},
+        skills: { passiveRanks: {}, unlockedAbilities: [], cooldowns: {}, activeDurations: {} },
+        ascensions: {},
       };
 
       const { resources } = applySaveData(saveData);
@@ -468,6 +472,7 @@ describe('SaveManager', () => {
         employees: {},
         botAssignments: {},
         skills: { passiveRanks: {}, unlockedAbilities: [], cooldowns: {}, activeDurations: {} },
+        ascensions: {},
       };
 
       const result = migrateIfNeeded(saveData);
@@ -500,7 +505,7 @@ describe('SaveManager', () => {
       expect(result.resources.trust).toBe(2);
       expect(result.managers).toEqual({});
       // v8->v9 migration strips reputation
-      expect((result.resources as Record<string, unknown>).reputation).toBeUndefined();
+      expect((result.resources as unknown as Record<string, unknown>).reputation).toBeUndefined();
     });
 
     it('should migrate v1 data to v2 by adding empty managers', () => {
@@ -737,7 +742,7 @@ describe('SaveManager', () => {
 
       expect(result.version).toBe(SAVE_VERSION);
       // reputation should be stripped from resources
-      expect((result.resources as Record<string, unknown>).reputation).toBeUndefined();
+      expect((result.resources as unknown as Record<string, unknown>).reputation).toBeUndefined();
       // Other resources preserved
       expect(result.resources.money).toBe(5000);
       expect(result.resources.heat).toBe(30);
@@ -802,7 +807,7 @@ describe('SaveManager', () => {
       expect(result.version).toBe(SAVE_VERSION);
       expect(result.managers).toEqual({});
       // v8->v9 migration strips reputation
-      expect((result.resources as Record<string, unknown>).reputation).toBeUndefined();
+      expect((result.resources as unknown as Record<string, unknown>).reputation).toBeUndefined();
     });
   });
 

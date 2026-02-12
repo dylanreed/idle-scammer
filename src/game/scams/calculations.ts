@@ -423,6 +423,12 @@ export function calculateMaxBuyCount(
   const baseCost = unlockCost ?? tierBase.baseCost;
   const costRate = getScamCostRate(baseCost);
 
+  // Guard: if costRate is 1, all upgrades cost the same
+  if (costRate <= 1) {
+    const uniformCost = baseCost * Math.pow(costRate, currentLevel - 1);
+    return uniformCost > 0 ? Math.max(0, Math.floor(money / uniformCost)) : 0;
+  }
+
   // Cost of first upgrade (current level to next level)
   const firstUpgradeCost = baseCost * Math.pow(costRate, currentLevel - 1);
   if (money < firstUpgradeCost) return 0;
@@ -456,6 +462,12 @@ export function calculateMaxBuyCost(
   const tierBase = getTierBase(tier);
   const baseCost = unlockCost ?? tierBase.baseCost;
   const costRate = getScamCostRate(baseCost);
+
+  // Guard: if costRate is 1, all upgrades cost the same
+  if (costRate <= 1) {
+    const uniformCost = baseCost * Math.pow(costRate, currentLevel - 1);
+    return Math.floor(uniformCost * count);
+  }
 
   // Total = baseCost × r^(level-1) × (r^count - 1) / (r - 1)
   const firstUpgradeCost = baseCost * Math.pow(costRate, currentLevel - 1);

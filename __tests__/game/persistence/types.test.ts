@@ -64,6 +64,7 @@ describe('Persistence Types', () => {
           cooldowns: {},
           activeDurations: {},
         },
+        ascensions: {},
       };
 
       // TypeScript compilation is the main test - this verifies runtime shape
@@ -101,6 +102,7 @@ describe('Persistence Types', () => {
           cooldowns: {},
           activeDurations: {},
         },
+        ascensions: {},
       };
 
       expect(saveData).toHaveProperty('version');

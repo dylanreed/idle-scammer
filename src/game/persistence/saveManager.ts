@@ -184,7 +184,7 @@ export function migrateIfNeeded(saveData: SaveData): SaveData {
     migrated = {
       ...migrated,
       version: 9,
-      resources: resources as GameResources,
+      resources: resources as unknown as GameResources,
     };
   }
 

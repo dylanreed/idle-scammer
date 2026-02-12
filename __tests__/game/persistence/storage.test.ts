@@ -50,6 +50,8 @@ describe('Storage', () => {
     managers: {},
     employees: {},
     botAssignments: {},
+    skills: { passiveRanks: {}, unlockedAbilities: [], cooldowns: {}, activeDurations: {} },
+    ascensions: {},
   };
 
   beforeEach(() => {

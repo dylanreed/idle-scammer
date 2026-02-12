@@ -72,7 +72,7 @@ export function CollectionPanel({
                 <HypeBar hype={collection.hype} />
 
                 <TerminalText size="sm" color={COLORS.terminalGreenDim}>
-                  {`Floor: ${(collection.hype * BASE_FLOOR_PRICE_PER_HYPE).toFixed(4)} crypto`}
+                  {`Floor: ${(collection.hype * BASE_FLOOR_PRICE_PER_HYPE).toFixed(4)} $TRUST`}
                 </TerminalText>
 
                 <View style={styles.shillerRow}>
@@ -119,7 +119,7 @@ export function CollectionPanel({
 
             {collection.isRugged && collection.rugPullValue > 0 && (
               <TerminalText size="sm" color={COLORS.terminalGreenDim}>
-                {`Drained: ${collection.rugPullValue.toFixed(2)} crypto`}
+                {`Drained: ${collection.rugPullValue.toFixed(2)} $TRUST`}
               </TerminalText>
             )}
           </View>

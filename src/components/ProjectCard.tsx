@@ -55,7 +55,7 @@ export function ProjectCard({
   const statusText = project.isRugged
     ? 'RUGGED'
     : isMatured
-      ? `+${(project.investedAmount * project.returnMultiplier).toFixed(2)} crypto`
+      ? `+${(project.investedAmount * project.returnMultiplier).toFixed(2)} $TRUST`
       : formatTimeRemaining(remaining);
 
   return (

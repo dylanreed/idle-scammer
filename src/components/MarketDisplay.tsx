@@ -43,7 +43,7 @@ export function MarketDisplay({
     <View style={styles.container} testID={testID}>
       <View style={styles.rateRow}>
         <TerminalText size="sm" color={COLORS.terminalGreenDim}>
-          {'1 CRYPTO ='}
+          {'1 TRUSTCOIN ='}
         </TerminalText>
         <TerminalText size="md" color={COLORS.terminalGreen}>
           {`$${formatRate(exchangeRate)}`}

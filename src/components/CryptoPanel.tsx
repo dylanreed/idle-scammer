@@ -105,7 +105,7 @@ export function CryptoPanel({ testID }: CryptoPanelProps): React.ReactElement {
         <View style={styles.content}>
           {/* Header */}
           <TerminalText size="lg" color={COLORS.terminalGreen}>
-            {'CRYPTO EXCHANGE'}
+            {'TRUSTCOIN EXCHANGE'}
           </TerminalText>
 
           {/* Market Display */}

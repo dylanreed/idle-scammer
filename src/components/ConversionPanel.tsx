@@ -53,7 +53,7 @@ export function ConversionPanel({
       {/* Buy Section */}
       <View style={styles.section}>
         <TerminalText size="sm" color={COLORS.terminalGreen}>
-          {'BUY CRYPTO'}
+          {'BUY TRUSTCOIN'}
         </TerminalText>
         <View style={styles.inputRow}>
           <TextInput
@@ -81,7 +81,7 @@ export function ConversionPanel({
         </View>
         {buyNum > 0 && (
           <TerminalText size="sm" color={COLORS.terminalGreenDim}>
-            {`\u2192 ${buyQuote.toFixed(4)} crypto`}
+            {`\u2192 ${buyQuote.toFixed(4)} $TRUST`}
           </TerminalText>
         )}
       </View>
@@ -89,14 +89,14 @@ export function ConversionPanel({
       {/* Sell Section */}
       <View style={styles.section}>
         <TerminalText size="sm" color={COLORS.terminalGreen}>
-          {'SELL CRYPTO'}
+          {'SELL TRUSTCOIN'}
         </TerminalText>
         <View style={styles.inputRow}>
           <TextInput
             style={styles.input}
             value={sellAmount}
             onChangeText={setSellAmount}
-            placeholder="crypto amount"
+            placeholder="$TRUST amount"
             placeholderTextColor={COLORS.terminalGreenDim}
             keyboardType="numeric"
             testID="sell-input"

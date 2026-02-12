@@ -86,7 +86,7 @@ export function ResponsiveLayout({
             style={styles.tabButton}
             testID="tab-crypto"
           >
-            {'CRYPTO'}
+            {'TRUSTCOIN'}
           </PixelButton>
         )}
         <PixelButton

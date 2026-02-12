@@ -30,7 +30,7 @@ const RESOURCE_LABELS: Record<ResourceKey, string> = {
   heat: 'HEAT',
   bots: 'BOTS',
   skillPoints: 'SP',
-  crypto: 'CRYPTO',
+  crypto: 'TRUSTCOIN',
   trust: 'TRUST',
   snitchCount: 'SNITCHES',
 };

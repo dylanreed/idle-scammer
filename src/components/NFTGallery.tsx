@@ -67,7 +67,7 @@ export function NFTGallery({
                 </View>
                 <View style={styles.nftAction}>
                   <TerminalText size="sm" color={COLORS.terminalGreen}>
-                    {`${floorPrice.toFixed(4)}\u20BF`}
+                    {`${floorPrice.toFixed(4)} $TRUST`}
                   </TerminalText>
                   <PixelButton
                     onPress={() => onSell(nft.id)}

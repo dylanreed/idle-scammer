@@ -32,15 +32,15 @@ const PRE_PRESTIGE_RESOURCES: Set<ResourceKey> = new Set([
 
 /**
  * Resources hidden until their systems are implemented.
- * Crypto has no game mechanic yet, so it's always hidden.
  */
-const ALWAYS_HIDDEN_RESOURCES: Set<ResourceKey> = new Set([
-  'crypto',
-]);
+const ALWAYS_HIDDEN_RESOURCES: Set<ResourceKey> = new Set([]);
 
 /**
  * Props for the ResourceHUD component
  */
+/** Minimum trust level required to see the crypto resource */
+const CRYPTO_TRUST_THRESHOLD = 21;
+
 export interface ResourceHUDProps {
   /** Current game resources to display */
   resources: GameResources;
@@ -81,6 +81,8 @@ export function ResourceHUD({
   const visibleResources = RESOURCE_ORDER.filter((key) => {
     if (ALWAYS_HIDDEN_RESOURCES.has(key)) return false;
     if (!hasPrestiged && !PRE_PRESTIGE_RESOURCES.has(key)) return false;
+    // Crypto is only visible once the player has enough trust (Tier 3 access)
+    if (key === 'crypto' && resources.trust < CRYPTO_TRUST_THRESHOLD) return false;
     return true;
   });
 

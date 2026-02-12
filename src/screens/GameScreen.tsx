@@ -50,6 +50,9 @@ import { ALL_ACTIVE_ABILITIES } from '../game/skills/abilities';
 import { useTutorialStore } from '../game/tutorial/tutorialStore';
 import { TUTORIAL_IDS, TUTORIAL_SEQUENCE } from '../game/tutorial/types';
 import { TutorialModal } from '../components/TutorialModal';
+import { useCryptoStore } from '../game/crypto/cryptoStore';
+import { MARKET_TICK_INTERVAL_MS } from '../game/crypto/constants';
+import { CryptoPanel } from '../components/CryptoPanel';
 
 /**
  * Tutorial modal content for each post-first-prestige introduction.
@@ -157,6 +160,9 @@ export function GameScreen(): React.ReactElement {
 
   // Ref guard to prevent double-triggering prestige (stale closures in useCallback)
   const showPrestigeRef = useRef(false);
+
+  // Accumulator for crypto market tick timing (market ticks every MARKET_TICK_INTERVAL_MS)
+  const cryptoTickAccRef = useRef(0);
 
   // Refs to hold timer and loop control functions
   const removeTimerRef = useRef<((scamId: string) => void) | null>(null);
@@ -346,6 +352,16 @@ export function GameScreen(): React.ReactElement {
         const passiveIncome = skillBonuses.passiveIncomePerSec * trustScaling * deltaSeconds;
         addMoney(passiveIncome);
       }
+
+      // Crypto market tick (every MARKET_TICK_INTERVAL_MS) — only real-time, not offline
+      cryptoTickAccRef.current += result.deltaMs;
+      while (cryptoTickAccRef.current >= MARKET_TICK_INTERVAL_MS) {
+        useCryptoStore.getState().tickMarket();
+        cryptoTickAccRef.current -= MARKET_TICK_INTERVAL_MS;
+      }
+
+      // Tick NFT collection hype decay and shill boost
+      useCryptoStore.getState().tickCollections(result.deltaMs);
     },
     [addHeat, addMoney]
   );
@@ -845,6 +861,11 @@ export function GameScreen(): React.ReactElement {
               onActivateAbility={handleActivateAbility}
               testID="skills-panel"
             />
+          ) : undefined
+        }
+        cryptoContent={
+          resources.trust >= 21 ? (
+            <CryptoPanel testID="crypto-panel" />
           ) : undefined
         }
         opsContent={

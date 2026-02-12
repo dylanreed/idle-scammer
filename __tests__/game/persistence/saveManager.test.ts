@@ -756,6 +756,88 @@ describe('SaveManager', () => {
       expect(result.scams['nigerian-prince-emails'].level).toBe(20);
     });
 
+    it('should migrate v9 data to v10 by adding default crypto state', () => {
+      const v9SaveData = {
+        version: 9,
+        savedAt: Date.now(),
+        resources: {
+          money: 12000,
+          heat: 35,
+          bots: 30,
+          skillPoints: 50,
+          crypto: 20,
+          trust: 25,
+          snitchCount: 2,
+        },
+        scams: {
+          'nigerian-prince-emails': {
+            scamId: 'nigerian-prince-emails',
+            level: 50,
+            isUnlocked: true,
+            timesCompleted: 500,
+          },
+        },
+        managers: {},
+        employees: {},
+        botAssignments: {},
+        skills: { passiveRanks: {}, unlockedAbilities: [], cooldowns: {}, activeDurations: {} },
+        ascensions: { 'nigerian-prince-emails': 1 },
+        tutorials: { hasPrestiged: true, seen: ['trust-intro', 'bots-intro', 'skill-points-intro'] },
+      } as unknown as SaveData;
+
+      const result = migrateIfNeeded(v9SaveData);
+
+      expect(result.version).toBe(SAVE_VERSION);
+      expect(result.crypto).toBeDefined();
+      expect(result.crypto!.market.exchangeRate).toBe(1000);
+      expect(result.crypto!.market.seed).toBe(42);
+      expect(result.crypto!.activeProjects).toEqual([]);
+      expect(result.crypto!.completedProjects).toEqual([]);
+      expect(result.crypto!.ownedNFTs).toEqual([]);
+      expect(result.crypto!.collections).toEqual([]);
+      // Existing data preserved
+      expect(result.resources.money).toBe(12000);
+      expect(result.resources.trust).toBe(25);
+      expect(result.tutorials).toEqual({ hasPrestiged: true, seen: ['trust-intro', 'bots-intro', 'skill-points-intro'] });
+    });
+
+    it('should preserve existing crypto data during v9->v10 migration', () => {
+      const v9SaveDataWithCrypto = {
+        version: 9,
+        savedAt: Date.now(),
+        resources: {
+          money: 5000,
+          heat: 20,
+          bots: 10,
+          skillPoints: 15,
+          crypto: 10,
+          trust: 10,
+          snitchCount: 0,
+        },
+        scams: {},
+        managers: {},
+        employees: {},
+        botAssignments: {},
+        skills: { passiveRanks: {}, unlockedAbilities: [], cooldowns: {}, activeDurations: {} },
+        ascensions: {},
+        tutorials: { hasPrestiged: true, seen: [] },
+        crypto: {
+          market: { exchangeRate: 1500, seed: 999, activeEvent: null, eventTicksRemaining: 0, totalTicks: 100 },
+          activeProjects: [],
+          completedProjects: [],
+          ownedNFTs: [],
+          collections: [],
+        },
+      } as unknown as SaveData;
+
+      const result = migrateIfNeeded(v9SaveDataWithCrypto);
+
+      expect(result.version).toBe(SAVE_VERSION);
+      expect(result.crypto!.market.exchangeRate).toBe(1500);
+      expect(result.crypto!.market.seed).toBe(999);
+      expect(result.crypto!.market.totalTicks).toBe(100);
+    });
+
     it('should preserve existing tutorials during v7->v8 migration', () => {
       const v7SaveDataWithTutorials = {
         version: 7,

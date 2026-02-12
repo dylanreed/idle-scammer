@@ -8,12 +8,13 @@ import type { EmployeeState } from '../employees/types';
 import type { BotAssignmentMap } from '../bots/types';
 import type { SkillSaveData } from '../skills/types';
 import type { TutorialSaveData } from '../tutorial/types';
+import type { CryptoSaveData } from '../crypto/types';
 
 /**
  * Current save data format version.
  * Increment when changing SaveData structure (requires migration logic).
  */
-export const SAVE_VERSION = 9;
+export const SAVE_VERSION = 10;
 
 /**
  * AsyncStorage key for game save data.
@@ -59,4 +60,7 @@ export interface SaveData {
 
   /** Tutorial/progressive disclosure state (prestige tracking, seen modals) */
   tutorials?: TutorialSaveData;
+
+  /** Crypto market, projects, and NFT state */
+  crypto?: CryptoSaveData;
 }

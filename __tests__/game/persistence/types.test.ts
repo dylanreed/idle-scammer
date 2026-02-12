@@ -10,8 +10,8 @@ import {
 
 describe('Persistence Types', () => {
   describe('constants', () => {
-    it('should export SAVE_VERSION at 9', () => {
-      expect(SAVE_VERSION).toBe(9);
+    it('should export SAVE_VERSION at 10', () => {
+      expect(SAVE_VERSION).toBe(10);
     });
 
     it('should export correct STORAGE_KEY', () => {

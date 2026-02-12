@@ -83,11 +83,22 @@ describe('ResourceHUD', () => {
       expect(screen.getByText('1')).toBeTruthy();      // trust
     });
 
-    it('always hides crypto (not yet implemented)', () => {
+    it('hides crypto when trust is below threshold', () => {
       render(<ResourceHUD resources={mockResources} hasPrestiged={true} />);
 
-      // crypto is 500, but should not be shown
+      // crypto is 500, but trust is 1 (below threshold of 21), so not shown
       expect(screen.queryByText('500')).toBeNull();
+    });
+
+    it('shows crypto when trust meets threshold', () => {
+      const highTrustResources: GameResources = {
+        ...mockResources,
+        trust: 21,
+      };
+      render(<ResourceHUD resources={highTrustResources} hasPrestiged={true} />);
+
+      // crypto is 500 and trust >= 21, so crypto should be visible
+      expect(screen.getByText('500')).toBeTruthy();
     });
 
     it('updates when resources change', () => {
@@ -138,8 +149,8 @@ describe('ResourceHUD', () => {
 
       expect(screen.getByText('1.23T')).toBeTruthy();  // money
       expect(screen.getByText('50M')).toBeTruthy();    // bots
-      // crypto (10B) should be hidden
-      expect(screen.queryByText('10B')).toBeNull();
+      // crypto (10B) is visible because trust (100) meets the threshold (21)
+      expect(screen.getByText('10B')).toBeTruthy();
     });
   });
 

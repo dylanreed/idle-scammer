@@ -19,6 +19,7 @@ export const TUTORIAL_IDS = {
   TRUST_INTRO: 'trust-intro',
   BOTS_INTRO: 'bots-intro',
   SKILL_POINTS_INTRO: 'skill-points-intro',
+  CRYPTO_INTRO: 'crypto-intro',
 } as const;
 
 /**

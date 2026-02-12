@@ -21,8 +21,12 @@ describe('Tutorial types', () => {
       expect(TUTORIAL_IDS.SKILL_POINTS_INTRO).toBe('skill-points-intro');
     });
 
-    it('should have exactly 3 tutorial IDs', () => {
-      expect(Object.keys(TUTORIAL_IDS)).toHaveLength(3);
+    it('should define crypto intro ID', () => {
+      expect(TUTORIAL_IDS.CRYPTO_INTRO).toBe('crypto-intro');
+    });
+
+    it('should have exactly 4 tutorial IDs', () => {
+      expect(Object.keys(TUTORIAL_IDS)).toHaveLength(4);
     });
   });
 

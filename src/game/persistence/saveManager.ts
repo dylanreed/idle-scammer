@@ -11,6 +11,8 @@ import type { BotAssignmentMap } from '../bots/types';
 import type { SkillSaveData } from '../skills/types';
 import type { TutorialSaveData } from '../tutorial/types';
 import { DEFAULT_TUTORIAL_SAVE_DATA } from '../tutorial/types';
+import type { CryptoSaveData } from '../crypto/types';
+import { DEFAULT_CRYPTO_SAVE_DATA } from '../crypto/types';
 import type { ScamTimer } from '../engine/types';
 import { ALL_MANAGERS } from '../managers/definitions';
 import { ALL_SCAMS } from '../scams/definitions';
@@ -47,7 +49,8 @@ export function createSaveData(
   botAssignments: BotAssignmentMap = {},
   skills: SkillSaveData = EMPTY_SKILL_SAVE_DATA,
   ascensions: AscensionMap = {},
-  tutorials: TutorialSaveData = DEFAULT_TUTORIAL_SAVE_DATA
+  tutorials: TutorialSaveData = DEFAULT_TUTORIAL_SAVE_DATA,
+  crypto: CryptoSaveData = DEFAULT_CRYPTO_SAVE_DATA
 ): SaveData {
   return {
     version: SAVE_VERSION,
@@ -60,6 +63,7 @@ export function createSaveData(
     skills,
     ascensions,
     tutorials,
+    crypto,
   };
 }
 
@@ -79,6 +83,7 @@ export function applySaveData(saveData: SaveData): {
   skills: SkillSaveData;
   ascensions: AscensionMap;
   tutorials: TutorialSaveData;
+  crypto: CryptoSaveData;
 } {
   return {
     resources: saveData.resources,
@@ -89,6 +94,7 @@ export function applySaveData(saveData: SaveData): {
     skills: saveData.skills ?? EMPTY_SKILL_SAVE_DATA,
     ascensions: saveData.ascensions ?? {},
     tutorials: saveData.tutorials ?? DEFAULT_TUTORIAL_SAVE_DATA,
+    crypto: saveData.crypto ?? DEFAULT_CRYPTO_SAVE_DATA,
   };
 }
 
@@ -185,6 +191,15 @@ export function migrateIfNeeded(saveData: SaveData): SaveData {
       ...migrated,
       version: 9,
       resources: resources as unknown as GameResources,
+    };
+  }
+
+  // Migration from version 9 to version 10: add crypto field
+  if (migrated.version < 10) {
+    migrated = {
+      ...migrated,
+      version: 10,
+      crypto: (migrated as SaveData).crypto ?? DEFAULT_CRYPTO_SAVE_DATA,
     };
   }
 

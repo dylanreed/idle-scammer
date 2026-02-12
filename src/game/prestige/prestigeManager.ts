@@ -8,6 +8,7 @@ import { useManagerStore } from '../managers/managerStore';
 import { useBotStore } from '../bots/botStore';
 import { useSkillStore } from '../skills/skillStore';
 import { useTutorialStore } from '../tutorial/tutorialStore';
+import { useCryptoStore } from '../crypto/cryptoStore';
 import type { PrestigeResult, PrestigeBonus, PerformanceMetrics } from './types';
 import { calculateCleanEscapeResult, calculateSnitchResult } from './calculations';
 
@@ -33,6 +34,9 @@ export function resetAllStores(): void {
 
   // Reset skills (must re-allocate with starting SP)
   useSkillStore.getState().reset();
+
+  // Reset crypto market, projects, and NFTs (all reset on prestige)
+  useCryptoStore.getState().reset();
 }
 
 /**
@@ -68,6 +72,9 @@ export function fullReset(): void {
 
   // Reset skills
   useSkillStore.getState().reset();
+
+  // Reset crypto market, projects, and NFTs
+  useCryptoStore.getState().reset();
 
   // Reset tutorial/progressive disclosure state (back to first-run experience)
   useTutorialStore.getState().reset();
@@ -150,6 +157,7 @@ export function executePrestige(choice: 'clean-escape' | 'snitch'): PrestigeResu
     useManagerStore.getState().resetManagers();
     useBotStore.getState().resetAssignments();
     useSkillStore.getState().reset();
+    useCryptoStore.getState().reset();
   } else {
     result = calculateSnitchResult(currentTrust, currentResources);
 
@@ -160,6 +168,7 @@ export function executePrestige(choice: 'clean-escape' | 'snitch'): PrestigeResu
     useManagerStore.getState().resetManagers();
     useBotStore.getState().resetAssignments();
     useSkillStore.getState().reset();
+    useCryptoStore.getState().reset();
 
     // Increment lifetime snitch count (after reset, since prestigeReset preserves it)
     const gameStore = useGameStore.getState();

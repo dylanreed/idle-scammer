@@ -17,11 +17,14 @@ export interface ResponsiveLayoutProps {
   /** Content for the right column / OPS CENTER tab */
   opsContent: React.ReactNode;
 
+  /** Content for the CRYPTO tab (trust-gated, appears after skills) */
+  cryptoContent?: React.ReactNode;
+
   /** Test ID for testing */
   testID?: string;
 }
 
-type TabKey = 'scams' | 'skills' | 'ops';
+type TabKey = 'scams' | 'skills' | 'crypto' | 'ops';
 
 /**
  * Responsive layout that adapts to screen width.
@@ -32,6 +35,7 @@ export function ResponsiveLayout({
   scamsContent,
   skillsContent,
   opsContent,
+  cryptoContent,
   testID,
 }: ResponsiveLayoutProps): React.ReactElement {
   const { width } = useWindowDimensions();
@@ -44,6 +48,9 @@ export function ResponsiveLayout({
         <View style={styles.leftColumn}>{scamsContent}</View>
         {skillsContent && (
           <View style={styles.centerColumn}>{skillsContent}</View>
+        )}
+        {cryptoContent && (
+          <View style={styles.centerColumn}>{cryptoContent}</View>
         )}
         <View style={styles.rightColumn}>{opsContent}</View>
       </View>
@@ -72,6 +79,16 @@ export function ResponsiveLayout({
             {'SKILLS'}
           </PixelButton>
         )}
+        {cryptoContent && (
+          <PixelButton
+            onPress={() => setActiveTab('crypto')}
+            variant={activeTab === 'crypto' ? 'primary' : 'secondary'}
+            style={styles.tabButton}
+            testID="tab-crypto"
+          >
+            {'CRYPTO'}
+          </PixelButton>
+        )}
         <PixelButton
           onPress={() => setActiveTab('ops')}
           variant={activeTab === 'ops' ? 'primary' : 'secondary'}
@@ -86,6 +103,7 @@ export function ResponsiveLayout({
       <View style={styles.tabContent}>
         {activeTab === 'scams' && scamsContent}
         {activeTab === 'skills' && skillsContent}
+        {activeTab === 'crypto' && cryptoContent}
         {activeTab === 'ops' && opsContent}
       </View>
     </View>

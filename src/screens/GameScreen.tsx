@@ -927,38 +927,6 @@ export function GameScreen(): React.ReactElement {
         <TerminalText size="lg" color={COLORS.textPrimary}>
           {'IDLE SCAMMER v0.1'}
         </TerminalText>
-        {!showResetConfirm ? (
-          <PixelButton
-            onPress={() => setShowResetConfirm(true)}
-            variant="danger"
-            style={styles.resetButton}
-            testID="reset-btn"
-          >
-            {'RESET'}
-          </PixelButton>
-        ) : (
-          <View style={styles.resetConfirm}>
-            <TerminalText size="sm" color={COLORS.warningRed}>
-              {'WIPE EVERYTHING?'}
-            </TerminalText>
-            <View style={styles.resetConfirmButtons}>
-              <PixelButton
-                onPress={handleResetConfirm}
-                variant="danger"
-                testID="reset-confirm-btn"
-              >
-                {'YES'}
-              </PixelButton>
-              <PixelButton
-                onPress={() => setShowResetConfirm(false)}
-                variant="secondary"
-                testID="reset-cancel-btn"
-              >
-                {'NO'}
-              </PixelButton>
-            </View>
-          </View>
-        )}
       </View>
 
       {/* Resource HUD */}
@@ -1060,6 +1028,42 @@ export function GameScreen(): React.ReactElement {
         />
       )}
 
+      {/* Reset button — tucked in the bottom-right corner */}
+      <View style={styles.resetCorner}>
+        {!showResetConfirm ? (
+          <PixelButton
+            onPress={() => setShowResetConfirm(true)}
+            variant="danger"
+            style={styles.resetButton}
+            testID="reset-btn"
+          >
+            {'RESET'}
+          </PixelButton>
+        ) : (
+          <View style={styles.resetConfirm}>
+            <TerminalText size="sm" color={COLORS.warningRed}>
+              {'WIPE EVERYTHING?'}
+            </TerminalText>
+            <View style={styles.resetConfirmButtons}>
+              <PixelButton
+                onPress={handleResetConfirm}
+                variant="danger"
+                testID="reset-confirm-btn"
+              >
+                {'YES'}
+              </PixelButton>
+              <PixelButton
+                onPress={() => setShowResetConfirm(false)}
+                variant="secondary"
+                testID="reset-cancel-btn"
+              >
+                {'NO'}
+              </PixelButton>
+            </View>
+          </View>
+        )}
+      </View>
+
       {/* Intro modal (shown on fresh start or after full reset) */}
       {showIntroModal && (
         <TutorialModal
@@ -1100,14 +1104,23 @@ const styles = StyleSheet.create({
     marginHorizontal: SPACING.md,
     marginBottom: SPACING.md,
   },
+  resetCorner: {
+    position: 'absolute',
+    bottom: SPACING.md,
+    right: SPACING.md,
+    zIndex: 10,
+    alignItems: 'flex-end',
+  },
   resetButton: {
-    marginTop: SPACING.xs,
     paddingVertical: SPACING.xs,
     paddingHorizontal: SPACING.sm,
+    opacity: 0.5,
   },
   resetConfirm: {
     alignItems: 'center',
-    marginTop: SPACING.xs,
+    backgroundColor: COLORS.backgroundSecondary,
+    padding: SPACING.sm,
+    borderRadius: 4,
   },
   resetConfirmButtons: {
     flexDirection: 'row',

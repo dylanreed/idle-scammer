@@ -245,6 +245,10 @@ export function useGameLoop(options: UseGameLoopOptions = {}): UseGameLoopReturn
   onTickRef.current = onTick;
   onTimerCompleteRef.current = onTimerComplete;
 
+  // Pending tick results queued inside setEngineState, processed by useEffect
+  const pendingResultsRef = useRef<TickResult[]>([]);
+  const [tickVersion, setTickVersion] = useState(0);
+
   const performTick = useCallback(() => {
     if (isPausedRef.current) {
       return;
@@ -252,22 +256,35 @@ export function useGameLoop(options: UseGameLoopOptions = {}): UseGameLoopReturn
 
     setEngineState((currentState) => {
       const result = tick(currentState, Date.now());
+      // Queue the result for processing after the state update commits
+      pendingResultsRef.current.push(result);
+      return result.state;
+    });
 
-      // Call callbacks outside of setState to avoid batching issues
+    // Bump version to trigger the effect that processes pending results
+    setTickVersion((v) => v + 1);
+  }, []);
+
+  // Process tick callbacks after state has committed, avoiding nested
+  // setEngineState calls that can silently drop timer removals and
+  // leave timers stuck at 100%.
+  useEffect(() => {
+    const results = pendingResultsRef.current;
+    if (results.length === 0) return;
+    pendingResultsRef.current = [];
+
+    for (const result of results) {
       if (onTickRef.current) {
         onTickRef.current(result);
       }
 
-      // Notify about completed timers
       for (const completedTimer of result.completedTimers) {
         if (onTimerCompleteRef.current) {
           onTimerCompleteRef.current(completedTimer);
         }
       }
-
-      return result.state;
-    });
-  }, []);
+    }
+  }, [tickVersion]);
 
   const start = useCallback(() => {
     // Clear any existing interval

@@ -1,14 +1,14 @@
 // ABOUTME: Tests for the prestige manager orchestrator
 // ABOUTME: Verifies that executePrestige properly resets all stores and returns correct results
 
-import { executePrestige, resetAllStores } from '../../../src/game/prestige/prestigeManager';
+import { executePrestige, resetAllStores, fullReset } from '../../../src/game/prestige/prestigeManager';
 import { useGameStore, getInitialResources, STARTING_MONEY } from '../../../src/game/store';
 import { useScamStore, getInitialScamState } from '../../../src/game/scams/scamStore';
 import { useEmployeeStore, getInitialEmployeeState } from '../../../src/game/employees/employeeStore';
 import { useManagerStore, getInitialManagerState } from '../../../src/game/managers/managerStore';
 import { useBotStore } from '../../../src/game/bots/botStore';
 import { SNITCH_TRUST_PERCENT } from '../../../src/game/prestige/constants';
-import { calculatePerformanceTrustGain } from '../../../src/game/prestige/calculations';
+import { calculatePerformanceTrustGain, calculateStartingSkillPoints } from '../../../src/game/prestige/calculations';
 import type { GameResources } from '../../../src/game/types';
 import type { PerformanceMetrics } from '../../../src/game/prestige/types';
 
@@ -101,8 +101,8 @@ describe('Prestige Manager', () => {
       expect(resources.heat).toBe(0);
       // Bots persist across prestige
       expect(resources.bots).toBe(5000);
-      // Starting skill points = floor(trust - 1)
-      expect(resources.skillPoints).toBe(Math.floor(newTrust - 1));
+      // Starting skill points from sublinear formula
+      expect(resources.skillPoints).toBe(calculateStartingSkillPoints(newTrust));
       expect(resources.crypto).toBe(0);
       expect(resources.trust).toBe(newTrust);
     });
@@ -198,8 +198,7 @@ describe('Prestige Manager', () => {
       // Crypto: 25 * 0.1 = 2.5
       expect(resources.crypto).toBeCloseTo(2.5);
       // Skill points: starting SP from trust + snitch bonus
-      // Starting: floor(37 - 1) = 36, Bonus: floor(50 * 0.1) = 5, Total: 41
-      const startingSP = Math.floor(newTrust - 1);
+      const startingSP = calculateStartingSkillPoints(newTrust);
       const snitchBonus = Math.floor(50 * 0.1);
       expect(resources.skillPoints).toBe(startingSP + snitchBonus);
       // Heat should still be 0
@@ -304,6 +303,22 @@ describe('Prestige Manager', () => {
       // After prestige, bot assignments should be cleared
       expect(useBotStore.getState().assignments).toEqual({});
       expect(useBotStore.getState().getTotalAssigned()).toBe(0);
+    });
+
+    it('should preserve ascensions across prestige but clear on fullReset', () => {
+      setupMidGameState();
+
+      // Award some ascensions
+      useGameStore.getState().addAscension('nigerian-prince-emails');
+      useGameStore.getState().addAscension('nigerian-prince-emails');
+
+      // Prestige should preserve ascensions
+      executePrestige('clean-escape');
+      expect(useGameStore.getState().ascensions['nigerian-prince-emails']).toBe(2);
+
+      // Full reset should clear ascensions
+      fullReset();
+      expect(useGameStore.getState().ascensions).toEqual({});
     });
 
     it('should handle multiple consecutive prestiges with varying trust gains', () => {

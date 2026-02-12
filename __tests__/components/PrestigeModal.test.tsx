@@ -7,6 +7,7 @@ import { PrestigeModal } from '../../src/components/PrestigeModal';
 import type { PrestigeModalProps } from '../../src/components/PrestigeModal';
 import type { GameResources } from '../../src/game/types';
 import type { PrestigeResult } from '../../src/game/prestige/types';
+import { calculateStartingSkillPoints } from '../../src/game/prestige/calculations';
 
 const mockResources: GameResources = {
   money: 50000,
@@ -176,8 +177,9 @@ describe('PrestigeModal', () => {
           })}
         />
       );
-      // Trust 21 -> (21-1)*1 = 20 starting SP
-      expect(screen.getByText(/Starting Skill Points: 20/)).toBeTruthy();
+      // Starting SP derived from trust via sublinear formula
+      const expectedSP = calculateStartingSkillPoints(cleanEscapeResult.newTrust);
+      expect(screen.getByText(new RegExp(`Starting Skill Points: ${expectedSP}`))).toBeTruthy();
     });
 
     it('should render CONTINUE button', () => {

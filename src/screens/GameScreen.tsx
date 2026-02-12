@@ -77,6 +77,7 @@ export function GameScreen(): React.ReactElement {
   const addHeat = useGameStore((state) => state.addHeat);
   const addBots = useGameStore((state) => state.addBots);
   const addSkillPoints = useGameStore((state) => state.addSkillPoints);
+  const addAscension = useGameStore((state) => state.addAscension);
 
   // Get scam states and actions from scam store
   const scams = useScamStore((state) => state.scams);
@@ -194,6 +195,9 @@ export function GameScreen(): React.ReactElement {
       // Skill reward params (resource type affects Hype Machine bonus)
       const { skillRewardMultiplier, activeRewardMultiplier } = getSkillRewardParams(definition.resourceType);
 
+      // Ascension bonus (permanent per-scam multiplier persisting through prestige)
+      const ascensionCount = useGameStore.getState().getAscensionCount(timer.scamId);
+
       const reward = calculateScamReward(
         definition,
         scamState.level,
@@ -201,7 +205,8 @@ export function GameScreen(): React.ReactElement {
         amplifiedProfitBonus,
         employeeRewardBonus,
         skillRewardMultiplier,
-        activeRewardMultiplier
+        activeRewardMultiplier,
+        ascensionCount
       );
 
       // Award money
@@ -473,8 +478,14 @@ export function GameScreen(): React.ReactElement {
           console.log(`🎉 MILESTONE L${newLevel}! Bonus: $${milestoneBonus}`);
         }
       }
+
+      // Award ascension when crossing a 100-level boundary
+      if (newLevel >= 100 && newLevel % 100 === 0) {
+        addAscension(scamId);
+        console.log(`⭐ ASCENSION! ${scamId} reached L${newLevel}`);
+      }
     },
-    [scams, resources.money, resources.trust, addMoney, upgradeScam]
+    [scams, resources.money, resources.trust, addMoney, upgradeScam, addAscension]
   );
 
   /**
@@ -498,7 +509,7 @@ export function GameScreen(): React.ReactElement {
       addMoney(-totalCost);
       upgradeScamByLevels(scamId, count);
 
-      // Check for milestone bonuses within the purchased range
+      // Check for milestone bonuses and ascensions within the purchased range
       const startLevel = scamState.level;
       for (let i = 1; i <= count; i++) {
         const lvl = startLevel + i;
@@ -508,9 +519,13 @@ export function GameScreen(): React.ReactElement {
             addMoney(milestoneBonus);
           }
         }
+        // Award ascension when crossing a 100-level boundary
+        if (lvl >= 100 && lvl % 100 === 0) {
+          addAscension(scamId);
+        }
       }
     },
-    [scams, resources.money, resources.trust, addMoney, upgradeScamByLevels]
+    [scams, resources.money, resources.trust, addMoney, upgradeScamByLevels, addAscension]
   );
 
   /**
@@ -604,8 +619,15 @@ export function GameScreen(): React.ReactElement {
    */
   const handleActivateAbility = useCallback(
     (abilityId: string) => {
+      // Check escalating activation SP cost
+      const currentCost = useSkillStore.getState().getActivationCost(abilityId);
+      if (useGameStore.getState().resources.skillPoints < currentCost) return;
+
       const success = useSkillStore.getState().activateAbility(abilityId);
       if (!success) return;
+
+      // Deduct activation cost (use pre-activation cost since activateAbility increments the counter)
+      addSkillPoints(-currentCost);
 
       // Handle instant abilities
       if (abilityId === 'ddos-burst') {
@@ -628,7 +650,7 @@ export function GameScreen(): React.ReactElement {
         }
       }
     },
-    [addHeat, rescaleTimerDurations]
+    [addHeat, addSkillPoints, rescaleTimerDurations]
   );
 
   /**

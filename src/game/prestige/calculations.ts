@@ -19,7 +19,7 @@ import {
   MIN_TRUST_GAIN,
   SNITCH_TRUST_PERCENT,
   SNITCH_RESOURCE_KEEP_PERCENT,
-  SKILL_POINTS_PER_TRUST,
+  SKILL_POINTS_SCALE,
   TIER_TRUST_REQUIREMENTS,
 } from './constants';
 import { getTierBase } from '../economy/constants';
@@ -84,16 +84,21 @@ export function calculateHeatDecay(currentHeat: number, deltaSeconds: number, tr
  * Higher trust = more skill points to spend at the start of a run.
  * This is the core prestige reward for clean escapes.
  *
- * Formula: floor(trust - 1) * SKILL_POINTS_PER_TRUST
- * - Trust 1: 0 SP (fresh player, no bonus)
- * - Trust 11: 10 SP (one clean escape from start)
- * - Trust 21: 20 SP (two clean escapes)
+ * Formula: floor(sqrt(trust - 1) * SKILL_POINTS_SCALE)
+ * Sublinear growth: early trust gains give proportionally more SP,
+ * preventing trivial skill tree completion at high trust levels.
+ *
+ * - Trust 1: 0 SP (fresh player)
+ * - Trust 50 (T2): 91 SP
+ * - Trust 700 (T5): 343 SP
  *
  * @param trust - The player's current trust value
  * @returns The number of skill points to start with
  */
 export function calculateStartingSkillPoints(trust: number): number {
-  return Math.floor(Math.max(0, trust - 1)) * SKILL_POINTS_PER_TRUST;
+  const base = Math.max(0, trust - 1);
+  if (base <= 0) return 0;
+  return Math.floor(Math.sqrt(base) * SKILL_POINTS_SCALE);
 }
 
 /**

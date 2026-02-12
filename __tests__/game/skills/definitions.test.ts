@@ -132,9 +132,27 @@ describe('Active Ability Definitions', () => {
     expect(new Set(ids).size).toBe(ids.length);
   });
 
-  it('should have positive costs', () => {
+  it('should have positive unlock costs', () => {
     for (const ability of ALL_ACTIVE_ABILITIES) {
       expect(ability.cost).toBeGreaterThan(0);
+    }
+  });
+
+  it('should have positive activation costs', () => {
+    for (const ability of ALL_ACTIVE_ABILITIES) {
+      expect(ability.activationCost).toBeGreaterThan(0);
+    }
+  });
+
+  it('should have activation costs less than or equal to unlock costs', () => {
+    for (const ability of ALL_ACTIVE_ABILITIES) {
+      expect(ability.activationCost).toBeLessThanOrEqual(ability.cost);
+    }
+  });
+
+  it('should have positive activation cost escalation rates', () => {
+    for (const ability of ALL_ACTIVE_ABILITIES) {
+      expect(ability.activationCostEscalation).toBeGreaterThan(0);
     }
   });
 

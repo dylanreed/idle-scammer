@@ -48,6 +48,12 @@ export interface ActiveAbilityDefinition {
   /** SP cost to unlock */
   cost: number;
 
+  /** SP cost per activation (base, before escalation) */
+  activationCost: number;
+
+  /** How much the activation cost increases per use (e.g., 0.5 = +1 SP every 2 uses) */
+  activationCostEscalation: number;
+
   /** Effect duration in milliseconds (0 = instant) */
   durationMs: number;
 
@@ -170,4 +176,7 @@ export interface SkillSaveData {
 
   /** Map of ability ID to remaining active duration ms */
   activeDurations: Record<string, number>;
+
+  /** Map of ability ID to number of times used this run */
+  abilityUseCounts?: Record<string, number>;
 }

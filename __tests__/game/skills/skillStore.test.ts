@@ -210,6 +210,84 @@ describe('Skill Store', () => {
     });
   });
 
+  describe('abilityUseCounts and escalating activation cost', () => {
+    it('should start with zero use counts', () => {
+      expect(useSkillStore.getState().abilityUseCounts).toEqual({});
+    });
+
+    it('should increment use count when ability is activated', () => {
+      useSkillStore.getState().unlockAbility('charm-offensive');
+      useSkillStore.getState().activateAbility('charm-offensive');
+
+      expect(useSkillStore.getState().abilityUseCounts['charm-offensive']).toBe(1);
+    });
+
+    it('should track multiple uses across cooldown resets', () => {
+      useSkillStore.getState().unlockAbility('charm-offensive');
+
+      useSkillStore.getState().activateAbility('charm-offensive');
+      useSkillStore.getState().tickCooldowns(300_000); // reset cooldown
+
+      useSkillStore.getState().activateAbility('charm-offensive');
+      useSkillStore.getState().tickCooldowns(300_000);
+
+      useSkillStore.getState().activateAbility('charm-offensive');
+
+      expect(useSkillStore.getState().abilityUseCounts['charm-offensive']).toBe(3);
+    });
+
+    it('should return base activation cost at 0 uses', () => {
+      // Charm Offensive: activationCost = 1, escalation = 0.5
+      const cost = useSkillStore.getState().getActivationCost('charm-offensive');
+      expect(cost).toBe(1);
+    });
+
+    it('should escalate activation cost with usage', () => {
+      useSkillStore.getState().unlockAbility('charm-offensive');
+      // Charm Offensive: base=1, escalation=0.5
+      // Use 1: 1 + floor(1 * 0.5) = 1 + 0 = 1
+      // Use 2: 1 + floor(2 * 0.5) = 1 + 1 = 2
+      // Use 3: 1 + floor(3 * 0.5) = 1 + 1 = 2
+      // Use 4: 1 + floor(4 * 0.5) = 1 + 2 = 3
+
+      useSkillStore.getState().activateAbility('charm-offensive');
+      expect(useSkillStore.getState().getActivationCost('charm-offensive')).toBe(1); // floor(1*0.5)=0
+
+      useSkillStore.getState().tickCooldowns(300_000);
+      useSkillStore.getState().activateAbility('charm-offensive');
+      expect(useSkillStore.getState().getActivationCost('charm-offensive')).toBe(2); // floor(2*0.5)=1
+
+      useSkillStore.getState().tickCooldowns(300_000);
+      useSkillStore.getState().activateAbility('charm-offensive');
+      expect(useSkillStore.getState().getActivationCost('charm-offensive')).toBe(2); // floor(3*0.5)=1
+
+      useSkillStore.getState().tickCooldowns(300_000);
+      useSkillStore.getState().activateAbility('charm-offensive');
+      expect(useSkillStore.getState().getActivationCost('charm-offensive')).toBe(3); // floor(4*0.5)=2
+    });
+
+    it('should always return whole numbers for activation cost', () => {
+      useSkillStore.getState().unlockAbility('ddos-burst');
+      for (let i = 0; i < 7; i++) {
+        const cost = useSkillStore.getState().getActivationCost('ddos-burst');
+        expect(Number.isInteger(cost)).toBe(true);
+        expect(cost).toBeGreaterThanOrEqual(1);
+        useSkillStore.getState().activateAbility('ddos-burst');
+        useSkillStore.getState().tickCooldowns(180_000);
+      }
+    });
+
+    it('should reset use counts on prestige', () => {
+      useSkillStore.getState().unlockAbility('charm-offensive');
+      useSkillStore.getState().activateAbility('charm-offensive');
+      useSkillStore.getState().activateAbility('charm-offensive'); // won't succeed (cooldown), but let's test reset anyway
+      useSkillStore.getState().reset();
+
+      expect(useSkillStore.getState().abilityUseCounts).toEqual({});
+      expect(useSkillStore.getState().getActivationCost('charm-offensive')).toBe(1);
+    });
+  });
+
   describe('toSaveData / hydrate', () => {
     it('should round-trip passive skill ranks', () => {
       useSkillStore.getState().allocateSkill('overclock');
@@ -273,6 +351,36 @@ describe('Skill Store', () => {
 
       expect(useSkillStore.getState().passiveRanks).toEqual({});
       expect(useSkillStore.getState().abilities['charm-offensive'].isUnlocked).toBe(false);
+    });
+
+    it('should round-trip ability use counts', () => {
+      useSkillStore.getState().unlockAbility('charm-offensive');
+      useSkillStore.getState().activateAbility('charm-offensive');
+      useSkillStore.getState().tickCooldowns(300_000);
+      useSkillStore.getState().activateAbility('charm-offensive');
+
+      const saveData = useSkillStore.getState().toSaveData();
+      expect(saveData.abilityUseCounts).toEqual({ 'charm-offensive': 2 });
+
+      useSkillStore.getState().reset();
+      useSkillStore.getState().hydrate(saveData);
+
+      expect(useSkillStore.getState().abilityUseCounts['charm-offensive']).toBe(2);
+      expect(useSkillStore.getState().getActivationCost('charm-offensive')).toBe(2); // 1 + floor(2*0.5)
+    });
+
+    it('should hydrate gracefully when abilityUseCounts is missing from old save data', () => {
+      const oldSaveData = {
+        passiveRanks: {},
+        unlockedAbilities: ['charm-offensive'],
+        cooldowns: {},
+        activeDurations: {},
+        // no abilityUseCounts field
+      };
+      useSkillStore.getState().hydrate(oldSaveData as any);
+
+      expect(useSkillStore.getState().abilityUseCounts).toEqual({});
+      expect(useSkillStore.getState().getActivationCost('charm-offensive')).toBe(1);
     });
   });
 });

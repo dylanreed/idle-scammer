@@ -42,6 +42,13 @@ export interface GameResources {
 export type ResourceKey = keyof GameResources;
 
 /**
+ * Per-scam ascension levels. Persists through prestige.
+ * Each time a scam reaches level 100 (or 200, 300, ...) in a run,
+ * it earns +1 ascension, granting a permanent 50% reward multiplier per level.
+ */
+export type AscensionMap = Record<string, number>;
+
+/**
  * Actions available on the game store
  */
 export interface GameActions {
@@ -77,6 +84,18 @@ export interface GameActions {
 
   /** Bulk-restore all resources from save data */
   hydrate: (resources: GameResources) => void;
+
+  /** Award +1 ascension to a scam (persists through prestige) */
+  addAscension: (scamId: string) => void;
+
+  /** Get the ascension count for a scam (0 if none) */
+  getAscensionCount: (scamId: string) => number;
+
+  /** Bulk-restore ascensions from save data */
+  hydrateAscensions: (ascensions: AscensionMap) => void;
+
+  /** Clear all ascensions (for full reset) */
+  resetAscensions: () => void;
 }
 
 /**
@@ -84,4 +103,7 @@ export interface GameActions {
  */
 export interface GameState extends GameActions {
   resources: GameResources;
+
+  /** Per-scam ascension levels (persist through prestige) */
+  ascensions: AscensionMap;
 }

@@ -14,6 +14,7 @@ import {
 } from '../game/skills/definitions';
 import { ALL_ACTIVE_ABILITIES } from '../game/skills/abilities';
 import { getSkillRankCost } from '../game/skills/calculations';
+import { useSkillStore } from '../game/skills/skillStore';
 import type { SkillCategory, PassiveSkillDefinition, ActiveAbilityDefinition } from '../game/skills/types';
 
 export interface SkillsPanelProps {
@@ -251,7 +252,9 @@ function ActiveAbilityRow({
   const isOnCooldown = cooldownMs > 0;
   const isActive = activeMs > 0;
   const canUnlock = !isUnlocked && skillPoints >= ability.cost;
-  const canActivate = isUnlocked && !isOnCooldown && !isActive;
+  const currentActivationCost = useSkillStore.getState().getActivationCost(ability.id);
+  const canAffordActivation = skillPoints >= currentActivationCost;
+  const canActivate = isUnlocked && !isOnCooldown && !isActive && canAffordActivation;
 
   return (
     <CRTFrame style={styles.skillRow} testID={`ability-${ability.id}`}>
@@ -292,7 +295,7 @@ function ActiveAbilityRow({
           style={styles.skillButton}
           testID={`activate-${ability.id}`}
         >
-          {canActivate ? 'USE' : isActive ? 'ON' : formatTimeMs(cooldownMs)}
+          {canActivate || (!isOnCooldown && !isActive) ? `${currentActivationCost} SP` : isActive ? 'ON' : formatTimeMs(cooldownMs)}
         </PixelButton>
       )}
     </CRTFrame>

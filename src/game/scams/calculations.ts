@@ -124,17 +124,27 @@ export function getProfitBonusMultiplier(level: number): number {
 /**
  * Gets the milestone multiplier for a specific level.
  * Returns 0 if not a milestone level.
+ * For levels past 100, repeating milestones every 25 levels
+ * use floor(level / 2) as the multiplier.
  */
 export function getMilestoneMultiplier(level: number): number {
   const milestone = MILESTONE_BONUSES.find((m) => m.level === level);
-  return milestone?.multiplier ?? 0;
+  if (milestone) return milestone.multiplier;
+  // Repeating milestones every 25 levels past 100
+  if (level > 100 && level % 25 === 0) {
+    return Math.floor(level / 2);
+  }
+  return 0;
 }
 
 /**
  * Checks if a level is a milestone level.
+ * Includes the static milestones (10, 25, 50, 75, 100) and
+ * repeating milestones every 25 levels past 100 (125, 150, 175, ...).
  */
 export function isMilestoneLevel(level: number): boolean {
-  return MILESTONE_BONUSES.some((m) => m.level === level);
+  if (MILESTONE_BONUSES.some((m) => m.level === level)) return true;
+  return level > 100 && level % 25 === 0;
 }
 
 /**
@@ -201,19 +211,15 @@ export function calculateScamDuration(
   const speedMultiplier = getSpeedMultiplier(level);
   const calculatedDuration = baseDuration / speedMultiplier;
 
-  // Employee speed bonus reduces duration further (e.g., 0.5 = 50% faster)
-  const withEmployeeBoost = calculatedDuration / (1 + employeeSpeedBonus);
-
-  // Bot speed bonus reduces duration further (e.g., 0.3 = 30% faster from 3 speed bots)
-  const withBotBoost = withEmployeeBoost / (1 + botSpeedBonus);
-
-  // Level/employee/bot bonuses are floored at 10% of base duration
+  // Level speed brackets are floored at 10% of base duration
   const minimumDuration = baseDuration * MIN_DURATION_PERCENTAGE;
-  const flooredDuration = Math.max(withBotBoost, minimumDuration);
+  const flooredByLevel = Math.max(calculatedDuration, minimumDuration);
 
-  // Skill passive reduces duration (e.g., 0.7 = 30% faster), active multiplier speeds up.
-  // Skills CAN push below the percentage floor — they only respect the absolute minimum.
-  const withSkills = flooredDuration * skillDurationMultiplier / activeSpeedMultiplier;
+  // Employee, bot, and skill bonuses can push below the percentage floor.
+  // They only respect the absolute minimum (500ms).
+  const withEmployeeBoost = flooredByLevel / (1 + employeeSpeedBonus);
+  const withBotBoost = withEmployeeBoost / (1 + botSpeedBonus);
+  const withSkills = withBotBoost * skillDurationMultiplier / activeSpeedMultiplier;
 
   return Math.max(Math.round(withSkills), ABSOLUTE_MIN_DURATION_MS);
 }
@@ -233,7 +239,8 @@ export function calculateScamReward(
   botProfitBonus: number = 0,
   employeeRewardBonus: number = 0,
   skillRewardMultiplier: number = 1,
-  activeRewardMultiplier: number = 1
+  activeRewardMultiplier: number = 1,
+  ascensionCount: number = 0
 ): number {
   const { unlockCost, tier } = definition;
   const tierBase = getTierBase(tier);
@@ -256,7 +263,10 @@ export function calculateScamReward(
   // Employee reward bonus (e.g., 0.5 = +50% reward from hired employees)
   const employeeMultiplier = 1 + employeeRewardBonus;
 
-  return baseReward * linearMultiplier * bracketBonus * trustMultiplier * botProfitMultiplier * employeeMultiplier * skillRewardMultiplier * activeRewardMultiplier;
+  // Ascension bonus: 50% more reward per ascension level (persists through prestige)
+  const ascensionMultiplier = 1 + ascensionCount * 0.5;
+
+  return baseReward * linearMultiplier * bracketBonus * trustMultiplier * botProfitMultiplier * employeeMultiplier * skillRewardMultiplier * activeRewardMultiplier * ascensionMultiplier;
 }
 
 /**

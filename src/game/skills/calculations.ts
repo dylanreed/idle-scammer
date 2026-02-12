@@ -11,35 +11,47 @@ import { ALL_PASSIVE_SKILLS } from './definitions';
 import { ALL_ACTIVE_ABILITIES } from './abilities';
 
 /**
+ * Rank cost lookup table.
+ * Uses triangular numbers: cheap to experiment, expensive to max.
+ * Total per skill: 1+3+6+10+15 = 35 SP. All 12 skills: 420 SP.
+ */
+const RANK_COSTS: readonly number[] = [0, 1, 3, 6, 10, 15];
+
+/**
  * Returns the SP cost to purchase a specific rank of any passive skill.
- * Cost per rank = rank number (1+2+3+4+5 = 15 SP per skill, 180 SP total for all 12).
+ * Uses triangular numbers (1, 3, 6, 10, 15) so early ranks are cheap to try
+ * and later ranks require real commitment.
  *
  * @param rank - The rank being purchased (1-5)
  * @returns SP cost for that rank
  */
 export function getSkillRankCost(rank: number): number {
   if (rank < 1 || rank > 5) return 0;
-  return rank;
+  return RANK_COSTS[rank];
 }
 
 /**
  * Returns the total SP cost to max a single skill from rank 0 to 5.
- * Sum of 1+2+3+4+5 = 15 SP.
+ * Sum of 1+3+6+10+15 = 35 SP.
  */
 export function getTotalSkillCost(): number {
-  return 15;
+  return 35;
 }
 
 /**
  * Returns the total SP spent on a skill at a given rank.
- * Sum of 1+2+...+rank.
+ * Cumulative sum of triangular rank costs.
  *
  * @param rank - Current rank (0-5)
  * @returns Total SP invested
  */
 export function getSpentOnSkill(rank: number): number {
   if (rank <= 0) return 0;
-  return (rank * (rank + 1)) / 2;
+  let total = 0;
+  for (let r = 1; r <= rank; r++) {
+    total += RANK_COSTS[r];
+  }
+  return total;
 }
 
 /**

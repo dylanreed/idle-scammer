@@ -83,12 +83,30 @@ describe('Employee-aware Scam Calculations', () => {
       ));
     });
 
-    it('should respect minimum duration floor even with large speed bonus', () => {
-      // With 100x speed bonus, duration should be clamped to 10% of base (100ms)
-      // but absolute minimum (500ms) is higher, so that wins
-      const boosted = calculateScamDuration(testScam, 1, 100);
+    it('should allow employee speed bonus to push below 10% floor', () => {
+      // Use a longer scam where 10% floor (1000ms) > hard floor (500ms)
+      const longScam: ScamDefinition = {
+        ...testScam,
+        baseDuration: 10000,
+      };
+      // 10% floor = 1000ms, hard floor = 500ms
 
-      expect(boosted).toBe(500);
+      // Level 1, employee bonus = 19 → 10000 / 20 = 500
+      // Without this fix: 10% floor clamps to 1000
+      // With this fix: employee pushes to 500 (at the hard floor)
+      const result = calculateScamDuration(longScam, 1, 19);
+      expect(result).toBe(500);
+
+      // Employee bonus = 9 → 10000 / 10 = 1000 (exactly at 10% floor)
+      // Below that: employee bonus = 12 → 10000 / 13 = 769
+      // This should go through (below 10% floor of 1000 but above hard 500ms)
+      const belowPercentFloor = calculateScamDuration(longScam, 1, 12);
+      expect(belowPercentFloor).toBe(769);
+    });
+
+    it('should not go below absolute minimum with employee speed bonus', () => {
+      const extreme = calculateScamDuration(testScam, 1, 100);
+      expect(extreme).toBe(500);
     });
 
     it('should combine with level-based speed brackets', () => {

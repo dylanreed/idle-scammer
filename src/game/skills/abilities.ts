@@ -13,6 +13,8 @@ export const ALL_ACTIVE_ABILITIES: ActiveAbilityDefinition[] = [
     name: 'Charm Offensive',
     description: '2x scam rewards for 60 seconds',
     cost: 3,
+    activationCost: 1,
+    activationCostEscalation: 0.5,
     durationMs: 60_000,
     cooldownMs: 300_000, // 5 minutes
     effectValue: 2,
@@ -22,6 +24,8 @@ export const ALL_ACTIVE_ABILITIES: ActiveAbilityDefinition[] = [
     name: 'DDoS Burst',
     description: 'Instantly complete all running scam timers',
     cost: 5,
+    activationCost: 2,
+    activationCostEscalation: 0.5,
     durationMs: 0, // Instant
     cooldownMs: 180_000, // 3 minutes
     effectValue: 1, // Boolean-style: triggers instant completion
@@ -31,6 +35,8 @@ export const ALL_ACTIVE_ABILITIES: ActiveAbilityDefinition[] = [
     name: 'Burner Phone',
     description: 'Instantly reduce current heat by 30%',
     cost: 3,
+    activationCost: 1,
+    activationCostEscalation: 0.5,
     durationMs: 0, // Instant
     cooldownMs: 120_000, // 2 minutes
     effectValue: 0.30, // 30% heat reduction
@@ -40,6 +46,8 @@ export const ALL_ACTIVE_ABILITIES: ActiveAbilityDefinition[] = [
     name: 'VPN Tunnel',
     description: 'Zero heat gain for 60 seconds',
     cost: 8,
+    activationCost: 2,
+    activationCostEscalation: 0.5,
     durationMs: 60_000,
     cooldownMs: 240_000, // 4 minutes
     effectValue: 1, // Boolean-style: zeroes heat gain
@@ -49,6 +57,8 @@ export const ALL_ACTIVE_ABILITIES: ActiveAbilityDefinition[] = [
     name: 'Deep Fake',
     description: '2x employee bonuses for 60 seconds',
     cost: 5,
+    activationCost: 2,
+    activationCostEscalation: 0.5,
     durationMs: 60_000,
     cooldownMs: 300_000, // 5 minutes
     effectValue: 2,
@@ -58,6 +68,8 @@ export const ALL_ACTIVE_ABILITIES: ActiveAbilityDefinition[] = [
     name: 'Zero Day',
     description: '3x scam speed for 30 seconds',
     cost: 10,
+    activationCost: 3,
+    activationCostEscalation: 0.5,
     durationMs: 30_000,
     cooldownMs: 300_000, // 5 minutes
     effectValue: 3,

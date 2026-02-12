@@ -25,6 +25,9 @@ export interface SkillStoreActions {
   /** Activate an unlocked ability (starts duration + cooldown) */
   activateAbility: (abilityId: string) => boolean;
 
+  /** Get the current activation cost for an ability (escalates with usage) */
+  getActivationCost: (abilityId: string) => number;
+
   /** Tick all cooldowns and active durations by deltaMs */
   tickCooldowns: (deltaMs: number) => void;
 
@@ -53,6 +56,9 @@ export interface SkillStoreState extends SkillStoreActions {
 
   /** Map of ability ID to runtime state */
   abilities: Record<string, ActiveAbilityState>;
+
+  /** Map of ability ID to number of times activated this run */
+  abilityUseCounts: Record<string, number>;
 }
 
 /**
@@ -84,6 +90,7 @@ function createInitialAbilities(): Record<string, ActiveAbilityState> {
 export const useSkillStore = create<SkillStoreState>()((set, get) => ({
   passiveRanks: {},
   abilities: createInitialAbilities(),
+  abilityUseCounts: {},
 
   allocateSkill: (skillId: string) => {
     const currentRank = get().passiveRanks[skillId] ?? 0;
@@ -152,8 +159,19 @@ export const useSkillStore = create<SkillStoreState>()((set, get) => ({
           activeRemainingMs: def.durationMs,
         },
       },
+      abilityUseCounts: {
+        ...state.abilityUseCounts,
+        [abilityId]: (state.abilityUseCounts[abilityId] ?? 0) + 1,
+      },
     }));
     return true;
+  },
+
+  getActivationCost: (abilityId: string) => {
+    const def = ALL_ACTIVE_ABILITIES.find((a) => a.id === abilityId);
+    if (!def) return 0;
+    const useCount = get().abilityUseCounts[abilityId] ?? 0;
+    return def.activationCost + Math.floor(useCount * def.activationCostEscalation);
   },
 
   tickCooldowns: (deltaMs: number) => {
@@ -192,6 +210,7 @@ export const useSkillStore = create<SkillStoreState>()((set, get) => ({
     set({
       passiveRanks: {},
       abilities: createInitialAbilities(),
+      abilityUseCounts: {},
     });
   },
 
@@ -213,6 +232,7 @@ export const useSkillStore = create<SkillStoreState>()((set, get) => ({
     set({
       passiveRanks: { ...saveData.passiveRanks },
       abilities,
+      abilityUseCounts: saveData.abilityUseCounts ? { ...saveData.abilityUseCounts } : {},
     });
   },
 
@@ -239,6 +259,7 @@ export const useSkillStore = create<SkillStoreState>()((set, get) => ({
       unlockedAbilities,
       cooldowns,
       activeDurations,
+      abilityUseCounts: { ...state.abilityUseCounts },
     };
   },
 }));

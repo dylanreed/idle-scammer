@@ -3,7 +3,7 @@
 
 import type { SaveData } from './types';
 import { SAVE_VERSION } from './types';
-import type { GameResources } from '../types';
+import type { AscensionMap, GameResources } from '../types';
 import type { ScamStateMap } from '../scams/scamStore';
 import type { ManagerStateMap } from '../managers/managerStore';
 import type { EmployeeStateMap } from '../employees/employeeStore';
@@ -43,7 +43,8 @@ export function createSaveData(
   managers: ManagerStateMap,
   employees: EmployeeStateMap = {},
   botAssignments: BotAssignmentMap = {},
-  skills: SkillSaveData = EMPTY_SKILL_SAVE_DATA
+  skills: SkillSaveData = EMPTY_SKILL_SAVE_DATA,
+  ascensions: AscensionMap = {}
 ): SaveData {
   return {
     version: SAVE_VERSION,
@@ -54,6 +55,7 @@ export function createSaveData(
     employees,
     botAssignments,
     skills,
+    ascensions,
   };
 }
 
@@ -71,6 +73,7 @@ export function applySaveData(saveData: SaveData): {
   employees: EmployeeStateMap;
   botAssignments: BotAssignmentMap;
   skills: SkillSaveData;
+  ascensions: AscensionMap;
 } {
   return {
     resources: saveData.resources,
@@ -79,6 +82,7 @@ export function applySaveData(saveData: SaveData): {
     employees: saveData.employees ?? {},
     botAssignments: saveData.botAssignments ?? {},
     skills: saveData.skills ?? EMPTY_SKILL_SAVE_DATA,
+    ascensions: saveData.ascensions ?? {},
   };
 }
 
@@ -146,6 +150,15 @@ export function migrateIfNeeded(saveData: SaveData): SaveData {
       ...migrated,
       version: 6,
       skills: (migrated as SaveData).skills ?? EMPTY_SKILL_SAVE_DATA,
+    };
+  }
+
+  // Migration from version 6 to version 7: add ascensions field
+  if (migrated.version < 7) {
+    migrated = {
+      ...migrated,
+      version: 7,
+      ascensions: (migrated as SaveData).ascensions ?? {},
     };
   }
 

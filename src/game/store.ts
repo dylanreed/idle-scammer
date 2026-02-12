@@ -2,7 +2,7 @@
 // ABOUTME: Handles all game resources with prestige-aware reset logic
 
 import { create } from 'zustand';
-import type { GameResources, GameState, ResourceKey } from './types';
+import type { AscensionMap, GameResources, GameState, ResourceKey } from './types';
 import { calculateStartingSkillPoints } from './prestige/calculations';
 
 /**
@@ -36,6 +36,7 @@ export function getInitialResources(): GameResources {
  */
 export const useGameStore = create<GameState>()((set, get) => ({
   resources: getInitialResources(),
+  ascensions: {},
 
   addMoney: (amount: number) => {
     set((state) => ({
@@ -127,11 +128,33 @@ export const useGameStore = create<GameState>()((set, get) => ({
           snitchCount: state.resources.snitchCount,
           bots: state.resources.bots,
         },
+        ascensions: state.ascensions, // preserved through prestige
       };
     });
   },
 
   hydrate: (resources: GameResources) => {
     set({ resources });
+  },
+
+  addAscension: (scamId: string) => {
+    set((state) => ({
+      ascensions: {
+        ...state.ascensions,
+        [scamId]: (state.ascensions[scamId] ?? 0) + 1,
+      },
+    }));
+  },
+
+  getAscensionCount: (scamId: string) => {
+    return get().ascensions[scamId] ?? 0;
+  },
+
+  hydrateAscensions: (ascensions: AscensionMap) => {
+    set({ ascensions });
+  },
+
+  resetAscensions: () => {
+    set({ ascensions: {} });
   },
 }));

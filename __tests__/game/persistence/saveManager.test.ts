@@ -12,6 +12,7 @@ import type { SaveData } from '../../../src/game/persistence/types';
 import type { GameResources } from '../../../src/game/types';
 import type { ScamStateMap } from '../../../src/game/scams/scamStore';
 import type { ManagerStateMap } from '../../../src/game/managers/managerStore';
+import type { AscensionMap } from '../../../src/game/types';
 
 describe('SaveManager', () => {
   describe('createSaveData', () => {
@@ -141,6 +142,48 @@ describe('SaveManager', () => {
       expect(result.scams['crypto-pump'].isUnlocked).toBe(false);
     });
 
+    it('should include ascensions in save data', () => {
+      const resources: GameResources = {
+        money: 1000,
+        reputation: 50,
+        heat: 25,
+        bots: 500,
+        skillPoints: 10,
+        crypto: 2.5,
+        trust: 3,
+        snitchCount: 0,
+      };
+      const scams: ScamStateMap = {};
+      const managers: ManagerStateMap = {};
+      const ascensions: AscensionMap = {
+        'nigerian-prince-emails': 2,
+        'fake-antivirus': 1,
+      };
+
+      const result = createSaveData(resources, scams, managers, {}, {}, undefined, ascensions);
+
+      expect(result.ascensions).toEqual(ascensions);
+    });
+
+    it('should default ascensions to empty object', () => {
+      const resources: GameResources = {
+        money: 1000,
+        reputation: 50,
+        heat: 25,
+        bots: 500,
+        skillPoints: 10,
+        crypto: 2.5,
+        trust: 3,
+        snitchCount: 0,
+      };
+      const scams: ScamStateMap = {};
+      const managers: ManagerStateMap = {};
+
+      const result = createSaveData(resources, scams, managers);
+
+      expect(result.ascensions).toEqual({});
+    });
+
     it('should handle multiple manager states', () => {
       const resources: GameResources = {
         money: 5000,
@@ -237,6 +280,57 @@ describe('SaveManager', () => {
       expect(Object.keys(scams)).toHaveLength(0);
       expect(Object.keys(managers)).toHaveLength(0);
       expect(botAssignments).toEqual({});
+    });
+
+    it('should return ascensions from save data', () => {
+      const saveData: SaveData = {
+        version: SAVE_VERSION,
+        savedAt: Date.now(),
+        resources: {
+          money: 1000,
+          reputation: 50,
+          heat: 25,
+          bots: 500,
+          skillPoints: 10,
+          crypto: 2.5,
+          trust: 3,
+          snitchCount: 0,
+        },
+        scams: {},
+        managers: {},
+        employees: {},
+        botAssignments: {},
+        skills: { passiveRanks: {}, unlockedAbilities: [], cooldowns: {}, activeDurations: {} },
+        ascensions: { 'nigerian-prince-emails': 3 },
+      };
+
+      const { ascensions } = applySaveData(saveData);
+      expect(ascensions).toEqual({ 'nigerian-prince-emails': 3 });
+    });
+
+    it('should default ascensions to empty when missing from save', () => {
+      const saveData = {
+        version: SAVE_VERSION,
+        savedAt: Date.now(),
+        resources: {
+          money: 0,
+          reputation: 0,
+          heat: 0,
+          bots: 0,
+          skillPoints: 0,
+          crypto: 0,
+          trust: 1,
+          snitchCount: 0,
+        },
+        scams: {},
+        managers: {},
+        employees: {},
+        botAssignments: {},
+        skills: { passiveRanks: {}, unlockedAbilities: [], cooldowns: {}, activeDurations: {} },
+      } as unknown as SaveData;
+
+      const { ascensions } = applySaveData(saveData);
+      expect(ascensions).toEqual({});
     });
 
     it('should preserve decimal values', () => {
@@ -446,6 +540,48 @@ describe('SaveManager', () => {
       expect(result.resources.money).toBe(5000);
       expect(result.resources.skillPoints).toBe(20);
       expect(result.botAssignments).toEqual({ 'nigerian-prince-emails': { speedBots: 2, profitBots: 1 } });
+    });
+
+    it('should migrate v6 data to v7 by adding empty ascensions', () => {
+      const v6SaveData = {
+        version: 6,
+        savedAt: Date.now(),
+        resources: {
+          money: 8000,
+          reputation: 300,
+          heat: 50,
+          bots: 20,
+          skillPoints: 30,
+          crypto: 10,
+          trust: 15,
+          snitchCount: 1,
+        },
+        scams: {
+          'nigerian-prince-emails': {
+            scamId: 'nigerian-prince-emails',
+            level: 100,
+            isUnlocked: true,
+            timesCompleted: 500,
+          },
+        },
+        managers: {},
+        employees: {},
+        botAssignments: {},
+        skills: { passiveRanks: {}, unlockedAbilities: [], cooldowns: {}, activeDurations: {} },
+      } as unknown as SaveData;
+
+      const result = migrateIfNeeded(v6SaveData);
+
+      expect(result.version).toBe(SAVE_VERSION);
+      expect(result.ascensions).toEqual({});
+      // Existing data preserved
+      expect(result.resources.money).toBe(8000);
+      expect(result.skills).toEqual({
+        passiveRanks: {},
+        unlockedAbilities: [],
+        cooldowns: {},
+        activeDurations: {},
+      });
     });
 
     it('should handle sequential migrations v0 -> v1 -> v2', () => {

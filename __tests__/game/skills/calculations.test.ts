@@ -12,12 +12,12 @@ import type { ActiveAbilityState } from '../../../src/game/skills/types';
 
 describe('Skill Calculations', () => {
   describe('getSkillRankCost', () => {
-    it('should return rank number as cost (rank 1 = 1 SP)', () => {
+    it('should return triangular costs (1, 3, 6, 10, 15)', () => {
       expect(getSkillRankCost(1)).toBe(1);
-      expect(getSkillRankCost(2)).toBe(2);
-      expect(getSkillRankCost(3)).toBe(3);
-      expect(getSkillRankCost(4)).toBe(4);
-      expect(getSkillRankCost(5)).toBe(5);
+      expect(getSkillRankCost(2)).toBe(3);
+      expect(getSkillRankCost(3)).toBe(6);
+      expect(getSkillRankCost(4)).toBe(10);
+      expect(getSkillRankCost(5)).toBe(15);
     });
 
     it('should return 0 for invalid ranks', () => {
@@ -28,8 +28,8 @@ describe('Skill Calculations', () => {
   });
 
   describe('getTotalSkillCost', () => {
-    it('should return 15 (1+2+3+4+5)', () => {
-      expect(getTotalSkillCost()).toBe(15);
+    it('should return 35 (1+3+6+10+15)', () => {
+      expect(getTotalSkillCost()).toBe(35);
     });
   });
 
@@ -38,12 +38,12 @@ describe('Skill Calculations', () => {
       expect(getSpentOnSkill(0)).toBe(0);
     });
 
-    it('should return triangular numbers for each rank', () => {
+    it('should return cumulative triangular costs for each rank', () => {
       expect(getSpentOnSkill(1)).toBe(1);
-      expect(getSpentOnSkill(2)).toBe(3);
-      expect(getSpentOnSkill(3)).toBe(6);
-      expect(getSpentOnSkill(4)).toBe(10);
-      expect(getSpentOnSkill(5)).toBe(15);
+      expect(getSpentOnSkill(2)).toBe(4);   // 1+3
+      expect(getSpentOnSkill(3)).toBe(10);  // 1+3+6
+      expect(getSpentOnSkill(4)).toBe(20);  // 1+3+6+10
+      expect(getSpentOnSkill(5)).toBe(35);  // 1+3+6+10+15
     });
 
     it('should return 0 for negative ranks', () => {

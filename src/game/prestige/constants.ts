@@ -89,12 +89,19 @@ export const SNITCH_EMPLOYEE_COST_PENALTY = 0.01;
 export const SNITCH_RESOURCE_KEEP_PERCENT = 0.1;
 
 /**
- * Skill points granted per point of trust above 1.
- * Formula: startingSP = floor(trust - 1) * SKILL_POINTS_PER_TRUST
+ * Scale factor for the sublinear SP formula.
+ * Formula: startingSP = floor(sqrt(trust - 1) * SKILL_POINTS_SCALE)
  *
- * At trust 1: 0 SP (fresh start)
- * At trust 2: 1 SP
- * At trust 11: 10 SP (one clean escape from start)
+ * At trust 50 (T2): 91 SP — a couple full skills
+ * At trust 350 (T4): 242 SP — about half the tree
+ * At trust 700 (T5): 343 SP — most but not all
+ * At trust ~1300: ~469 SP — can finally max everything (454 needed)
+ */
+export const SKILL_POINTS_SCALE = 13;
+
+/**
+ * @deprecated Use SKILL_POINTS_SCALE with the sqrt formula instead.
+ * Kept for backward compatibility with any code referencing this constant.
  */
 export const SKILL_POINTS_PER_TRUST = 1;
 

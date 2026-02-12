@@ -51,6 +51,9 @@ export function fullReset(): void {
     snitchCount: 0,
   });
 
+  // Clear ascensions (permanent per-scam bonuses)
+  useGameStore.getState().resetAscensions();
+
   // Reset scams to initial state
   useScamStore.getState().resetScams();
 

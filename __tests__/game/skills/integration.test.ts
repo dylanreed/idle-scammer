@@ -68,12 +68,12 @@ describe('Skill Integration: calculateScamDuration', () => {
     expect(extreme).toBe(500);
   });
 
-  it('should apply level/bot floor before skill multipliers', () => {
-    // High level + bots hit the 10% floor, then skills reduce from there
+  it('should apply 10% floor after level brackets only, then bots/skills push below', () => {
+    // Level 100 bracket = 10x → 10000/10 = 1000 (floored to 10% = 1000)
+    // Bot bonus 3.0 → 1000 / 4.0 = 250 (bots push below 10% floor)
+    // Skill 0.7 → 250 * 0.7 = 175, hard floor catches → 500
     const withSkillsAndBots = calculateScamDuration(testScam, 100, 0, 3.0, 0.7, 1);
-    // withBotBoost = 1000 / 4.0 = 250, floored to 1000
-    // then skills: 1000 * 0.7 = 700
-    expect(withSkillsAndBots).toBe(700);
+    expect(withSkillsAndBots).toBe(500);
   });
 });
 

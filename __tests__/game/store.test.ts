@@ -2,6 +2,7 @@
 // ABOUTME: Covers initial state, resource actions, and prestige reset logic
 
 import { useGameStore, getInitialResources, STARTING_MONEY } from '../../src/game/store';
+import { calculateStartingSkillPoints } from '../../src/game/prestige/calculations';
 import type { GameResources } from '../../src/game/types';
 
 describe('GameStore', () => {
@@ -240,8 +241,8 @@ describe('GameStore', () => {
       // snitchCount should be preserved
       expect(resources.snitchCount).toBe(0);
 
-      // Skill points should be set based on trust: floor(75 - 1) = 74
-      expect(resources.skillPoints).toBe(Math.floor(75 - 1));
+      // Skill points should be set based on trust via sublinear formula
+      expect(resources.skillPoints).toBe(calculateStartingSkillPoints(75));
     });
 
     it('should preserve trust across multiple prestiges', () => {
@@ -413,6 +414,61 @@ describe('GameStore', () => {
       expect(resources.money).toBe(STARTING_MONEY);
       expect(resources.reputation).toBe(0);
       expect(resources.heat).toBe(0);
+    });
+  });
+
+  describe('ascensions', () => {
+    it('should start with empty ascensions', () => {
+      expect(useGameStore.getState().ascensions).toEqual({});
+    });
+
+    it('should add an ascension for a scam', () => {
+      useGameStore.getState().addAscension('nigerian-prince-emails');
+      expect(useGameStore.getState().ascensions['nigerian-prince-emails']).toBe(1);
+    });
+
+    it('should increment ascension on repeated calls', () => {
+      useGameStore.getState().addAscension('nigerian-prince-emails');
+      useGameStore.getState().addAscension('nigerian-prince-emails');
+      useGameStore.getState().addAscension('nigerian-prince-emails');
+      expect(useGameStore.getState().ascensions['nigerian-prince-emails']).toBe(3);
+    });
+
+    it('should track ascensions independently per scam', () => {
+      useGameStore.getState().addAscension('nigerian-prince-emails');
+      useGameStore.getState().addAscension('nigerian-prince-emails');
+      useGameStore.getState().addAscension('fake-antivirus');
+      expect(useGameStore.getState().ascensions['nigerian-prince-emails']).toBe(2);
+      expect(useGameStore.getState().ascensions['fake-antivirus']).toBe(1);
+    });
+
+    it('should preserve ascensions across prestige reset', () => {
+      useGameStore.getState().addAscension('nigerian-prince-emails');
+      useGameStore.getState().addAscension('nigerian-prince-emails');
+      useGameStore.getState().prestigeReset(5);
+      expect(useGameStore.getState().ascensions['nigerian-prince-emails']).toBe(2);
+    });
+
+    it('should return ascension count via getAscensionCount', () => {
+      useGameStore.getState().addAscension('nigerian-prince-emails');
+      expect(useGameStore.getState().getAscensionCount('nigerian-prince-emails')).toBe(1);
+      expect(useGameStore.getState().getAscensionCount('nonexistent')).toBe(0);
+    });
+
+    it('should hydrate ascensions from save data', () => {
+      useGameStore.getState().hydrateAscensions({
+        'nigerian-prince-emails': 3,
+        'fake-antivirus': 1,
+      });
+      expect(useGameStore.getState().ascensions['nigerian-prince-emails']).toBe(3);
+      expect(useGameStore.getState().ascensions['fake-antivirus']).toBe(1);
+    });
+
+    it('should reset ascensions to empty', () => {
+      useGameStore.getState().addAscension('nigerian-prince-emails');
+      useGameStore.getState().addAscension('nigerian-prince-emails');
+      useGameStore.getState().resetAscensions();
+      expect(useGameStore.getState().ascensions).toEqual({});
     });
   });
 });

@@ -9,7 +9,9 @@ import {
   calculateCleanEscapeResult,
   calculateSnitchResult,
   calculatePerformanceTrustGain,
+  calculateStartingSkillPoints,
 } from '../../../src/game/prestige/calculations';
+import { SKILL_POINTS_SCALE } from '../../../src/game/prestige/constants';
 import {
   MAX_HEAT,
   MIN_HEAT_PER_COMPLETION,
@@ -562,6 +564,53 @@ describe('Prestige Calculations', () => {
       const result = calculateSnitchResult(50, resources);
 
       expect(result.bonuses).toHaveLength(5);
+    });
+  });
+
+  describe('calculateStartingSkillPoints', () => {
+    it('should return 0 at trust 1', () => {
+      expect(calculateStartingSkillPoints(1)).toBe(0);
+    });
+
+    it('should return 0 at trust 0 or negative', () => {
+      expect(calculateStartingSkillPoints(0)).toBe(0);
+      expect(calculateStartingSkillPoints(-5)).toBe(0);
+    });
+
+    it('should use sublinear sqrt-based formula', () => {
+      // At trust 50: floor(sqrt(49) * SKILL_POINTS_SCALE) = floor(7 * 13) = 91
+      expect(calculateStartingSkillPoints(50)).toBe(Math.floor(Math.sqrt(49) * SKILL_POINTS_SCALE));
+    });
+
+    it('should produce known values at tier gates', () => {
+      // T2 (trust 50): sqrt(49)*13 = 91
+      expect(calculateStartingSkillPoints(50)).toBe(91);
+      // T3 (trust 150): floor(sqrt(149)*13) = floor(12.206*13) = floor(158.68) = 158
+      expect(calculateStartingSkillPoints(150)).toBe(Math.floor(Math.sqrt(149) * SKILL_POINTS_SCALE));
+      // T4 (trust 350): floor(sqrt(349)*13) = floor(18.681*13) = floor(242.86) = 242
+      expect(calculateStartingSkillPoints(350)).toBe(Math.floor(Math.sqrt(349) * SKILL_POINTS_SCALE));
+      // T5 (trust 700): floor(sqrt(699)*13) = floor(26.438*13) = floor(343.70) = 343
+      expect(calculateStartingSkillPoints(700)).toBe(Math.floor(Math.sqrt(699) * SKILL_POINTS_SCALE));
+    });
+
+    it('should show diminishing returns (sublinear growth)', () => {
+      // Equal-width intervals: each 100 trust should give less SP than the previous 100
+      const sp100 = calculateStartingSkillPoints(100);
+      const sp200 = calculateStartingSkillPoints(200);
+      const sp300 = calculateStartingSkillPoints(300);
+
+      const gain100to200 = sp200 - sp100;
+      const gain200to300 = sp300 - sp200;
+      expect(gain100to200).toBeGreaterThan(gain200to300);
+    });
+
+    it('should be monotonically increasing', () => {
+      let prev = 0;
+      for (const trust of [1, 2, 5, 10, 50, 100, 350, 700, 1000, 2000]) {
+        const sp = calculateStartingSkillPoints(trust);
+        expect(sp).toBeGreaterThanOrEqual(prev);
+        prev = sp;
+      }
     });
   });
 });

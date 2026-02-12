@@ -42,10 +42,11 @@ export function GameProvider({ children }: GameProviderProps): React.ReactElemen
           const migrated = migrateIfNeeded(rawSave);
 
           // Extract state from save
-          const { resources, scams, managers, employees, botAssignments, skills } = applySaveData(migrated);
+          const { resources, scams, managers, employees, botAssignments, skills, ascensions } = applySaveData(migrated);
 
           // Hydrate all stores
           useGameStore.getState().hydrate(resources);
+          useGameStore.getState().hydrateAscensions(ascensions);
           useScamStore.getState().hydrate(scams);
           useManagerStore.getState().hydrate(managers);
           useEmployeeStore.getState().hydrate(employees);
@@ -172,8 +173,9 @@ function performSave() {
   const employees = useEmployeeStore.getState().employees;
   const botAssignments = useBotStore.getState().assignments;
   const skills = useSkillStore.getState().toSaveData();
+  const ascensions = useGameStore.getState().ascensions;
 
-  const saveData = createSaveData(resources, scams, managers, employees, botAssignments, skills);
+  const saveData = createSaveData(resources, scams, managers, employees, botAssignments, skills, ascensions);
   saveGame(saveData).catch((error) => {
     console.warn('[GameProvider] Auto-save failed:', error);
   });

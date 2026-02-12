@@ -1,7 +1,7 @@
 // ABOUTME: Type definitions and constants for the game save/load system
 // ABOUTME: Defines SaveData interface and persistence-related constants
 
-import type { GameResources } from '../types';
+import type { AscensionMap, GameResources } from '../types';
 import type { ScamState } from '../scams/types';
 import type { ManagerState } from '../managers/types';
 import type { EmployeeState } from '../employees/types';
@@ -12,7 +12,7 @@ import type { SkillSaveData } from '../skills/types';
  * Current save data format version.
  * Increment when changing SaveData structure (requires migration logic).
  */
-export const SAVE_VERSION = 6;
+export const SAVE_VERSION = 7;
 
 /**
  * AsyncStorage key for game save data.
@@ -52,4 +52,7 @@ export interface SaveData {
 
   /** Skill system state (passive ranks, active ability states) */
   skills: SkillSaveData;
+
+  /** Per-scam ascension counts (persist across prestiges and saves) */
+  ascensions: AscensionMap;
 }

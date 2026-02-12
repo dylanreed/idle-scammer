@@ -496,4 +496,86 @@ describe('Scam Calculations', () => {
       expect(isTierFullyUnlocked(1, {})).toBe(false);
     });
   });
+
+  describe('Repeating milestones (past level 100)', () => {
+    it('should keep existing milestones at 10, 25, 50, 75, 100', () => {
+      expect(isMilestoneLevel(10)).toBe(true);
+      expect(isMilestoneLevel(25)).toBe(true);
+      expect(isMilestoneLevel(50)).toBe(true);
+      expect(isMilestoneLevel(75)).toBe(true);
+      expect(isMilestoneLevel(100)).toBe(true);
+
+      expect(getMilestoneMultiplier(10)).toBe(2);
+      expect(getMilestoneMultiplier(25)).toBe(5);
+      expect(getMilestoneMultiplier(50)).toBe(10);
+      expect(getMilestoneMultiplier(75)).toBe(15);
+      expect(getMilestoneMultiplier(100)).toBe(25);
+    });
+
+    it('should have milestones every 25 levels past 100', () => {
+      expect(isMilestoneLevel(125)).toBe(true);
+      expect(isMilestoneLevel(150)).toBe(true);
+      expect(isMilestoneLevel(175)).toBe(true);
+      expect(isMilestoneLevel(200)).toBe(true);
+      expect(isMilestoneLevel(250)).toBe(true);
+      expect(isMilestoneLevel(500)).toBe(true);
+    });
+
+    it('should not have milestones at non-25 levels past 100', () => {
+      expect(isMilestoneLevel(101)).toBe(false);
+      expect(isMilestoneLevel(110)).toBe(false);
+      expect(isMilestoneLevel(130)).toBe(false);
+      expect(isMilestoneLevel(199)).toBe(false);
+    });
+
+    it('should have increasing multipliers past 100', () => {
+      const m125 = getMilestoneMultiplier(125);
+      const m150 = getMilestoneMultiplier(150);
+      const m200 = getMilestoneMultiplier(200);
+      const m500 = getMilestoneMultiplier(500);
+
+      expect(m125).toBeGreaterThan(25); // more than level 100
+      expect(m150).toBeGreaterThan(m125);
+      expect(m200).toBeGreaterThan(m150);
+      expect(m500).toBeGreaterThan(m200);
+    });
+
+    it('should scale milestone multipliers based on level', () => {
+      // Formula: floor(level / 2) for levels > 100 on 25-level boundaries
+      expect(getMilestoneMultiplier(125)).toBe(62);
+      expect(getMilestoneMultiplier(150)).toBe(75);
+      expect(getMilestoneMultiplier(200)).toBe(100);
+      expect(getMilestoneMultiplier(500)).toBe(250);
+    });
+
+    it('should calculate milestone bonus using repeating milestones', () => {
+      const bonus = calculateMilestoneBonus(testScam, 125, 1);
+      expect(bonus).toBeGreaterThan(0);
+      // bonus = reward_at_level_125 * 62
+      const reward125 = calculateScamReward(testScam, 125, 1);
+      expect(bonus).toBeCloseTo(reward125 * 62, 0);
+    });
+  });
+
+  describe('Ascension bonus in calculateScamReward', () => {
+    it('should not change reward when ascensionBonus = 0 (default)', () => {
+      const base = calculateScamReward(testScam, 10, 1);
+      const withDefault = calculateScamReward(testScam, 10, 1, 0, 0, 1, 1, 0);
+      expect(withDefault).toBe(base);
+    });
+
+    it('should increase reward with ascension bonus', () => {
+      const base = calculateScamReward(testScam, 10, 1);
+      const withAscension = calculateScamReward(testScam, 10, 1, 0, 0, 1, 1, 1);
+      // 1 ascension = 1.5x reward (50% per ascension)
+      expect(withAscension).toBeCloseTo(base * 1.5, 2);
+    });
+
+    it('should stack ascension bonuses', () => {
+      const base = calculateScamReward(testScam, 10, 1);
+      const with3 = calculateScamReward(testScam, 10, 1, 0, 0, 1, 1, 3);
+      // 3 ascensions = 1 + 3*0.5 = 2.5x
+      expect(with3).toBeCloseTo(base * 2.5, 2);
+    });
+  });
 });

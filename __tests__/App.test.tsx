@@ -22,11 +22,11 @@ describe('App', () => {
     });
   });
 
-  it('displays the game screen with Nigerian Prince Emails', async () => {
+  it('displays the game screen with Prince Emails', async () => {
     render(<App />);
 
     await waitFor(() => {
-      expect(screen.getByText(/Nigerian Prince Emails/i)).toBeTruthy();
+      expect(screen.getByText(/Prince Emails/i)).toBeTruthy();
     });
   });
 });

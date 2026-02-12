@@ -9,7 +9,7 @@ import { TIER_5_EMPLOYEES } from './tier5';
 
 /**
  * Email Copywriter - Crafts more compelling prince stories.
- * Works on: Nigerian Prince Emails
+ * Works on: Prince Emails
  */
 export const EMAIL_COPYWRITER: EmployeeDefinition = {
   id: 'email-copywriter',

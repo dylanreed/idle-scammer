@@ -9,9 +9,9 @@ import { TIER_4_MANAGERS } from './tier4';
 import { TIER_5_MANAGERS } from './tier5';
 
 /**
- * Prince Okonkwo III - The Nigerian Prince Emails Manager
+ * Prince Okonkwo III - The Prince Emails Manager
  *
- * Claims to be the REAL Nigerian prince. The others are imposters.
+ * Claims to be the REAL prince. The others are imposters.
  * His father was deposed (again) and he needs your help (again).
  *
  * Position 0: cost = floor(getProgressionCost(1) × 0.75) = $750

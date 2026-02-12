@@ -7,7 +7,7 @@ import { calculateStartingSkillPoints } from './prestige/calculations';
 
 /**
  * Starting money for new games.
- * Players start with $0 but Nigerian Prince Emails is already unlocked.
+ * Players start with $0 but Prince Emails is already unlocked.
  */
 export const STARTING_MONEY = 0;
 

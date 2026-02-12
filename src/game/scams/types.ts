@@ -21,7 +21,7 @@ export interface ScamDefinition {
   /** Unique identifier (kebab-case, e.g., 'nigerian-prince-emails') */
   id: string;
 
-  /** Display name (e.g., 'Nigerian Prince Emails') */
+  /** Display name (e.g., 'Prince Emails') */
   name: string;
 
   /** Difficulty tier (1-5) - determines unlock requirements and scaling */

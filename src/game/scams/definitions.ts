@@ -9,14 +9,14 @@ import { TIER_4_SCAMS } from './tier4';
 import { TIER_5_SCAMS } from './tier5';
 
 /**
- * Nigerian Prince Emails - The classic advance-fee scam.
+ * Prince Emails - The classic advance-fee scam.
  * A slow but rewarding scam that relies on elaborate backstories.
  *
  * Position 0: FREE scam, baseReward = $10
  */
 export const NIGERIAN_PRINCE_EMAILS: ScamDefinition = {
   id: 'nigerian-prince-emails',
-  name: 'Nigerian Prince Emails',
+  name: 'Prince Emails',
   tier: 1,
   baseDuration: 5000, // 5 seconds - starter scam, nice and quick
   baseReward: 10, // Position 0: free scam, fixed base

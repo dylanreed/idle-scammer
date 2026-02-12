@@ -21,7 +21,7 @@ export function resetAllStores(): void {
   // Reset game resources (trust is preserved via prestigeReset with no modifier)
   useGameStore.getState().prestigeReset();
 
-  // Reset scams to initial state (Nigerian Prince unlocked, others locked, all level 1)
+  // Reset scams to initial state (Prince Emails scam unlocked, others locked, all level 1)
   useScamStore.getState().resetScams();
 
   // Reset employees (empty - must rehire)

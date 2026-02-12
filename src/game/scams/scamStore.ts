@@ -69,7 +69,7 @@ export function createScamState(scamId: string, isUnlocked = false): ScamState {
 
 /**
  * Returns the initial scam state with all tiers initialized.
- * Nigerian Prince Emails starts unlocked; all other scams start locked.
+ * Prince Emails starts unlocked; all other scams start locked.
  * T2-T5 scams are initialized but locked (require trust to access their tier).
  *
  * @returns Initial scam state map
@@ -79,7 +79,7 @@ export function getInitialScamState(): ScamStateMap {
 
   // Initialize all Tier 1 scams
   TIER_1_SCAMS.forEach((scam) => {
-    // Only Nigerian Prince Emails starts unlocked
+    // Only Prince Emails starts unlocked
     const isUnlocked = scam.id === NIGERIAN_PRINCE_EMAILS.id;
     initialState[scam.id] = createScamState(scam.id, isUnlocked);
   });

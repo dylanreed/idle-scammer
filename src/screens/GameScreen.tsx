@@ -79,6 +79,15 @@ const TUTORIAL_CONTENT: Record<string, { title: string; body: string[] }> = {
       'Skills reset every prestige \u2014 choose wisely each run. More Trust = more SP = more powerful builds.',
     ],
   },
+  [TUTORIAL_IDS.CRYPTO_INTRO]: {
+    title: 'TRUSTCOIN \u2014 Your Crypto Empire',
+    body: [
+      'Welcome to the TrustCoin Exchange! Convert your cash to $TRUST and back \u2014 the exchange rate shifts every few seconds.',
+      'Invest $TRUST in projects for returns. Higher-tier projects take longer but can pay out big.',
+      'Create NFT collections, mint NFTs, and assign shillers to pump the hype. Sell at the peak or rug pull the whole thing.',
+      'Check the TRUSTCOIN tab to get started. The market waits for no one.',
+    ],
+  },
 };
 
 /**
@@ -135,6 +144,9 @@ export function GameScreen(): React.ReactElement {
 
   // Tutorial modal sequence state (post-first-prestige introduction)
   const [activeTutorialIndex, setActiveTutorialIndex] = useState<number | null>(null);
+
+  // Standalone crypto tutorial modal (triggers at trust >= 21, independent of prestige sequence)
+  const [showCryptoTutorial, setShowCryptoTutorial] = useState(false);
 
   // Prestige modal state
   const [showPrestige, setShowPrestige] = useState(false);
@@ -362,6 +374,12 @@ export function GameScreen(): React.ReactElement {
 
       // Tick NFT collection hype decay and shill boost
       useCryptoStore.getState().tickCollections(result.deltaMs);
+
+      // Trigger crypto tutorial when trust first reaches 21
+      const currentTrust = useGameStore.getState().resources.trust;
+      if (currentTrust >= 21 && !useTutorialStore.getState().hasSeen(TUTORIAL_IDS.CRYPTO_INTRO)) {
+        setShowCryptoTutorial(true);
+      }
     },
     [addHeat, addMoney]
   );
@@ -769,6 +787,14 @@ export function GameScreen(): React.ReactElement {
   }, [activeTutorialIndex]);
 
   /**
+   * Handle dismissing the crypto tutorial modal
+   */
+  const handleCryptoTutorialContinue = useCallback(() => {
+    useTutorialStore.getState().markSeen(TUTORIAL_IDS.CRYPTO_INTRO);
+    setShowCryptoTutorial(false);
+  }, []);
+
+  /**
    * Handle full game reset - wipe everything including trust
    */
   const handleResetConfirm = useCallback(() => {
@@ -901,6 +927,17 @@ export function GameScreen(): React.ReactElement {
           body={TUTORIAL_CONTENT[TUTORIAL_SEQUENCE[activeTutorialIndex]].body}
           onContinue={handleTutorialContinue}
           testID="tutorial-modal"
+        />
+      )}
+
+      {/* Crypto tutorial modal (triggers independently at trust >= 21) */}
+      {showCryptoTutorial && TUTORIAL_CONTENT[TUTORIAL_IDS.CRYPTO_INTRO] && (
+        <TutorialModal
+          visible={true}
+          title={TUTORIAL_CONTENT[TUTORIAL_IDS.CRYPTO_INTRO].title}
+          body={TUTORIAL_CONTENT[TUTORIAL_IDS.CRYPTO_INTRO].body}
+          onContinue={handleCryptoTutorialContinue}
+          testID="crypto-tutorial-modal"
         />
       )}
     </SafeAreaView>

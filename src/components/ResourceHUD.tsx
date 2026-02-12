@@ -29,6 +29,9 @@ export interface ResourceHUDProps {
   /** Current game resources to display */
   resources: GameResources;
 
+  /** Maximum heat threshold (100 + Ghost Protocol bonus). Shown as "heat/max" when provided. */
+  heatMax?: number;
+
   /** Whether to show in compact mode without labels (default: true) */
   compact?: boolean;
 
@@ -49,6 +52,7 @@ export interface ResourceHUDProps {
  */
 export function ResourceHUD({
   resources,
+  heatMax,
   compact = true,
   showScanlines = true,
   style,
@@ -71,6 +75,7 @@ export function ResourceHUD({
             key={resourceKey}
             resourceKey={resourceKey}
             value={resources[resourceKey]}
+            maxValue={resourceKey === 'heat' ? heatMax : undefined}
             showLabel={!compact}
             style={styles.resourceItem}
           />

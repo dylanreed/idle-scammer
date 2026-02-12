@@ -218,6 +218,8 @@ export interface UseGameLoopReturn {
   addTimer: (scamId: string, durationMs: number) => void;
   /** Remove a timer by scam ID */
   removeTimer: (scamId: string) => void;
+  /** Rescale remaining time on all active timers by a speed multiplier */
+  rescaleTimerDurations: (speedMultiplier: number) => void;
 }
 
 /**
@@ -338,6 +340,23 @@ export function useGameLoop(options: UseGameLoopOptions = {}): UseGameLoopReturn
     }));
   }, []);
 
+  const rescaleTimerDurations = useCallback((speedMultiplier: number) => {
+    const now = Date.now();
+    setEngineState((currentState) => ({
+      ...currentState,
+      activeTimers: currentState.activeTimers.map((timer) => {
+        if (timer.isComplete) return timer;
+        const elapsed = now - timer.startTime;
+        const remaining = Math.max(0, timer.duration - elapsed);
+        const newRemaining = remaining / speedMultiplier;
+        return {
+          ...timer,
+          duration: elapsed + newRemaining,
+        };
+      }),
+    }));
+  }, []);
+
   // Cleanup on unmount
   useEffect(() => {
     return () => {
@@ -356,5 +375,6 @@ export function useGameLoop(options: UseGameLoopOptions = {}): UseGameLoopReturn
     engineState,
     addTimer,
     removeTimer,
+    rescaleTimerDurations,
   };
 }

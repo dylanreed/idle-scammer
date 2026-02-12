@@ -665,6 +665,65 @@ describe('Game Loop', () => {
       expect(result.current.engineState.activeTimers[0].scamId).toBe('scam-2');
     });
 
+    it('should expose rescaleTimerDurations function', () => {
+      const { result } = renderHook(() => useGameLoop());
+      expect(typeof result.current.rescaleTimerDurations).toBe('function');
+    });
+
+    it('should rescale running timer durations by speed multiplier', () => {
+      const { result } = renderHook(() => useGameLoop());
+
+      // Add a timer with 10000ms duration
+      act(() => {
+        result.current.start();
+        result.current.addTimer('test-scam', 10000);
+      });
+
+      // Advance 2000ms so timer has 8000ms remaining
+      act(() => {
+        jest.advanceTimersByTime(2000);
+      });
+
+      // Rescale with 3x speed — remaining 8000ms becomes ~2667ms
+      act(() => {
+        result.current.rescaleTimerDurations(3);
+      });
+
+      const timer = result.current.engineState.activeTimers[0];
+      // elapsed is ~2000ms, new remaining ~2667ms, so new duration ~4667ms
+      // Allow some tolerance since Date.now() might drift slightly in fake timers
+      expect(timer.duration).toBeLessThan(6000);
+      expect(timer.duration).toBeGreaterThan(3000);
+    });
+
+    it('should not rescale completed timers', () => {
+      const { result } = renderHook(() => useGameLoop());
+
+      act(() => {
+        result.current.start();
+        result.current.addTimer('fast-scam', 50);
+      });
+
+      // Complete the timer
+      act(() => {
+        jest.advanceTimersByTime(200);
+      });
+
+      const timerBefore = result.current.engineState.activeTimers.find(
+        (t) => t.scamId === 'fast-scam'
+      );
+
+      // Rescale should not affect completed timer duration
+      act(() => {
+        result.current.rescaleTimerDurations(3);
+      });
+
+      const timerAfter = result.current.engineState.activeTimers.find(
+        (t) => t.scamId === 'fast-scam'
+      );
+      expect(timerAfter?.duration).toBe(timerBefore?.duration);
+    });
+
     it('should call onTimerComplete when timer finishes', () => {
       const onTimerComplete = jest.fn();
       const { result } = renderHook(() =>

@@ -12,6 +12,7 @@ import { PixelButton } from '../components/PixelButton';
 import { ResponsiveLayout } from '../components/ResponsiveLayout';
 import { ScamListPanel } from '../components/ScamListPanel';
 import { OpsPanel } from '../components/OpsPanel';
+import { SkillsPanel } from '../components/SkillsPanel';
 import { COLORS, SPACING } from '../components/theme';
 import { useGameStore } from '../game/store';
 import { useScamStore } from '../game/scams/scamStore';
@@ -34,7 +35,7 @@ import {
   calculateMaxBuyCost,
   isTierFullyUnlocked,
 } from '../game/scams/calculations';
-import { calculateHeatFromScam, calculateHeatDecay, isTierAccessible } from '../game/prestige/calculations';
+import { calculateHeatFromScam, calculateHeatDecay, isPrestigeForced, isTierAccessible } from '../game/prestige/calculations';
 import { executePrestige, fullReset } from '../game/prestige/prestigeManager';
 import { MAX_HEAT } from '../game/prestige/constants';
 import { useGameLoop, type TickResult } from '../game/engine/gameLoop';
@@ -43,6 +44,9 @@ import type { ScamDefinition, ScamTier, ScamState } from '../game/scams/types';
 import type { PrestigeResult } from '../game/prestige/types';
 import { useBotStore } from '../game/bots/botStore';
 import { BOT_GENERATION_RATES, IDLE_BOT_HEAT_REDUCTION } from '../game/bots/constants';
+import { useSkillStore } from '../game/skills/skillStore';
+import { getSkillRankCost } from '../game/skills/calculations';
+import { ALL_ACTIVE_ABILITIES } from '../game/skills/abilities';
 
 /**
  * Scam arrays grouped by tier for iteration
@@ -72,6 +76,7 @@ export function GameScreen(): React.ReactElement {
   const addMoney = useGameStore((state) => state.addMoney);
   const addHeat = useGameStore((state) => state.addHeat);
   const addBots = useGameStore((state) => state.addBots);
+  const addSkillPoints = useGameStore((state) => state.addSkillPoints);
 
   // Get scam states and actions from scam store
   const scams = useScamStore((state) => state.scams);
@@ -86,6 +91,10 @@ export function GameScreen(): React.ReactElement {
 
   // Get employee actions from employee store
   const hireEmployee = useEmployeeStore((state) => state.hireEmployee);
+
+  // Get skill states from skill store
+  const passiveRanks = useSkillStore((state) => state.passiveRanks);
+  const skillAbilities = useSkillStore((state) => state.abilities);
 
   // Prestige modal state
   const [showPrestige, setShowPrestige] = useState(false);
@@ -116,6 +125,51 @@ export function GameScreen(): React.ReactElement {
   const removeTimerRef = useRef<((scamId: string) => void) | null>(null);
   const addTimerRef = useRef<((scamId: string, durationMs: number) => void) | null>(null);
   const pauseRef = useRef<(() => void) | null>(null);
+  const completeAllTimersRef = useRef<(() => void) | null>(null);
+
+  /**
+   * Helper to get current skill bonuses and active effects from the skill store.
+   * Always reads fresh state via getState() to avoid stale closures.
+   */
+  function getSkillModifiers() {
+    const skillStore = useSkillStore.getState();
+    return {
+      bonuses: skillStore.getSkillBonuses(),
+      effects: skillStore.getActiveEffects(),
+    };
+  }
+
+  /**
+   * Compute the skill-based duration multiplier from passive + active effects.
+   * Overclock reduces duration, Zero Day active ability speeds up.
+   */
+  function getSkillDurationParams() {
+    const { bonuses, effects } = getSkillModifiers();
+    return {
+      skillDurationMultiplier: 1 - bonuses.durationReduction,
+      activeSpeedMultiplier: effects.speedMultiplier,
+    };
+  }
+
+  /**
+   * Compute the skill-based reward multiplier from passive + active effects.
+   * Silver Tongue applies to all scams; Creative Accounting to money; Hype Machine to reputation.
+   */
+  function getSkillRewardParams(resourceType: string = 'money') {
+    const { bonuses, effects } = getSkillModifiers();
+    // Silver Tongue (rewardBonus) applies to all scam types
+    let skillRewardMultiplier = 1 + bonuses.rewardBonus;
+    // Creative Accounting (moneyBonus) applies to all scams
+    skillRewardMultiplier *= (1 + bonuses.moneyBonus);
+    // Hype Machine (reputationBonus) stacks on top for reputation scams
+    if (resourceType === 'reputation') {
+      skillRewardMultiplier *= (1 + bonuses.reputationBonus);
+    }
+    return {
+      skillRewardMultiplier,
+      activeRewardMultiplier: effects.rewardMultiplier,
+    };
+  }
 
   /**
    * Handle scam timer completion - award resources, auto-collect, and manager auto-restart
@@ -128,28 +182,40 @@ export function GameScreen(): React.ReactElement {
       const scamState = scams[timer.scamId];
       if (!scamState) return;
 
-      // Get bot bonuses for this scam
-      const botBonuses = useBotStore.getState().getScamBotBonuses(timer.scamId);
+      // Get bot bonuses for this scam, amplified by skill passives
+      const { bonuses: skillBonuses, effects: activeEffects } = getSkillModifiers();
+      const rawBotBonuses = useBotStore.getState().getScamBotBonuses(timer.scamId);
+      const amplifiedProfitBonus = rawBotBonuses.profitBonus * (1 + skillBonuses.botProfitAmplifier);
 
-      // Calculate reward based on level, trust, employee bonuses, and bot profit bonus
-      const { rewardBonus } = useEmployeeStore.getState().getScamBonuses(timer.scamId);
+      // Employee bonuses, optionally amplified by Deep Fake active ability
+      const { rewardBonus: rawRewardBonus } = useEmployeeStore.getState().getScamBonuses(timer.scamId);
+      const employeeRewardBonus = rawRewardBonus * activeEffects.employeeBonusMultiplier;
+
+      // Skill reward params (resource type affects Hype Machine bonus)
+      const { skillRewardMultiplier, activeRewardMultiplier } = getSkillRewardParams(definition.resourceType);
+
       const reward = calculateScamReward(
         definition,
         scamState.level,
         resources.trust,
-        botBonuses.profitBonus,
-        rewardBonus
+        amplifiedProfitBonus,
+        employeeRewardBonus,
+        skillRewardMultiplier,
+        activeRewardMultiplier
       );
 
       // Award money
       addMoney(reward);
 
-      // Add heat from the scam, reduced by unassigned idle bots
-      const totalBots = useGameStore.getState().resources.bots;
-      const unassignedBots = useBotStore.getState().getAvailableBots(totalBots);
-      const heatMultiplier = 1 / (1 + IDLE_BOT_HEAT_REDUCTION * unassignedBots);
-      const heat = calculateHeatFromScam(definition) * heatMultiplier;
-      addHeat(heat);
+      // Add heat from the scam (unless VPN Tunnel is active)
+      if (!activeEffects.zeroHeatGain) {
+        const totalBots = useGameStore.getState().resources.bots;
+        const unassignedBots = useBotStore.getState().getAvailableBots(totalBots);
+        const heatMultiplier = 1 / (1 + IDLE_BOT_HEAT_REDUCTION * unassignedBots);
+        const skillHeatGainMultiplier = 1 - skillBonuses.heatGainReduction;
+        const heat = calculateHeatFromScam(definition, skillHeatGainMultiplier) * heatMultiplier;
+        addHeat(heat);
+      }
 
       // Generate fractional bots from scam completion
       addBots(BOT_GENERATION_RATES[definition.tier]);
@@ -157,9 +223,9 @@ export function GameScreen(): React.ReactElement {
       // Increment completion counter
       incrementCompletion(timer.scamId);
 
-      // Check if heat has reached max (triggers prestige)
+      // Check if heat has reached max (with skill threshold bonus)
       const currentHeat = useGameStore.getState().resources.heat;
-      if (currentHeat >= MAX_HEAT && !showPrestigeRef.current) {
+      if (isPrestigeForced(currentHeat, skillBonuses.heatThresholdBonus) && !showPrestigeRef.current) {
         showPrestigeRef.current = true;
         setShowPrestige(true);
         setPrestigePhase('choice');
@@ -180,8 +246,13 @@ export function GameScreen(): React.ReactElement {
       if (manager && isManagerHired(manager.id) && addTimerRef.current) {
         // Schedule auto-restart on next tick to avoid state conflicts
         const { speedBonus } = useEmployeeStore.getState().getScamBonuses(timer.scamId);
-        const botSpeedBonus = useBotStore.getState().getScamBotBonuses(timer.scamId).speedBonus;
-        const duration = calculateScamDuration(definition, scamState.level, speedBonus, botSpeedBonus);
+        const amplifiedSpeedBonus = rawBotBonuses.speedBonus * (1 + skillBonuses.botSpeedAmplifier);
+        const { skillDurationMultiplier, activeSpeedMultiplier } = getSkillDurationParams();
+        const employeeSpeedBonus = speedBonus * activeEffects.employeeBonusMultiplier;
+        const duration = calculateScamDuration(
+          definition, scamState.level, employeeSpeedBonus, amplifiedSpeedBonus,
+          skillDurationMultiplier, activeSpeedMultiplier
+        );
         setTimeout(() => {
           if (addTimerRef.current) {
             addTimerRef.current(timer.scamId, duration);
@@ -193,38 +264,57 @@ export function GameScreen(): React.ReactElement {
   );
 
   /**
-   * Handle tick - apply heat decay each frame
+   * Handle tick - apply heat decay, employee heat, skill cooldowns, and passive income
    */
   const handleTick = useCallback(
     (result: TickResult) => {
       if (result.deltaMs <= 0) return;
 
       const deltaSeconds = result.deltaMs / 1000;
+      const { bonuses: skillBonuses, effects: activeEffects } = getSkillModifiers();
 
-      // Apply heat decay (trust boosts decay rate via criminal network)
+      // Tick skill cooldowns and active durations
+      useSkillStore.getState().tickCooldowns(result.deltaMs);
+
+      // Apply heat decay (trust + skill Dirty Cops bonus boosts decay rate)
       const currentHeat = useGameStore.getState().resources.heat;
       if (currentHeat > 0) {
         const currentTrust = useGameStore.getState().resources.trust;
         const decayedHeat = calculateHeatDecay(currentHeat, deltaSeconds, currentTrust);
-        const heatLost = currentHeat - decayedHeat;
+        // Apply skill decay bonus on top: extra decay as fraction of base rate
+        const skillExtraDecay = skillBonuses.heatDecayBonus > 0
+          ? currentHeat * (1 - Math.exp(-skillBonuses.heatDecayBonus * 0.001 * deltaSeconds))
+          : 0;
+        const heatLost = (currentHeat - decayedHeat) + skillExtraDecay;
         if (heatLost > 0) {
           addHeat(-heatLost);
         }
       }
 
-      // Apply employee heat generation
-      const totalEmployees = useEmployeeStore.getState().getAllEmployeeStates()
-        .reduce((sum, e) => sum + e.count, 0);
-      if (totalEmployees > 0) {
-        const employeeHeat = calculateEmployeeHeat(totalEmployees, deltaSeconds);
-        addHeat(employeeHeat);
+      // Apply employee heat generation (unless VPN Tunnel is active)
+      if (!activeEffects.zeroHeatGain) {
+        const totalEmployees = useEmployeeStore.getState().getAllEmployeeStates()
+          .reduce((sum, e) => sum + e.count, 0);
+        if (totalEmployees > 0) {
+          const skillHeatGainMultiplier = 1 - skillBonuses.heatGainReduction;
+          const employeeHeat = calculateEmployeeHeat(totalEmployees, deltaSeconds) * skillHeatGainMultiplier;
+          addHeat(employeeHeat);
+        }
+      }
+
+      // Compound Interest passive income (scaled by trust^0.3)
+      if (skillBonuses.passiveIncomePerSec > 0) {
+        const currentTrust = useGameStore.getState().resources.trust;
+        const trustScaling = Math.pow(currentTrust, 0.3);
+        const passiveIncome = skillBonuses.passiveIncomePerSec * trustScaling * deltaSeconds;
+        addMoney(passiveIncome);
       }
     },
-    [addHeat]
+    [addHeat, addMoney]
   );
 
   // Initialize the game loop
-  const { start, stop, pause, engineState, addTimer, removeTimer } = useGameLoop({
+  const { start, stop, pause, engineState, addTimer, removeTimer, rescaleTimerDurations } = useGameLoop({
     onTick: handleTick,
     onTimerComplete: handleTimerComplete,
   });
@@ -233,6 +323,18 @@ export function GameScreen(): React.ReactElement {
   removeTimerRef.current = removeTimer;
   addTimerRef.current = addTimer;
   pauseRef.current = pause;
+
+  // Build a function to complete all timers (for DDoS Burst)
+  completeAllTimersRef.current = useCallback(() => {
+    for (const timer of engineState.activeTimers) {
+      const definition = getScamDefinition(timer.scamId);
+      if (!definition) continue;
+      const scamState = scams[timer.scamId];
+      if (!scamState) continue;
+      // Simulate completion
+      handleTimerComplete(timer);
+    }
+  }, [engineState.activeTimers, scams, handleTimerComplete]);
 
   // Start the game loop on mount
   useEffect(() => {
@@ -301,10 +403,17 @@ export function GameScreen(): React.ReactElement {
       // Check if already running
       if (timerMap[scamId]) return;
 
-      // Calculate duration with employee and bot speed bonuses
+      // Calculate duration with employee, bot, and skill bonuses
       const { speedBonus } = useEmployeeStore.getState().getScamBonuses(scamId);
-      const botSpeedBonus = useBotStore.getState().getScamBotBonuses(scamId).speedBonus;
-      const duration = calculateScamDuration(definition, scamState.level, speedBonus, botSpeedBonus);
+      const rawBotBonuses = useBotStore.getState().getScamBotBonuses(scamId);
+      const { bonuses: skillBonuses, effects: activeEffects } = getSkillModifiers();
+      const amplifiedSpeedBonus = rawBotBonuses.speedBonus * (1 + skillBonuses.botSpeedAmplifier);
+      const { skillDurationMultiplier, activeSpeedMultiplier } = getSkillDurationParams();
+      const employeeSpeedBonus = speedBonus * activeEffects.employeeBonusMultiplier;
+      const duration = calculateScamDuration(
+        definition, scamState.level, employeeSpeedBonus, amplifiedSpeedBonus,
+        skillDurationMultiplier, activeSpeedMultiplier
+      );
       addTimer(scamId, duration);
     },
     [scams, timerMap, addTimer]
@@ -344,8 +453,9 @@ export function GameScreen(): React.ReactElement {
       const scamState = scams[scamId];
       if (!scamState || !scamState.isUnlocked) return;
 
-      // Check cost
-      const upgradeCost = calculateUpgradeCost(definition, scamState.level);
+      // Check cost (with skill Bulk Discount)
+      const { bonuses: skillBonuses } = getSkillModifiers();
+      const upgradeCost = calculateUpgradeCost(definition, scamState.level, skillBonuses.upgradeCostDiscount);
       if (resources.money < upgradeCost) return;
 
       // Calculate the new level after upgrade
@@ -441,7 +551,9 @@ export function GameScreen(): React.ReactElement {
       // Trust-based cap: can't hire more than trust level per type
       if (!canHireEmployee(resources.trust, count)) return;
 
-      const cost = getEmployeeCostForScam(scamId, count, resources.snitchCount);
+      // Skill Recruitment Drive discount
+      const { bonuses: skillBonuses } = getSkillModifiers();
+      const cost = getEmployeeCostForScam(scamId, count, resources.snitchCount, skillBonuses.employeeCostDiscount);
 
       if (resources.money < cost) return;
 
@@ -449,6 +561,74 @@ export function GameScreen(): React.ReactElement {
       hireEmployee(employeeId);
     },
     [resources.money, resources.trust, resources.snitchCount, addMoney, hireEmployee]
+  );
+
+  /**
+   * Handle allocating a passive skill rank
+   */
+  const handleAllocateSkill = useCallback(
+    (skillId: string) => {
+      const currentRank = useSkillStore.getState().passiveRanks[skillId] ?? 0;
+      const cost = getSkillRankCost(currentRank + 1);
+
+      if (resources.skillPoints < cost) return;
+
+      const success = useSkillStore.getState().allocateSkill(skillId);
+      if (success) {
+        addSkillPoints(-cost);
+      }
+    },
+    [resources.skillPoints, addSkillPoints]
+  );
+
+  /**
+   * Handle unlocking an active ability
+   */
+  const handleUnlockAbility = useCallback(
+    (abilityId: string) => {
+      const abilityDef = ALL_ACTIVE_ABILITIES.find((a) => a.id === abilityId);
+      if (!abilityDef) return;
+
+      if (resources.skillPoints < abilityDef.cost) return;
+
+      const success = useSkillStore.getState().unlockAbility(abilityId);
+      if (success) {
+        addSkillPoints(-abilityDef.cost);
+      }
+    },
+    [resources.skillPoints, addSkillPoints]
+  );
+
+  /**
+   * Handle activating an active ability
+   */
+  const handleActivateAbility = useCallback(
+    (abilityId: string) => {
+      const success = useSkillStore.getState().activateAbility(abilityId);
+      if (!success) return;
+
+      // Handle instant abilities
+      if (abilityId === 'ddos-burst') {
+        // Instant-complete all running timers by simulating their completion
+        if (completeAllTimersRef.current) {
+          completeAllTimersRef.current();
+        }
+      } else if (abilityId === 'burner-phone-ability') {
+        // Instant -30% current heat
+        const currentHeat = useGameStore.getState().resources.heat;
+        if (currentHeat > 0) {
+          const reduction = currentHeat * 0.30;
+          addHeat(-reduction);
+        }
+      } else if (abilityId === 'zero-day') {
+        // Rescale all running timers to reflect 3x speed boost
+        const abilityDef = ALL_ACTIVE_ABILITIES.find((a) => a.id === 'zero-day');
+        if (abilityDef) {
+          rescaleTimerDurations(abilityDef.effectValue);
+        }
+      }
+    },
+    [addHeat, rescaleTimerDurations]
   );
 
   /**
@@ -546,12 +726,13 @@ export function GameScreen(): React.ReactElement {
       {/* Resource HUD */}
       <ResourceHUD
         resources={resources}
+        heatMax={MAX_HEAT + (useSkillStore.getState().getSkillBonuses().heatThresholdBonus)}
         compact
         style={styles.hud}
         testID="resource-hud"
       />
 
-      {/* Two-column layout (wide) or tabbed layout (narrow) */}
+      {/* Three-column layout (wide) or tabbed layout (narrow) */}
       <ResponsiveLayout
         scamsContent={
           <ScamListPanel
@@ -567,6 +748,17 @@ export function GameScreen(): React.ReactElement {
             collapsedTiers={collapsedTiers}
             onToggleTier={toggleTier}
             testID="scam-list-panel"
+          />
+        }
+        skillsContent={
+          <SkillsPanel
+            skillPoints={resources.skillPoints}
+            passiveRanks={passiveRanks}
+            abilities={skillAbilities}
+            onAllocateSkill={handleAllocateSkill}
+            onUnlockAbility={handleUnlockAbility}
+            onActivateAbility={handleActivateAbility}
+            testID="skills-panel"
           />
         }
         opsContent={

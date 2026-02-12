@@ -6,12 +6,13 @@ import type { ScamState } from '../scams/types';
 import type { ManagerState } from '../managers/types';
 import type { EmployeeState } from '../employees/types';
 import type { BotAssignmentMap } from '../bots/types';
+import type { SkillSaveData } from '../skills/types';
 
 /**
  * Current save data format version.
  * Increment when changing SaveData structure (requires migration logic).
  */
-export const SAVE_VERSION = 5;
+export const SAVE_VERSION = 6;
 
 /**
  * AsyncStorage key for game save data.
@@ -48,4 +49,7 @@ export interface SaveData {
 
   /** Map of scam IDs to their bot assignments */
   botAssignments: BotAssignmentMap;
+
+  /** Skill system state (passive ranks, active ability states) */
+  skills: SkillSaveData;
 }

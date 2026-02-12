@@ -8,6 +8,7 @@ import type { ScamStateMap } from '../scams/scamStore';
 import type { ManagerStateMap } from '../managers/managerStore';
 import type { EmployeeStateMap } from '../employees/employeeStore';
 import type { BotAssignmentMap } from '../bots/types';
+import type { SkillSaveData } from '../skills/types';
 import type { ScamTimer } from '../engine/types';
 import { ALL_MANAGERS } from '../managers/definitions';
 import { ALL_SCAMS } from '../scams/definitions';
@@ -26,12 +27,23 @@ import { useBotStore } from '../bots/botStore';
  * @param employees - Current employee states from the employee store
  * @returns Complete SaveData object ready for storage
  */
+/**
+ * Default empty skill save data for new games or missing field.
+ */
+const EMPTY_SKILL_SAVE_DATA: SkillSaveData = {
+  passiveRanks: {},
+  unlockedAbilities: [],
+  cooldowns: {},
+  activeDurations: {},
+};
+
 export function createSaveData(
   resources: GameResources,
   scams: ScamStateMap,
   managers: ManagerStateMap,
   employees: EmployeeStateMap = {},
-  botAssignments: BotAssignmentMap = {}
+  botAssignments: BotAssignmentMap = {},
+  skills: SkillSaveData = EMPTY_SKILL_SAVE_DATA
 ): SaveData {
   return {
     version: SAVE_VERSION,
@@ -41,6 +53,7 @@ export function createSaveData(
     managers,
     employees,
     botAssignments,
+    skills,
   };
 }
 
@@ -57,6 +70,7 @@ export function applySaveData(saveData: SaveData): {
   managers: ManagerStateMap;
   employees: EmployeeStateMap;
   botAssignments: BotAssignmentMap;
+  skills: SkillSaveData;
 } {
   return {
     resources: saveData.resources,
@@ -64,6 +78,7 @@ export function applySaveData(saveData: SaveData): {
     managers: saveData.managers,
     employees: saveData.employees ?? {},
     botAssignments: saveData.botAssignments ?? {},
+    skills: saveData.skills ?? EMPTY_SKILL_SAVE_DATA,
   };
 }
 
@@ -122,6 +137,15 @@ export function migrateIfNeeded(saveData: SaveData): SaveData {
       ...migrated,
       version: 5,
       botAssignments: (migrated as SaveData).botAssignments ?? {},
+    };
+  }
+
+  // Migration from version 5 to version 6: add skills field
+  if (migrated.version < 6) {
+    migrated = {
+      ...migrated,
+      version: 6,
+      skills: (migrated as SaveData).skills ?? EMPTY_SKILL_SAVE_DATA,
     };
   }
 

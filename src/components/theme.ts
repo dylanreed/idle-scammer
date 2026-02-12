@@ -177,10 +177,13 @@ export const LAYOUT = {
   /** Width threshold for switching between tabs and columns */
   BREAKPOINT: 768,
 
-  /** Left column (scams) flex weight — 60% */
+  /** Left column (scams) flex weight — ~43% of total */
   LEFT_COLUMN_FLEX: 3,
 
-  /** Right column (ops) flex weight — 40% */
+  /** Center column (skills) flex weight — ~28% of total */
+  CENTER_COLUMN_FLEX: 2,
+
+  /** Right column (ops) flex weight — ~28% of total */
   RIGHT_COLUMN_FLEX: 2,
 } as const;
 

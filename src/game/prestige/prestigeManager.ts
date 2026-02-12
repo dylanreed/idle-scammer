@@ -6,6 +6,7 @@ import { useScamStore } from '../scams/scamStore';
 import { useEmployeeStore } from '../employees/employeeStore';
 import { useManagerStore } from '../managers/managerStore';
 import { useBotStore } from '../bots/botStore';
+import { useSkillStore } from '../skills/skillStore';
 import type { PrestigeResult, PrestigeBonus, PerformanceMetrics } from './types';
 import { calculateCleanEscapeResult, calculateSnitchResult } from './calculations';
 
@@ -28,6 +29,9 @@ export function resetAllStores(): void {
 
   // Reset bot assignments (bots return to pool, total count persists via resources)
   useBotStore.getState().resetAssignments();
+
+  // Reset skills (must re-allocate with starting SP)
+  useSkillStore.getState().reset();
 }
 
 /**
@@ -58,6 +62,9 @@ export function fullReset(): void {
 
   // Reset bot assignments
   useBotStore.getState().resetAssignments();
+
+  // Reset skills
+  useSkillStore.getState().reset();
 }
 
 /**
@@ -138,6 +145,7 @@ export function executePrestige(choice: 'clean-escape' | 'snitch'): PrestigeResu
     useEmployeeStore.getState().resetEmployees();
     useManagerStore.getState().resetManagers();
     useBotStore.getState().resetAssignments();
+    useSkillStore.getState().reset();
   } else {
     result = calculateSnitchResult(currentTrust, currentResources);
 
@@ -147,6 +155,7 @@ export function executePrestige(choice: 'clean-escape' | 'snitch'): PrestigeResu
     useEmployeeStore.getState().resetEmployees();
     useManagerStore.getState().resetManagers();
     useBotStore.getState().resetAssignments();
+    useSkillStore.getState().reset();
 
     // Increment lifetime snitch count (after reset, since prestigeReset preserves it)
     const gameStore = useGameStore.getState();

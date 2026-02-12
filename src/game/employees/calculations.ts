@@ -134,10 +134,11 @@ export function getManagerCostForScam(scamId: string): number {
  * Applies the standard 1.15x exponential growth on top of the dynamic baseCost,
  * plus a 1% cost inflation per lifetime snitch.
  */
-export function getEmployeeCostForScam(scamId: string, count: number, snitchCount: number = 0): number {
+export function getEmployeeCostForScam(scamId: string, count: number, snitchCount: number = 0, skillCostDiscount: number = 0): number {
   const baseCost = getEmployeeBaseCost(scamId);
   const snitchMultiplier = 1 + SNITCH_EMPLOYEE_COST_PENALTY * snitchCount;
-  return Math.floor(baseCost * Math.pow(EMPLOYEE_COST_GROWTH_RATE, count) * snitchMultiplier);
+  const rawCost = baseCost * Math.pow(EMPLOYEE_COST_GROWTH_RATE, count) * snitchMultiplier;
+  return Math.max(1, Math.floor(rawCost * (1 - skillCostDiscount)));
 }
 
 /**

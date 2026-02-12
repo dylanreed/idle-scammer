@@ -47,6 +47,9 @@ export interface ResourceIconProps {
   /** Current value of the resource */
   value: number;
 
+  /** Maximum value to display as "value/max" (e.g. heat threshold) */
+  maxValue?: number;
+
   /** Whether to show the resource label below the value (default: false) */
   showLabel?: boolean;
 
@@ -65,13 +68,16 @@ export interface ResourceIconProps {
 export function ResourceIcon({
   resourceKey,
   value,
+  maxValue,
   showLabel = false,
   style,
   testID,
 }: ResourceIconProps): React.ReactElement {
   const color = RESOURCE_COLORS[resourceKey];
   const label = RESOURCE_LABELS[resourceKey];
-  const formattedValue = formatNumber(value);
+  const formattedValue = maxValue !== undefined
+    ? `${formatNumber(value)}/${formatNumber(maxValue)}`
+    : formatNumber(value);
   const icon = getResourceIcon(resourceKey);
 
   return (

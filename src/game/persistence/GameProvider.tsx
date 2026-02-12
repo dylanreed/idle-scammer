@@ -14,6 +14,7 @@ import { useScamStore } from '../scams/scamStore';
 import { useManagerStore } from '../managers/managerStore';
 import { useEmployeeStore } from '../employees/employeeStore';
 import { useBotStore } from '../bots/botStore';
+import { useSkillStore } from '../skills/skillStore';
 import { COLORS } from '../../components/theme';
 
 interface GameProviderProps {
@@ -41,7 +42,7 @@ export function GameProvider({ children }: GameProviderProps): React.ReactElemen
           const migrated = migrateIfNeeded(rawSave);
 
           // Extract state from save
-          const { resources, scams, managers, employees, botAssignments } = applySaveData(migrated);
+          const { resources, scams, managers, employees, botAssignments, skills } = applySaveData(migrated);
 
           // Hydrate all stores
           useGameStore.getState().hydrate(resources);
@@ -49,6 +50,7 @@ export function GameProvider({ children }: GameProviderProps): React.ReactElemen
           useManagerStore.getState().hydrate(managers);
           useEmployeeStore.getState().hydrate(employees);
           useBotStore.getState().hydrate(botAssignments);
+          useSkillStore.getState().hydrate(skills);
 
           // Calculate offline earnings
           const timers = reconstructActiveTimers(scams, managers);
@@ -169,8 +171,9 @@ function performSave() {
   const managers = useManagerStore.getState().managers;
   const employees = useEmployeeStore.getState().employees;
   const botAssignments = useBotStore.getState().assignments;
+  const skills = useSkillStore.getState().toSaveData();
 
-  const saveData = createSaveData(resources, scams, managers, employees, botAssignments);
+  const saveData = createSaveData(resources, scams, managers, employees, botAssignments, skills);
   saveGame(saveData).catch((error) => {
     console.warn('[GameProvider] Auto-save failed:', error);
   });

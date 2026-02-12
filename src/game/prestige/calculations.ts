@@ -33,7 +33,7 @@ import type { ScamTier } from '../scams/types';
  * @param scamDefinition - The scam that was completed
  * @returns The amount of heat to add
  */
-export function calculateHeatFromScam(scamDefinition: ScamDefinition): number {
+export function calculateHeatFromScam(scamDefinition: ScamDefinition, skillHeatGainMultiplier: number = 1): number {
   const { unlockCost, tier } = scamDefinition;
   const tierBase = getTierBase(tier);
   const baseCost = unlockCost ?? tierBase.baseCost;
@@ -45,7 +45,9 @@ export function calculateHeatFromScam(scamDefinition: ScamDefinition): number {
 
   // Apply tier discount
   const tierDiscount = HEAT_TIER_DISCOUNT[tier] ?? 1.0;
-  return baseHeat * tierDiscount;
+
+  // Apply skill-based heat reduction (e.g., 0.6 = 40% less heat)
+  return baseHeat * tierDiscount * skillHeatGainMultiplier;
 }
 
 /**
@@ -56,9 +58,9 @@ export function calculateHeatFromScam(scamDefinition: ScamDefinition): number {
  * @param trust - The player's current trust value
  * @returns The effective decay rate per second
  */
-export function getEffectiveDecayRate(trust: number): number {
+export function getEffectiveDecayRate(trust: number, skillDecayBonus: number = 0): number {
   const safeTrust = Math.max(1, trust);
-  return HEAT_DECAY_RATE * (1 + Math.log(safeTrust) * TRUST_DECAY_BOOST);
+  return HEAT_DECAY_RATE * (1 + Math.log(safeTrust) * TRUST_DECAY_BOOST) + skillDecayBonus * HEAT_DECAY_RATE;
 }
 
 /**
@@ -123,8 +125,8 @@ export function getTierTrustRequirement(tier: ScamTier): number {
  * @param currentHeat - The player's current heat level
  * @returns True if heat >= MAX_HEAT
  */
-export function isPrestigeForced(currentHeat: number): boolean {
-  return currentHeat >= MAX_HEAT;
+export function isPrestigeForced(currentHeat: number, skillHeatThresholdBonus: number = 0): boolean {
+  return currentHeat >= MAX_HEAT + skillHeatThresholdBonus;
 }
 
 /**

@@ -93,6 +93,21 @@ export interface ScamCardProps {
   /** Dynamic unlock cost override (from cumulative income formula). Falls back to scamDefinition.unlockCost. */
   unlockCost?: number;
 
+  /** Skill passive duration multiplier (e.g. 0.7 = 30% faster from Overclock) */
+  skillDurationMultiplier?: number;
+
+  /** Active ability speed multiplier (e.g. 3 = 3x speed from Zero Day) */
+  activeSpeedMultiplier?: number;
+
+  /** Skill passive reward multiplier (e.g. 1.45 from Silver Tongue + Creative Accounting) */
+  skillRewardMultiplier?: number;
+
+  /** Active ability reward multiplier (e.g. 2 = 2x from Charm Offensive) */
+  activeRewardMultiplier?: number;
+
+  /** Skill passive upgrade cost discount (e.g. 0.25 = 25% off from Bulk Discount) */
+  skillUpgradeCostDiscount?: number;
+
   /** Test ID for testing */
   testID?: string;
 }
@@ -161,17 +176,22 @@ export function ScamCard({
   onHireEmployee,
   employeeHireCost,
   unlockCost: unlockCostProp,
+  skillDurationMultiplier = 1,
+  activeSpeedMultiplier = 1,
+  skillRewardMultiplier = 1,
+  activeRewardMultiplier = 1,
+  skillUpgradeCostDiscount = 0,
   testID,
 }: ScamCardProps): React.ReactElement {
   const status = getScamStatus(scamState, timer);
   const level = scamState?.level ?? 1;
   const isRunning = status === 'running';
 
-  // Calculate values for display (including employee bonuses)
-  const duration = calculateScamDuration(scamDefinition, level, employeeSpeedBonus, botSpeedBonus);
-  const reward = calculateScamReward(scamDefinition, level, trust, botProfitBonus, employeeRewardBonus);
+  // Calculate values for display (including employee, bot, and skill bonuses)
+  const duration = calculateScamDuration(scamDefinition, level, employeeSpeedBonus, botSpeedBonus, skillDurationMultiplier, activeSpeedMultiplier);
+  const reward = calculateScamReward(scamDefinition, level, trust, botProfitBonus, employeeRewardBonus, skillRewardMultiplier, activeRewardMultiplier);
   const progress = getTimerProgress(timer);
-  const upgradeCost = calculateUpgradeCost(scamDefinition, level);
+  const upgradeCost = calculateUpgradeCost(scamDefinition, level, skillUpgradeCostDiscount);
   // Use dynamic unlock cost prop when provided, fall back to static definition
   const effectiveUnlockCost = unlockCostProp ?? scamDefinition.unlockCost;
   const canAffordUnlock =

@@ -10,8 +10,8 @@ import {
 
 describe('Persistence Types', () => {
   describe('constants', () => {
-    it('should export SAVE_VERSION at 5', () => {
-      expect(SAVE_VERSION).toBe(5);
+    it('should export SAVE_VERSION at 6', () => {
+      expect(SAVE_VERSION).toBe(6);
     });
 
     it('should export correct STORAGE_KEY', () => {
@@ -24,9 +24,9 @@ describe('Persistence Types', () => {
   });
 
   describe('SaveData interface', () => {
-    it('should accept valid SaveData structure with managers, employees, and botAssignments', () => {
+    it('should accept valid SaveData structure with managers, employees, botAssignments, and skills', () => {
       const validSaveData: SaveData = {
-        version: 5,
+        version: 6,
         savedAt: Date.now(),
         resources: {
           money: 100,
@@ -59,19 +59,26 @@ describe('Persistence Types', () => {
           },
         },
         botAssignments: {},
+        skills: {
+          passiveRanks: {},
+          unlockedAbilities: [],
+          cooldowns: {},
+          activeDurations: {},
+        },
       };
 
       // TypeScript compilation is the main test - this verifies runtime shape
-      expect(validSaveData.version).toBe(5);
+      expect(validSaveData.version).toBe(6);
       expect(validSaveData.savedAt).toBeGreaterThan(0);
       expect(validSaveData.resources).toBeDefined();
       expect(validSaveData.scams).toBeDefined();
       expect(validSaveData.managers).toBeDefined();
       expect(validSaveData.employees).toBeDefined();
       expect(validSaveData.botAssignments).toBeDefined();
+      expect(validSaveData.skills).toBeDefined();
     });
 
-    it('should require all SaveData fields including managers, employees, and botAssignments', () => {
+    it('should require all SaveData fields including managers, employees, botAssignments, and skills', () => {
       // This test documents the expected structure
       const saveData: SaveData = {
         version: SAVE_VERSION,
@@ -90,6 +97,12 @@ describe('Persistence Types', () => {
         managers: {},
         employees: {},
         botAssignments: {},
+        skills: {
+          passiveRanks: {},
+          unlockedAbilities: [],
+          cooldowns: {},
+          activeDurations: {},
+        },
       };
 
       expect(saveData).toHaveProperty('version');
@@ -99,6 +112,7 @@ describe('Persistence Types', () => {
       expect(saveData).toHaveProperty('managers');
       expect(saveData).toHaveProperty('employees');
       expect(saveData).toHaveProperty('botAssignments');
+      expect(saveData).toHaveProperty('skills');
     });
   });
 });

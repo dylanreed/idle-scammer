@@ -1,4 +1,4 @@
-// ABOUTME: Width-responsive layout that shows two columns on wide screens
+// ABOUTME: Width-responsive layout that shows three columns on wide screens
 // ABOUTME: Switches to tab-based navigation on narrow screens (phones)
 
 import React, { useState } from 'react';
@@ -11,6 +11,9 @@ export interface ResponsiveLayoutProps {
   /** Content for the left column / SCAMS tab */
   scamsContent: React.ReactNode;
 
+  /** Content for the center column / SKILLS tab */
+  skillsContent?: React.ReactNode;
+
   /** Content for the right column / OPS CENTER tab */
   opsContent: React.ReactNode;
 
@@ -18,15 +21,16 @@ export interface ResponsiveLayoutProps {
   testID?: string;
 }
 
-type TabKey = 'scams' | 'ops';
+type TabKey = 'scams' | 'skills' | 'ops';
 
 /**
  * Responsive layout that adapts to screen width.
- * Wide screens (>= 768px): Two-column layout with 60/40 split.
- * Narrow screens (< 768px): Tab switching between SCAMS and OPS CENTER.
+ * Wide screens (>= 768px): Three-column layout (3/2/2 flex split).
+ * Narrow screens (< 768px): Tab switching between SCAMS, SKILLS, and OPS CENTER.
  */
 export function ResponsiveLayout({
   scamsContent,
+  skillsContent,
   opsContent,
   testID,
 }: ResponsiveLayoutProps): React.ReactElement {
@@ -38,6 +42,9 @@ export function ResponsiveLayout({
     return (
       <View style={styles.wideContainer} testID={testID ?? 'responsive-layout-wide'}>
         <View style={styles.leftColumn}>{scamsContent}</View>
+        {skillsContent && (
+          <View style={styles.centerColumn}>{skillsContent}</View>
+        )}
         <View style={styles.rightColumn}>{opsContent}</View>
       </View>
     );
@@ -55,6 +62,16 @@ export function ResponsiveLayout({
         >
           {'SCAMS'}
         </PixelButton>
+        {skillsContent && (
+          <PixelButton
+            onPress={() => setActiveTab('skills')}
+            variant={activeTab === 'skills' ? 'primary' : 'secondary'}
+            style={styles.tabButton}
+            testID="tab-skills"
+          >
+            {'SKILLS'}
+          </PixelButton>
+        )}
         <PixelButton
           onPress={() => setActiveTab('ops')}
           variant={activeTab === 'ops' ? 'primary' : 'secondary'}
@@ -67,7 +84,9 @@ export function ResponsiveLayout({
 
       {/* Tab content */}
       <View style={styles.tabContent}>
-        {activeTab === 'scams' ? scamsContent : opsContent}
+        {activeTab === 'scams' && scamsContent}
+        {activeTab === 'skills' && skillsContent}
+        {activeTab === 'ops' && opsContent}
       </View>
     </View>
   );
@@ -80,6 +99,9 @@ const styles = StyleSheet.create({
   },
   leftColumn: {
     flex: LAYOUT.LEFT_COLUMN_FLEX,
+  },
+  centerColumn: {
+    flex: LAYOUT.CENTER_COLUMN_FLEX,
   },
   rightColumn: {
     flex: LAYOUT.RIGHT_COLUMN_FLEX,

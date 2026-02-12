@@ -199,6 +199,7 @@ describe('SaveManager', () => {
         },
         employees: {},
         botAssignments: {},
+        skills: { passiveRanks: {}, unlockedAbilities: [], cooldowns: {}, activeDurations: {} },
       };
 
       const { resources, scams, managers, botAssignments } = applySaveData(saveData);
@@ -227,6 +228,7 @@ describe('SaveManager', () => {
         managers: {},
         employees: {},
         botAssignments: {},
+        skills: { passiveRanks: {}, unlockedAbilities: [], cooldowns: {}, activeDurations: {} },
       };
 
       const { resources, scams, managers, botAssignments } = applySaveData(saveData);
@@ -296,6 +298,7 @@ describe('SaveManager', () => {
         },
         employees: {},
         botAssignments: {},
+        skills: { passiveRanks: {}, unlockedAbilities: [], cooldowns: {}, activeDurations: {} },
       };
 
       const result = migrateIfNeeded(saveData);
@@ -394,13 +397,55 @@ describe('SaveManager', () => {
 
       const result = migrateIfNeeded(v4SaveData);
 
-      expect(result.version).toBe(5);
+      expect(result.version).toBe(SAVE_VERSION);
       expect(result.botAssignments).toEqual({});
       // Existing data preserved
       expect(result.resources.money).toBe(2000);
       expect(result.resources.snitchCount).toBe(1);
       expect(result.scams['nigerian-prince-emails'].level).toBe(3);
       expect(result.managers['prince-okonkwo'].isHired).toBe(true);
+    });
+
+    it('should migrate v5 data to v6 by adding empty skills', () => {
+      const v5SaveData = {
+        version: 5,
+        savedAt: Date.now(),
+        resources: {
+          money: 5000,
+          reputation: 200,
+          heat: 40,
+          bots: 15,
+          skillPoints: 20,
+          crypto: 5,
+          trust: 10,
+          snitchCount: 2,
+        },
+        scams: {
+          'nigerian-prince-emails': {
+            scamId: 'nigerian-prince-emails',
+            level: 8,
+            isUnlocked: true,
+            timesCompleted: 50,
+          },
+        },
+        managers: {},
+        employees: {},
+        botAssignments: { 'nigerian-prince-emails': { speedBots: 2, profitBots: 1 } },
+      } as unknown as SaveData;
+
+      const result = migrateIfNeeded(v5SaveData);
+
+      expect(result.version).toBe(SAVE_VERSION);
+      expect(result.skills).toEqual({
+        passiveRanks: {},
+        unlockedAbilities: [],
+        cooldowns: {},
+        activeDurations: {},
+      });
+      // Existing data preserved
+      expect(result.resources.money).toBe(5000);
+      expect(result.resources.skillPoints).toBe(20);
+      expect(result.botAssignments).toEqual({ 'nigerian-prince-emails': { speedBots: 2, profitBots: 1 } });
     });
 
     it('should handle sequential migrations v0 -> v1 -> v2', () => {

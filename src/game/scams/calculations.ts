@@ -49,8 +49,15 @@ const SPEED_BRACKETS: { maxLevel: number; multiplier: number }[] = [
 
 /**
  * Minimum duration as a percentage of base.
+ * Level/employee/bot bonuses cannot reduce duration below this percentage.
  */
 const MIN_DURATION_PERCENTAGE = 0.1;
+
+/**
+ * Absolute minimum duration in ms. Skill bonuses can push below the
+ * percentage-based floor, but never below this hard limit.
+ */
+export const ABSOLUTE_MIN_DURATION_MS = 500;
 
 /**
  * Returns the maximum number of speed bots that can usefully reduce a scam's duration.
@@ -186,7 +193,9 @@ export function calculateScamDuration(
   definition: ScamDefinition,
   level: number,
   employeeSpeedBonus: number = 0,
-  botSpeedBonus: number = 0
+  botSpeedBonus: number = 0,
+  skillDurationMultiplier: number = 1,
+  activeSpeedMultiplier: number = 1
 ): number {
   const { baseDuration } = definition;
   const speedMultiplier = getSpeedMultiplier(level);
@@ -198,9 +207,15 @@ export function calculateScamDuration(
   // Bot speed bonus reduces duration further (e.g., 0.3 = 30% faster from 3 speed bots)
   const withBotBoost = withEmployeeBoost / (1 + botSpeedBonus);
 
+  // Level/employee/bot bonuses are floored at 10% of base duration
   const minimumDuration = baseDuration * MIN_DURATION_PERCENTAGE;
+  const flooredDuration = Math.max(withBotBoost, minimumDuration);
 
-  return Math.max(Math.round(withBotBoost), Math.round(minimumDuration));
+  // Skill passive reduces duration (e.g., 0.7 = 30% faster), active multiplier speeds up.
+  // Skills CAN push below the percentage floor — they only respect the absolute minimum.
+  const withSkills = flooredDuration * skillDurationMultiplier / activeSpeedMultiplier;
+
+  return Math.max(Math.round(withSkills), ABSOLUTE_MIN_DURATION_MS);
 }
 
 /**
@@ -216,7 +231,9 @@ export function calculateScamReward(
   level: number,
   trust: number,
   botProfitBonus: number = 0,
-  employeeRewardBonus: number = 0
+  employeeRewardBonus: number = 0,
+  skillRewardMultiplier: number = 1,
+  activeRewardMultiplier: number = 1
 ): number {
   const { unlockCost, tier } = definition;
   const tierBase = getTierBase(tier);
@@ -239,7 +256,7 @@ export function calculateScamReward(
   // Employee reward bonus (e.g., 0.5 = +50% reward from hired employees)
   const employeeMultiplier = 1 + employeeRewardBonus;
 
-  return baseReward * linearMultiplier * bracketBonus * trustMultiplier * botProfitMultiplier * employeeMultiplier;
+  return baseReward * linearMultiplier * bracketBonus * trustMultiplier * botProfitMultiplier * employeeMultiplier * skillRewardMultiplier * activeRewardMultiplier;
 }
 
 /**
@@ -253,7 +270,8 @@ export function calculateScamReward(
  */
 export function calculateUpgradeCost(
   definition: ScamDefinition,
-  level: number
+  level: number,
+  skillUpgradeCostDiscount: number = 0
 ): number {
   const { unlockCost, tier } = definition;
   const tierBase = getTierBase(tier);
@@ -265,7 +283,12 @@ export function calculateUpgradeCost(
   const costRate = getScamCostRate(baseCost);
   const costMultiplier = Math.pow(costRate, level - 1);
 
-  return Math.max(1, Math.floor(baseCost * costMultiplier));
+  const rawCost = baseCost * costMultiplier;
+
+  // Apply skill discount (e.g., 0.25 = 25% cheaper)
+  const discountedCost = rawCost * (1 - skillUpgradeCostDiscount);
+
+  return Math.max(1, Math.floor(discountedCost));
 }
 
 /**

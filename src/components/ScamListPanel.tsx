@@ -17,6 +17,7 @@ import { getManagerByScamId } from '../game/managers/definitions';
 import { useManagerStore } from '../game/managers/managerStore';
 import { useEmployeeStore } from '../game/employees/employeeStore';
 import { useBotStore } from '../game/bots/botStore';
+import { useSkillStore } from '../game/skills/skillStore';
 import { getEmployeesByScamId } from '../game/employees/definitions';
 import { getEmployeeCostForScam, getMaxEmployeesPerType, getUnlockCostForScam } from '../game/employees/calculations';
 import type { ScamTimer } from '../game/engine/types';
@@ -109,6 +110,24 @@ export function ScamListPanel({
   const isManagerHired = useManagerStore((state) => state.isManagerHired);
   const getScamBotBonuses = useBotStore((state) => state.getScamBotBonuses);
 
+  // Read skill bonuses and active effects for display.
+  // Uses getState() to avoid infinite re-render from new-object comparison.
+  // Parent component (GameScreen) subscribes to passiveRanks/abilities,
+  // so skill changes trigger parent re-render → ScamListPanel re-render → fresh getState().
+  const skillBonuses = useSkillStore.getState().getSkillBonuses();
+  const activeEffects = useSkillStore.getState().getActiveEffects();
+
+  // Compute display modifiers from skill state
+  const skillDurationMultiplier = 1 - skillBonuses.durationReduction;
+  const activeSpeedMultiplier = activeEffects.speedMultiplier;
+  const skillRewardBase = 1 + skillBonuses.rewardBonus; // Silver Tongue
+  const moneyBonus = 1 + skillBonuses.moneyBonus; // Creative Accounting
+  const reputationBonus = 1 + skillBonuses.reputationBonus; // Hype Machine
+  const activeRewardMultiplier = activeEffects.rewardMultiplier;
+  const skillUpgradeCostDiscount = skillBonuses.upgradeCostDiscount;
+  const skillEmployeeCostDiscount = skillBonuses.employeeCostDiscount;
+  const activeEmployeeBonusMultiplier = activeEffects.employeeBonusMultiplier;
+
   return (
     <ScrollView
       style={styles.container}
@@ -199,15 +218,27 @@ export function ScamListPanel({
               const empCount = empDef
                 ? useEmployeeStore.getState().getEmployeeCount(empDef.id)
                 : 0;
-              const empBonuses = useEmployeeStore.getState().getScamBonuses(scamDef.id);
+              const rawEmpBonuses = useEmployeeStore.getState().getScamBonuses(scamDef.id);
               const empCost = empDef
-                ? getEmployeeCostForScam(scamDef.id, empCount, resources.snitchCount)
+                ? getEmployeeCostForScam(scamDef.id, empCount, resources.snitchCount, skillEmployeeCostDiscount)
                 : undefined;
 
               const empMaxCount = getMaxEmployeesPerType(resources.trust);
 
-              // Look up bot bonuses for this scam
-              const botBonuses = getScamBotBonuses(scamDef.id);
+              // Look up bot bonuses for this scam, amplified by skills
+              const rawBotBonuses = getScamBotBonuses(scamDef.id);
+              const amplifiedBotSpeed = rawBotBonuses.speedBonus * (1 + skillBonuses.botSpeedAmplifier);
+              const amplifiedBotProfit = rawBotBonuses.profitBonus * (1 + skillBonuses.botProfitAmplifier);
+
+              // Amplify employee bonuses with Deep Fake active ability
+              const amplifiedEmpSpeed = rawEmpBonuses.speedBonus * activeEmployeeBonusMultiplier;
+              const amplifiedEmpReward = rawEmpBonuses.rewardBonus * activeEmployeeBonusMultiplier;
+
+              // Compute reward multiplier based on scam resource type
+              let scamRewardMultiplier = skillRewardBase * moneyBonus;
+              if (scamDef.resourceType === 'reputation') {
+                scamRewardMultiplier = skillRewardBase * reputationBonus;
+              }
 
               return (
                 <ScamCard
@@ -225,15 +256,20 @@ export function ScamListPanel({
                   employeeDefinition={empDef}
                   employeeCount={empCount}
                   employeeMaxCount={empMaxCount}
-                  employeeSpeedBonus={empBonuses.speedBonus}
-                  employeeRewardBonus={empBonuses.rewardBonus}
-                  botSpeedBonus={botBonuses.speedBonus}
-                  botProfitBonus={botBonuses.profitBonus}
+                  employeeSpeedBonus={amplifiedEmpSpeed}
+                  employeeRewardBonus={amplifiedEmpReward}
+                  botSpeedBonus={amplifiedBotSpeed}
+                  botProfitBonus={amplifiedBotProfit}
                   onHireEmployee={
                     empDef ? () => onHireEmployee(empDef.id, scamDef.id) : undefined
                   }
                   employeeHireCost={empCost}
                   unlockCost={getUnlockCostForScam(scamDef.id)}
+                  skillDurationMultiplier={skillDurationMultiplier}
+                  activeSpeedMultiplier={activeSpeedMultiplier}
+                  skillRewardMultiplier={scamRewardMultiplier}
+                  activeRewardMultiplier={activeRewardMultiplier}
+                  skillUpgradeCostDiscount={skillUpgradeCostDiscount}
                   testID={`scam-card-${scamDef.id}`}
                 />
               );

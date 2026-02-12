@@ -83,12 +83,12 @@ describe('Employee-aware Scam Calculations', () => {
       ));
     });
 
-    it('should respect minimum duration (10% of base) even with large speed bonus', () => {
-      // With 100x speed bonus, duration should be clamped
+    it('should respect minimum duration floor even with large speed bonus', () => {
+      // With 100x speed bonus, duration should be clamped to 10% of base (100ms)
+      // but absolute minimum (500ms) is higher, so that wins
       const boosted = calculateScamDuration(testScam, 1, 100);
-      const minimumDuration = Math.round(testScam.baseDuration * 0.1);
 
-      expect(boosted).toBe(minimumDuration);
+      expect(boosted).toBe(500);
     });
 
     it('should combine with level-based speed brackets', () => {

@@ -1,8 +1,8 @@
 // ABOUTME: Interactive card component for displaying and controlling a single scam
 // ABOUTME: Shows scam state, progress bar, and action buttons (start, collect, unlock)
 
-import React from 'react';
-import { View, StyleSheet, Image } from 'react-native';
+import React, { useState } from 'react';
+import { View, StyleSheet, Image, Pressable } from 'react-native';
 import { CRTFrame } from './CRTFrame';
 import { PixelButton } from './PixelButton';
 import { ProgressBar } from './ProgressBar';
@@ -224,10 +224,19 @@ export function ScamCard({
   const manager = getManagerByScamId(scamDefinition.id);
   const managerPortrait = hasManager && manager ? getManagerPortrait(manager.id) : undefined;
 
+  const [isCollapsed, setIsCollapsed] = useState(false);
+
   return (
     <CRTFrame testID={testID} style={styles.card} accentColor={COLORS.primary}>
-      {/* Header with icon, name, level, and manager portrait */}
-      <View style={styles.header}>
+      {/* Header with icon, name, level, and manager portrait — tap to collapse/expand */}
+      <Pressable
+        onPress={() => setIsCollapsed((prev) => !prev)}
+        style={styles.header}
+        testID={testID ? `${testID}-header` : undefined}
+      >
+        <TerminalText size="sm" color={COLORS.textDim} style={styles.chevron}>
+          {isCollapsed ? '▶' : '▼'}
+        </TerminalText>
         {scamIcon && (
           <Image
             source={scamIcon}
@@ -250,171 +259,176 @@ export function ScamCard({
             testID={testID ? `${testID}-manager` : undefined}
           />
         )}
-      </View>
+      </Pressable>
 
-      {/* Description */}
-      <TerminalText size="sm" color={COLORS.textSecondary} style={styles.description}>
-        {scamDefinition.description}
-      </TerminalText>
+      {/* Collapsible content — everything below the header */}
+      {!isCollapsed && (
+        <>
+          {/* Description */}
+          <TerminalText size="sm" color={COLORS.textSecondary} style={styles.description}>
+            {scamDefinition.description}
+          </TerminalText>
 
-      {/* Stats row - duration and reward preview, with floating numbers anchored here */}
-      {status !== 'locked' && (
-        <View style={styles.statsRowWrapper}>
-          <View style={styles.statsRow}>
-            <TerminalText size="sm" color={COLORS.textDim}>
-              {formatDuration(duration)}
-            </TerminalText>
-            <TerminalText size="sm" color={COLORS.gold}>
-              {rewardDisplay}
-            </TerminalText>
-          </View>
-          {/* Floating reward numbers — absolutely positioned relative to this wrapper */}
-          {floatingRewards?.map((fr) => (
-            <FloatingNumber
-              key={fr.id}
-              value={rewardDisplay}
-              color={fr.color}
-              fontSize={FONT_SIZES.sm}
-              onComplete={() => onFloatingComplete?.(fr.id)}
-              testID={`floating-${fr.id}`}
-            />
-          ))}
-        </View>
-      )}
+          {/* Stats row - duration and reward preview, with floating numbers anchored here */}
+          {status !== 'locked' && (
+            <View style={styles.statsRowWrapper}>
+              <View style={styles.statsRow}>
+                <TerminalText size="sm" color={COLORS.textDim}>
+                  {formatDuration(duration)}
+                </TerminalText>
+                <TerminalText size="sm" color={COLORS.gold}>
+                  {rewardDisplay}
+                </TerminalText>
+              </View>
+              {/* Floating reward numbers — absolutely positioned relative to this wrapper */}
+              {floatingRewards?.map((fr) => (
+                <FloatingNumber
+                  key={fr.id}
+                  value={rewardDisplay}
+                  color={fr.color}
+                  fontSize={FONT_SIZES.sm}
+                  onComplete={() => onFloatingComplete?.(fr.id)}
+                  testID={`floating-${fr.id}`}
+                />
+              ))}
+            </View>
+          )}
 
-      {/* Progress bar (always visible when unlocked) */}
-      {status !== 'locked' && (
-        <View style={styles.progressContainer}>
-          <ProgressBar
-            progress={progress}
-            showPercentage
-            testID={testID ? `${testID}-progress` : undefined}
-          />
-        </View>
-      )}
+          {/* Progress bar (always visible when unlocked) */}
+          {status !== 'locked' && (
+            <View style={styles.progressContainer}>
+              <ProgressBar
+                progress={progress}
+                showPercentage
+                testID={testID ? `${testID}-progress` : undefined}
+              />
+            </View>
+          )}
 
-      {/* Action buttons */}
-      <View style={styles.buttonContainer}>
-        {status === 'locked' && (
-          <PixelButton
-            onPress={onUnlock}
-            disabled={!canAffordUnlock}
-            variant="gold"
-            testID={testID ? `${testID}-unlock` : undefined}
-          >
-            {effectiveUnlockCost !== undefined
-              ? `UNLOCK ($${formatNumber(effectiveUnlockCost)})`
-              : 'UNLOCK (FREE)'}
-          </PixelButton>
-        )}
-
-        {status === 'idle' && !hasManager && (
-          <PixelButton
-            onPress={onStart}
-            variant="primary"
-            testID={testID ? `${testID}-start` : undefined}
-          >
-            START
-          </PixelButton>
-        )}
-
-        {status === 'idle' && hasManager && (
-          <PixelButton
-            onPress={() => {}}
-            disabled
-            variant="secondary"
-            testID={testID ? `${testID}-auto` : undefined}
-          >
-            AUTO (MANAGED)
-          </PixelButton>
-        )}
-
-        {isRunning && (
-          <PixelButton
-            onPress={() => {}}
-            disabled
-            variant="primary"
-            testID={testID ? `${testID}-running` : undefined}
-          >
-            {hasManager ? 'AUTO RUNNING...' : 'RUNNING...'}
-          </PixelButton>
-        )}
-      </View>
-
-      {/* Upgrade and Max Buy buttons - always visible when unlocked */}
-      {status !== 'locked' && (
-        <View style={styles.upgradeContainer}>
-          <View style={styles.upgradeRow}>
-            <PixelButton
-              onPress={onUpgrade}
-              disabled={!canAffordUpgrade}
-              variant="secondary"
-              testID={testID ? `${testID}-upgrade` : undefined}
-              style={styles.upgradeButton}
-            >
-              {`UPGRADE ($${formatNumber(upgradeCost)})`}
-            </PixelButton>
-            {onMaxBuy && maxBuyCount > 1 && (
+          {/* Action buttons */}
+          <View style={styles.buttonContainer}>
+            {status === 'locked' && (
               <PixelButton
-                onPress={onMaxBuy}
-                disabled={maxBuyCount <= 0}
-                variant="secondary"
-                testID={testID ? `${testID}-max-buy` : undefined}
-                style={styles.maxBuyButton}
+                onPress={onUnlock}
+                disabled={!canAffordUnlock}
+                variant="gold"
+                testID={testID ? `${testID}-unlock` : undefined}
               >
-                {`MAX x${maxBuyCount} ($${formatNumber(maxBuyCost)})`}
+                {effectiveUnlockCost !== undefined
+                  ? `UNLOCK ($${formatNumber(effectiveUnlockCost)})`
+                  : 'UNLOCK (FREE)'}
+              </PixelButton>
+            )}
+
+            {status === 'idle' && !hasManager && (
+              <PixelButton
+                onPress={onStart}
+                variant="primary"
+                testID={testID ? `${testID}-start` : undefined}
+              >
+                START
+              </PixelButton>
+            )}
+
+            {status === 'idle' && hasManager && (
+              <PixelButton
+                onPress={() => {}}
+                disabled
+                variant="secondary"
+                testID={testID ? `${testID}-auto` : undefined}
+              >
+                AUTO (MANAGED)
+              </PixelButton>
+            )}
+
+            {isRunning && (
+              <PixelButton
+                onPress={() => {}}
+                disabled
+                variant="primary"
+                testID={testID ? `${testID}-running` : undefined}
+              >
+                {hasManager ? 'AUTO RUNNING...' : 'RUNNING...'}
               </PixelButton>
             )}
           </View>
-        </View>
-      )}
 
-      {/* Employee section - hire and view bonuses */}
-      {status !== 'locked' && employeeDefinition && onHireEmployee && employeeHireCost !== undefined && (
-        <View style={styles.employeeSection}>
-          <View style={styles.employeeHeader}>
-            <TerminalText size="sm" color={COLORS.terminalGreen}>
-              {employeeMaxCount !== undefined
-                ? `${employeeDefinition.name} x${employeeCount}/${employeeMaxCount}`
-                : `${employeeDefinition.name} x${employeeCount}`}
-            </TerminalText>
-            {(employeeSpeedBonus > 0 || employeeRewardBonus > 0) && (
-              <TerminalText size="sm" color={COLORS.textSecondary}>
-                {`Speed +${Math.round(employeeSpeedBonus * 100)}% / Reward +${Math.round(employeeRewardBonus * 100)}%`}
-              </TerminalText>
-            )}
-          </View>
-          {employeeMaxCount !== undefined && employeeCount >= employeeMaxCount ? (
-            <PixelButton
-              onPress={() => {}}
-              disabled
-              variant="secondary"
-              testID={testID ? `${testID}-hire-employee` : undefined}
-            >
-              MAX
-            </PixelButton>
-          ) : (
-            <PixelButton
-              onPress={onHireEmployee}
-              disabled={money < employeeHireCost}
-              variant="secondary"
-              testID={testID ? `${testID}-hire-employee` : undefined}
-            >
-              {`HIRE ($${formatNumber(employeeHireCost)})`}
-            </PixelButton>
+          {/* Upgrade and Max Buy buttons - always visible when unlocked */}
+          {status !== 'locked' && (
+            <View style={styles.upgradeContainer}>
+              <View style={styles.upgradeRow}>
+                <PixelButton
+                  onPress={onUpgrade}
+                  disabled={!canAffordUpgrade}
+                  variant="secondary"
+                  testID={testID ? `${testID}-upgrade` : undefined}
+                  style={styles.upgradeButton}
+                >
+                  {`UPGRADE ($${formatNumber(upgradeCost)})`}
+                </PixelButton>
+                {onMaxBuy && maxBuyCount > 1 && (
+                  <PixelButton
+                    onPress={onMaxBuy}
+                    disabled={maxBuyCount <= 0}
+                    variant="secondary"
+                    testID={testID ? `${testID}-max-buy` : undefined}
+                    style={styles.maxBuyButton}
+                  >
+                    {`MAX x${maxBuyCount} ($${formatNumber(maxBuyCost)})`}
+                  </PixelButton>
+                )}
+              </View>
+            </View>
           )}
-        </View>
-      )}
 
-      {/* Times completed counter */}
-      {status !== 'locked' && scamState && scamState.timesCompleted > 0 && (
-        <TerminalText
-          size="sm"
-          color={COLORS.textDim}
-          style={styles.completedCount}
-        >
-          {`Completed: ${formatNumber(scamState.timesCompleted)}x`}
-        </TerminalText>
+          {/* Employee section - hire and view bonuses */}
+          {status !== 'locked' && employeeDefinition && onHireEmployee && employeeHireCost !== undefined && (
+            <View style={styles.employeeSection}>
+              <View style={styles.employeeHeader}>
+                <TerminalText size="sm" color={COLORS.terminalGreen}>
+                  {employeeMaxCount !== undefined
+                    ? `${employeeDefinition.name} x${employeeCount}/${employeeMaxCount}`
+                    : `${employeeDefinition.name} x${employeeCount}`}
+                </TerminalText>
+                {(employeeSpeedBonus > 0 || employeeRewardBonus > 0) && (
+                  <TerminalText size="sm" color={COLORS.textSecondary}>
+                    {`Speed +${Math.round(employeeSpeedBonus * 100)}% / Reward +${Math.round(employeeRewardBonus * 100)}%`}
+                  </TerminalText>
+                )}
+              </View>
+              {employeeMaxCount !== undefined && employeeCount >= employeeMaxCount ? (
+                <PixelButton
+                  onPress={() => {}}
+                  disabled
+                  variant="secondary"
+                  testID={testID ? `${testID}-hire-employee` : undefined}
+                >
+                  MAX
+                </PixelButton>
+              ) : (
+                <PixelButton
+                  onPress={onHireEmployee}
+                  disabled={money < employeeHireCost}
+                  variant="secondary"
+                  testID={testID ? `${testID}-hire-employee` : undefined}
+                >
+                  {`HIRE ($${formatNumber(employeeHireCost)})`}
+                </PixelButton>
+              )}
+            </View>
+          )}
+
+          {/* Times completed counter */}
+          {status !== 'locked' && scamState && scamState.timesCompleted > 0 && (
+            <TerminalText
+              size="sm"
+              color={COLORS.textDim}
+              style={styles.completedCount}
+            >
+              {`Completed: ${formatNumber(scamState.timesCompleted)}x`}
+            </TerminalText>
+          )}
+        </>
       )}
     </CRTFrame>
   );
@@ -430,6 +444,9 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: SPACING.xs,
+  },
+  chevron: {
+    marginRight: SPACING.xs,
   },
   scamIcon: {
     width: 48,

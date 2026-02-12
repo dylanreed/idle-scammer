@@ -61,6 +61,12 @@ export interface ScamListPanelProps {
   /** Called when a tier header is pressed to toggle collapse */
   onToggleTier: (tier: ScamTier) => void;
 
+  /** Floating reward numbers awaiting display, keyed by scamId */
+  floatingNumbers?: { id: number; value: string; color: string; scamId: string }[];
+
+  /** Called when a floating number animation completes */
+  onFloatingComplete?: (id: number) => void;
+
   /** Test ID for testing */
   testID?: string;
 }
@@ -105,6 +111,8 @@ export function ScamListPanel({
   onHireEmployee,
   collapsedTiers,
   onToggleTier,
+  floatingNumbers,
+  onFloatingComplete,
   testID,
 }: ScamListPanelProps): React.ReactElement {
   const isManagerHired = useManagerStore((state) => state.isManagerHired);
@@ -266,6 +274,8 @@ export function ScamListPanel({
                   skillRewardMultiplier={scamRewardMultiplier}
                   activeRewardMultiplier={activeRewardMultiplier}
                   skillUpgradeCostDiscount={skillUpgradeCostDiscount}
+                  floatingRewards={floatingNumbers?.filter((fn) => fn.scamId === scamDef.id)}
+                  onFloatingComplete={onFloatingComplete}
                   testID={`scam-card-${scamDef.id}`}
                 />
               );

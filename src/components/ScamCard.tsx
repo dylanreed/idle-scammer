@@ -7,7 +7,7 @@ import { CRTFrame } from './CRTFrame';
 import { PixelButton } from './PixelButton';
 import { ProgressBar } from './ProgressBar';
 import { TerminalText } from './TerminalText';
-import { COLORS, SPACING } from './theme';
+import { COLORS, FONT_SIZES, SPACING } from './theme';
 import { formatNumber, formatDuration } from '../utils/formatters';
 import type { ScamDefinition } from '../game/scams/types';
 import type { ScamState } from '../game/scams/types';
@@ -22,6 +22,7 @@ import {
 } from '../game/scams/calculations';
 import { getScamIcon, getManagerPortrait } from '../game/assets';
 import { getManagerByScamId } from '../game/managers/definitions';
+import { FloatingNumber } from './FloatingNumber';
 
 /**
  * Possible states a scam card can be in.
@@ -108,6 +109,12 @@ export interface ScamCardProps {
   /** Skill passive upgrade cost discount (e.g. 0.25 = 25% off from Bulk Discount) */
   skillUpgradeCostDiscount?: number;
 
+  /** Floating reward numbers to render over this card */
+  floatingRewards?: { id: number; value: string; color: string }[];
+
+  /** Called when a floating reward animation completes */
+  onFloatingComplete?: (id: number) => void;
+
   /** Test ID for testing */
   testID?: string;
 }
@@ -181,6 +188,8 @@ export function ScamCard({
   skillRewardMultiplier = 1,
   activeRewardMultiplier = 1,
   skillUpgradeCostDiscount = 0,
+  floatingRewards,
+  onFloatingComplete,
   testID,
 }: ScamCardProps): React.ReactElement {
   const status = getScamStatus(scamState, timer);
@@ -248,15 +257,28 @@ export function ScamCard({
         {scamDefinition.description}
       </TerminalText>
 
-      {/* Stats row - duration and reward preview */}
+      {/* Stats row - duration and reward preview, with floating numbers anchored here */}
       {status !== 'locked' && (
-        <View style={styles.statsRow}>
-          <TerminalText size="sm" color={COLORS.textDim}>
-            {formatDuration(duration)}
-          </TerminalText>
-          <TerminalText size="sm" color={COLORS.gold}>
-            {rewardDisplay}
-          </TerminalText>
+        <View style={styles.statsRowWrapper}>
+          <View style={styles.statsRow}>
+            <TerminalText size="sm" color={COLORS.textDim}>
+              {formatDuration(duration)}
+            </TerminalText>
+            <TerminalText size="sm" color={COLORS.gold}>
+              {rewardDisplay}
+            </TerminalText>
+          </View>
+          {/* Floating reward numbers — absolutely positioned relative to this wrapper */}
+          {floatingRewards?.map((fr) => (
+            <FloatingNumber
+              key={fr.id}
+              value={rewardDisplay}
+              color={fr.color}
+              fontSize={FONT_SIZES.sm}
+              onComplete={() => onFloatingComplete?.(fr.id)}
+              testID={`floating-${fr.id}`}
+            />
+          ))}
         </View>
       )}
 
@@ -401,6 +423,7 @@ export function ScamCard({
 const styles = StyleSheet.create({
   card: {
     marginBottom: SPACING.cardGap,
+    overflow: 'visible',
   },
   header: {
     flexDirection: 'row',
@@ -424,10 +447,13 @@ const styles = StyleSheet.create({
   description: {
     marginBottom: SPACING.sm,
   },
+  statsRowWrapper: {
+    marginBottom: SPACING.sm,
+    overflow: 'visible',
+  },
   statsRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: SPACING.sm,
   },
   progressContainer: {
     marginBottom: SPACING.sm,

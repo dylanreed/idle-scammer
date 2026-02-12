@@ -12,33 +12,38 @@ export interface FloatingNumberProps {
   color: string;
   /** Called when the animation finishes so the parent can remove this element */
   onComplete: () => void;
+  /** Font size override (defaults to FONT_SIZES.lg) */
+  fontSize?: number;
   /** Test ID for testing */
   testID?: string;
 }
 
-/** Duration of the float-up + fade-out animation in ms */
-const ANIMATION_DURATION = 800;
+/** Duration of the float + fade animation in ms */
+const ANIMATION_DURATION = 1000;
 
 /** Distance in pixels the number drifts upward */
-const DRIFT_DISTANCE = -40;
+const DRIFT_Y = -50;
 
 /**
- * Animated text that drifts upward and fades out.
+ * Animated text that drifts diagonally up-right and fades out.
  * Self-destructs via onComplete callback after the animation finishes.
  */
 export function FloatingNumber({
   value,
   color,
   onComplete,
+  fontSize,
   testID,
 }: FloatingNumberProps): React.ReactElement {
   const translateY = useRef(new Animated.Value(0)).current;
-  const opacity = useRef(new Animated.Value(1)).current;
+  const opacity = useRef(new Animated.Value(0.9)).current;
+  const onCompleteRef = useRef(onComplete);
+  onCompleteRef.current = onComplete;
 
   useEffect(() => {
     Animated.parallel([
       Animated.timing(translateY, {
-        toValue: DRIFT_DISTANCE,
+        toValue: DRIFT_Y,
         duration: ANIMATION_DURATION,
         useNativeDriver: true,
       }),
@@ -47,10 +52,14 @@ export function FloatingNumber({
         duration: ANIMATION_DURATION,
         useNativeDriver: true,
       }),
-    ]).start(() => {
-      onComplete();
+    ]).start(({ finished }) => {
+      if (finished) {
+        onCompleteRef.current();
+      }
     });
-  }, [translateY, opacity, onComplete]);
+  // Run once on mount only — onComplete is tracked via ref
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <Animated.View
@@ -61,7 +70,7 @@ export function FloatingNumber({
       ]}
       pointerEvents="none"
     >
-      <Text style={[styles.text, { color }]}>
+      <Text style={[styles.text, { color }, fontSize != null && { fontSize }]}>
         {value}
       </Text>
     </Animated.View>
@@ -71,7 +80,8 @@ export function FloatingNumber({
 const styles = StyleSheet.create({
   container: {
     position: 'absolute',
-    alignSelf: 'center',
+    right: -1,
+    top: -1,
     zIndex: 50,
   },
   text: {

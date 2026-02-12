@@ -55,7 +55,6 @@ import { MARKET_TICK_INTERVAL_MS } from '../game/crypto/constants';
 import { CryptoPanel } from '../components/CryptoPanel';
 import { useOriginStore } from '../game/origin/originStore';
 import { OriginSelectModal } from '../components/OriginSelectModal';
-import { FloatingNumber } from '../components/FloatingNumber';
 import { triggerHaptic } from '../utils/haptics';
 import { formatNumber } from '../utils/formatters';
 import type { OriginId } from '../game/origin/types';
@@ -187,7 +186,7 @@ export function GameScreen(): React.ReactElement {
   const [showResetConfirm, setShowResetConfirm] = useState(false);
 
   // Floating reward numbers state
-  const [floatingNumbers, setFloatingNumbers] = useState<{ id: number; value: string; color: string }[]>([]);
+  const [floatingNumbers, setFloatingNumbers] = useState<{ id: number; value: string; color: string; scamId: string }[]>([]);
   const floatingIdRef = useRef(0);
 
   // Shared collapse state for tier sections (scam list + manager panel)
@@ -312,7 +311,7 @@ export function GameScreen(): React.ReactElement {
       const floatId = ++floatingIdRef.current;
       setFloatingNumbers((prev) => [
         ...prev,
-        { id: floatId, value: `+$${formatNumber(reward)}`, color: COLORS.gold },
+        { id: floatId, value: `+$${formatNumber(reward)}`, color: COLORS.gold, scamId: timer.scamId },
       ]);
 
       // Add heat from the scam (unless VPN Tunnel is active)
@@ -963,29 +962,15 @@ export function GameScreen(): React.ReactElement {
       </View>
 
       {/* Resource HUD */}
-      <View>
-        <ResourceHUD
-          resources={resources}
-          heatMax={MAX_HEAT + (useSkillStore.getState().getSkillBonuses().heatThresholdBonus)}
-          prestigeCount={prestigeCount}
-          moneyPerSecond={moneyPerSecond}
-          compact
-          style={styles.hud}
-          testID="resource-hud"
-        />
-        {/* Floating reward numbers */}
-        {floatingNumbers.map((fn) => (
-          <FloatingNumber
-            key={fn.id}
-            value={fn.value}
-            color={fn.color}
-            onComplete={() =>
-              setFloatingNumbers((prev) => prev.filter((n) => n.id !== fn.id))
-            }
-            testID={`floating-${fn.id}`}
-          />
-        ))}
-      </View>
+      <ResourceHUD
+        resources={resources}
+        heatMax={MAX_HEAT + (useSkillStore.getState().getSkillBonuses().heatThresholdBonus)}
+        prestigeCount={prestigeCount}
+        moneyPerSecond={moneyPerSecond}
+        compact
+        style={styles.hud}
+        testID="resource-hud"
+      />
 
       {/* Three-column layout (wide) or tabbed layout (narrow) */}
       <ResponsiveLayout
@@ -1002,6 +987,10 @@ export function GameScreen(): React.ReactElement {
             onHireEmployee={handleHireEmployee}
             collapsedTiers={collapsedTiers}
             onToggleTier={toggleTier}
+            floatingNumbers={floatingNumbers}
+            onFloatingComplete={(id) =>
+              setFloatingNumbers((prev) => prev.filter((n) => n.id !== id))
+            }
             testID="scam-list-panel"
           />
         }

@@ -14,6 +14,7 @@ import { ScamListPanel } from '../components/ScamListPanel';
 import { OpsPanel } from '../components/OpsPanel';
 import { SkillsPanel } from '../components/SkillsPanel';
 import { COLORS, SPACING } from '../components/theme';
+
 import { useGameStore } from '../game/store';
 import { useScamStore } from '../game/scams/scamStore';
 import { useManagerStore } from '../game/managers/managerStore';
@@ -940,7 +941,7 @@ export function GameScreen(): React.ReactElement {
         testID="resource-hud"
       />
 
-      {/* Three-column layout (wide) or tabbed layout (narrow) */}
+      {/* Tab-based layout: SCAMS | SKILLS | TRUSTCOIN | MANAGERS */}
       <ResponsiveLayout
         scamsContent={
           <ScamListPanel

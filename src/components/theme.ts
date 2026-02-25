@@ -190,24 +190,6 @@ export const TIMING = {
 } as const;
 
 /**
- * Layout breakpoints and column proportions for responsive design.
- * Wide screens get two-column layout; narrow screens use tab switching.
- */
-export const LAYOUT = {
-  /** Width threshold for switching between tabs and columns */
-  BREAKPOINT: 768,
-
-  /** Left column (scams) flex weight — ~43% of total */
-  LEFT_COLUMN_FLEX: 3,
-
-  /** Center column (skills) flex weight — ~28% of total */
-  CENTER_COLUMN_FLEX: 2,
-
-  /** Right column (ops) flex weight — ~28% of total */
-  RIGHT_COLUMN_FLEX: 2,
-} as const;
-
-/**
  * Type exports for theme values
  */
 export type ColorKey = keyof typeof COLORS;
@@ -217,4 +199,3 @@ export type SpacingKey = keyof typeof SPACING;
 export type BorderRadiusKey = keyof typeof BORDER_RADIUS;
 export type ShadowKey = keyof typeof SHADOWS;
 export type TimingKey = keyof typeof TIMING;
-export type LayoutKey = keyof typeof LAYOUT;

@@ -1,23 +1,22 @@
-// ABOUTME: Width-responsive layout that shows three columns on wide screens
-// ABOUTME: Switches to tab-based navigation on narrow screens (phones)
+// ABOUTME: Tab-based navigation layout for the game screen
+// ABOUTME: Four tabs: SCAMS, SKILLS (conditional), TRUSTCOIN (conditional), MANAGERS
 
 import React, { useState } from 'react';
 import { View, StyleSheet } from 'react-native';
-import { useWindowDimensions } from './useWindowDimensions';
 import { PixelButton } from './PixelButton';
-import { SPACING, LAYOUT } from './theme';
+import { SPACING } from './theme';
 
 export interface ResponsiveLayoutProps {
-  /** Content for the left column / SCAMS tab */
+  /** Content for the SCAMS tab */
   scamsContent: React.ReactNode;
 
-  /** Content for the center column / SKILLS tab */
+  /** Content for the SKILLS tab (prestige-gated) */
   skillsContent?: React.ReactNode;
 
-  /** Content for the right column / OPS CENTER tab */
+  /** Content for the MANAGERS tab (renamed from OPS CENTER) */
   opsContent: React.ReactNode;
 
-  /** Content for the CRYPTO tab (trust-gated, appears after skills) */
+  /** Content for the TRUSTCOIN tab (trust-gated) */
   cryptoContent?: React.ReactNode;
 
   /** Test ID for testing */
@@ -27,9 +26,8 @@ export interface ResponsiveLayoutProps {
 type TabKey = 'scams' | 'skills' | 'crypto' | 'ops';
 
 /**
- * Responsive layout that adapts to screen width.
- * Wide screens (>= 768px): Three-column layout (3/2/2 flex split).
- * Narrow screens (< 768px): Tab switching between SCAMS, SKILLS, and OPS CENTER.
+ * Tab-based layout for the game screen.
+ * Four tabs: SCAMS, SKILLS (after prestige 2), TRUSTCOIN (after trust >= 150), MANAGERS.
  */
 export function ResponsiveLayout({
   scamsContent,
@@ -38,27 +36,10 @@ export function ResponsiveLayout({
   cryptoContent,
   testID,
 }: ResponsiveLayoutProps): React.ReactElement {
-  const { width } = useWindowDimensions();
-  const isWide = width >= LAYOUT.BREAKPOINT;
   const [activeTab, setActiveTab] = useState<TabKey>('scams');
 
-  if (isWide) {
-    return (
-      <View style={styles.wideContainer} testID={testID ?? 'responsive-layout-wide'}>
-        <View style={styles.leftColumn}>{scamsContent}</View>
-        {skillsContent && (
-          <View style={styles.centerColumn}>{skillsContent}</View>
-        )}
-        {cryptoContent && (
-          <View style={styles.centerColumn}>{cryptoContent}</View>
-        )}
-        <View style={styles.rightColumn}>{opsContent}</View>
-      </View>
-    );
-  }
-
   return (
-    <View style={styles.narrowContainer} testID={testID ?? 'responsive-layout-narrow'}>
+    <View style={styles.container} testID={testID ?? 'responsive-layout'}>
       {/* Tab bar */}
       <View style={styles.tabBar}>
         <PixelButton
@@ -95,7 +76,7 @@ export function ResponsiveLayout({
           style={styles.tabButton}
           testID="tab-ops"
         >
-          {'OPS CENTER'}
+          {'MANAGERS'}
         </PixelButton>
       </View>
 
@@ -111,20 +92,7 @@ export function ResponsiveLayout({
 }
 
 const styles = StyleSheet.create({
-  wideContainer: {
-    flex: 1,
-    flexDirection: 'row',
-  },
-  leftColumn: {
-    flex: LAYOUT.LEFT_COLUMN_FLEX,
-  },
-  centerColumn: {
-    flex: LAYOUT.CENTER_COLUMN_FLEX,
-  },
-  rightColumn: {
-    flex: LAYOUT.RIGHT_COLUMN_FLEX,
-  },
-  narrowContainer: {
+  container: {
     flex: 1,
   },
   tabBar: {

@@ -1,5 +1,5 @@
-// ABOUTME: Tests for ResponsiveLayout component - width-responsive two-column/tab layout
-// ABOUTME: Verifies wide mode (two columns), narrow mode (tabs), and transition behavior
+// ABOUTME: Tests for ResponsiveLayout component - tab-based navigation for all screen sizes
+// ABOUTME: Verifies tab switching between SCAMS, SKILLS, MANAGERS, and TRUSTCOIN tabs
 
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react-native';
@@ -28,6 +28,16 @@ const opsContent = (
     <Text>Ops</Text>
   </View>
 );
+const skillsContent = (
+  <View testID="skills-content">
+    <Text>Skills</Text>
+  </View>
+);
+const cryptoContent = (
+  <View testID="crypto-content">
+    <Text>Crypto</Text>
+  </View>
+);
 
 describe('ResponsiveLayout', () => {
   beforeEach(() => {
@@ -39,8 +49,8 @@ describe('ResponsiveLayout', () => {
     });
   });
 
-  describe('wide mode (width >= 768)', () => {
-    it('renders both scamsContent and opsContent simultaneously', () => {
+  describe('tab-based layout', () => {
+    it('renders tab bar with SCAMS and MANAGERS tabs', () => {
       render(
         <ResponsiveLayout
           scamsContent={scamsContent}
@@ -48,53 +58,14 @@ describe('ResponsiveLayout', () => {
         />
       );
 
-      expect(screen.getByTestId('scams-content')).toBeTruthy();
-      expect(screen.getByTestId('ops-content')).toBeTruthy();
+      expect(screen.getByTestId('tab-scams')).toBeTruthy();
+      expect(screen.getByTestId('tab-ops')).toBeTruthy();
     });
 
-    it('does NOT render tab buttons', () => {
-      render(
-        <ResponsiveLayout
-          scamsContent={scamsContent}
-          opsContent={opsContent}
-        />
-      );
-
-      expect(screen.queryByTestId('tab-scams')).toBeNull();
-      expect(screen.queryByTestId('tab-ops')).toBeNull();
-    });
-
-    it('layout uses flexDirection row', () => {
-      render(
-        <ResponsiveLayout
-          scamsContent={scamsContent}
-          opsContent={opsContent}
-        />
-      );
-
-      const container = screen.getByTestId('responsive-layout-wide');
-      const style = container.props.style;
-      const flatStyle = Array.isArray(style)
-        ? Object.assign({}, ...style.filter(Boolean))
-        : style;
-      expect(flatStyle.flexDirection).toBe('row');
-    });
-
-    it('has testID responsive-layout-wide', () => {
-      render(
-        <ResponsiveLayout
-          scamsContent={scamsContent}
-          opsContent={opsContent}
-        />
-      );
-
-      expect(screen.getByTestId('responsive-layout-wide')).toBeTruthy();
-    });
-
-    it('uses exact breakpoint width of 768 as wide', () => {
+    it('uses tabs even on wide screens', () => {
       mockUseWindowDimensions.mockReturnValue({
-        width: 768,
-        height: 1024,
+        width: 1024,
+        height: 768,
         scale: 1,
         fontScale: 1,
       });
@@ -106,28 +77,7 @@ describe('ResponsiveLayout', () => {
         />
       );
 
-      expect(screen.getByTestId('responsive-layout-wide')).toBeTruthy();
-    });
-  });
-
-  describe('narrow mode (width < 768)', () => {
-    beforeEach(() => {
-      mockUseWindowDimensions.mockReturnValue({
-        width: 375,
-        height: 667,
-        scale: 1,
-        fontScale: 1,
-      });
-    });
-
-    it('shows tab bar with SCAMS and OPS CENTER buttons', () => {
-      render(
-        <ResponsiveLayout
-          scamsContent={scamsContent}
-          opsContent={opsContent}
-        />
-      );
-
+      // Tab buttons should always be present
       expect(screen.getByTestId('tab-scams')).toBeTruthy();
       expect(screen.getByTestId('tab-ops')).toBeTruthy();
     });
@@ -144,7 +94,7 @@ describe('ResponsiveLayout', () => {
       expect(screen.queryByTestId('ops-content')).toBeNull();
     });
 
-    it('pressing OPS CENTER tab shows opsContent, hides scamsContent', () => {
+    it('pressing MANAGERS tab shows opsContent, hides scamsContent', () => {
       render(
         <ResponsiveLayout
           scamsContent={scamsContent}
@@ -176,7 +126,7 @@ describe('ResponsiveLayout', () => {
       expect(screen.queryByTestId('ops-content')).toBeNull();
     });
 
-    it('has testID responsive-layout-narrow', () => {
+    it('has testID responsive-layout', () => {
       render(
         <ResponsiveLayout
           scamsContent={scamsContent}
@@ -184,30 +134,106 @@ describe('ResponsiveLayout', () => {
         />
       );
 
-      expect(screen.getByTestId('responsive-layout-narrow')).toBeTruthy();
+      expect(screen.getByTestId('responsive-layout')).toBeTruthy();
     });
   });
 
-  describe('transition behavior', () => {
-    it('when transitioning from wide to narrow, defaults to SCAMS tab', () => {
-      // Start wide
-      mockUseWindowDimensions.mockReturnValue({
-        width: 1024,
-        height: 768,
-        scale: 1,
-        fontScale: 1,
-      });
+  describe('conditional tabs', () => {
+    it('shows SKILLS tab when skillsContent is provided', () => {
+      render(
+        <ResponsiveLayout
+          scamsContent={scamsContent}
+          opsContent={opsContent}
+          skillsContent={skillsContent}
+        />
+      );
 
-      const { rerender } = render(
+      expect(screen.getByTestId('tab-skills')).toBeTruthy();
+    });
+
+    it('hides SKILLS tab when skillsContent is not provided', () => {
+      render(
         <ResponsiveLayout
           scamsContent={scamsContent}
           opsContent={opsContent}
         />
       );
 
-      expect(screen.getByTestId('responsive-layout-wide')).toBeTruthy();
+      expect(screen.queryByTestId('tab-skills')).toBeNull();
+    });
 
-      // Transition to narrow
+    it('shows TRUSTCOIN tab when cryptoContent is provided', () => {
+      render(
+        <ResponsiveLayout
+          scamsContent={scamsContent}
+          opsContent={opsContent}
+          cryptoContent={cryptoContent}
+        />
+      );
+
+      expect(screen.getByTestId('tab-crypto')).toBeTruthy();
+    });
+
+    it('hides TRUSTCOIN tab when cryptoContent is not provided', () => {
+      render(
+        <ResponsiveLayout
+          scamsContent={scamsContent}
+          opsContent={opsContent}
+        />
+      );
+
+      expect(screen.queryByTestId('tab-crypto')).toBeNull();
+    });
+
+    it('switching to SKILLS tab shows skills content', () => {
+      render(
+        <ResponsiveLayout
+          scamsContent={scamsContent}
+          opsContent={opsContent}
+          skillsContent={skillsContent}
+        />
+      );
+
+      fireEvent.press(screen.getByTestId('tab-skills'));
+
+      expect(screen.getByTestId('skills-content')).toBeTruthy();
+      expect(screen.queryByTestId('scams-content')).toBeNull();
+    });
+
+    it('switching to TRUSTCOIN tab shows crypto content', () => {
+      render(
+        <ResponsiveLayout
+          scamsContent={scamsContent}
+          opsContent={opsContent}
+          cryptoContent={cryptoContent}
+        />
+      );
+
+      fireEvent.press(screen.getByTestId('tab-crypto'));
+
+      expect(screen.getByTestId('crypto-content')).toBeTruthy();
+      expect(screen.queryByTestId('scams-content')).toBeNull();
+    });
+
+    it('renders all four tabs when all content is provided', () => {
+      render(
+        <ResponsiveLayout
+          scamsContent={scamsContent}
+          opsContent={opsContent}
+          skillsContent={skillsContent}
+          cryptoContent={cryptoContent}
+        />
+      );
+
+      expect(screen.getByTestId('tab-scams')).toBeTruthy();
+      expect(screen.getByTestId('tab-skills')).toBeTruthy();
+      expect(screen.getByTestId('tab-crypto')).toBeTruthy();
+      expect(screen.getByTestId('tab-ops')).toBeTruthy();
+    });
+  });
+
+  describe('narrow screens', () => {
+    it('uses tabs on narrow screens too', () => {
       mockUseWindowDimensions.mockReturnValue({
         width: 375,
         height: 667,
@@ -215,17 +241,16 @@ describe('ResponsiveLayout', () => {
         fontScale: 1,
       });
 
-      rerender(
+      render(
         <ResponsiveLayout
           scamsContent={scamsContent}
           opsContent={opsContent}
         />
       );
 
-      expect(screen.getByTestId('responsive-layout-narrow')).toBeTruthy();
-      // Should default to SCAMS tab
-      expect(screen.getByTestId('scams-content')).toBeTruthy();
-      expect(screen.queryByTestId('ops-content')).toBeNull();
+      expect(screen.getByTestId('tab-scams')).toBeTruthy();
+      expect(screen.getByTestId('tab-ops')).toBeTruthy();
+      expect(screen.getByTestId('responsive-layout')).toBeTruthy();
     });
   });
 });

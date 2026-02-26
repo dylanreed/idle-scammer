@@ -12,6 +12,10 @@ import { MAX_HYPE, BASE_FLOOR_PRICE_PER_HYPE } from '../game/crypto/constants';
 export interface CollectionPanelProps {
   /** All player collections */
   collections: NFTCollection[];
+  /** Number of owned NFTs per collection (collectionId -> count) */
+  nftCountPerCollection: Record<string, number>;
+  /** Estimated rug pull value per collection (collectionId -> crypto amount) */
+  rugEstimatePerCollection: Record<string, number>;
   /** Called when player adjusts shillers on a collection */
   onSetShillers: (collectionId: string, count: number) => void;
   /** Called when player rug pulls a collection */
@@ -42,6 +46,8 @@ function HypeBar({ hype }: { hype: number }): React.ReactElement {
  */
 export function CollectionPanel({
   collections,
+  nftCountPerCollection,
+  rugEstimatePerCollection,
   onSetShillers,
   onRugPull,
   onMint,
@@ -109,17 +115,22 @@ export function CollectionPanel({
                   <PixelButton
                     onPress={() => onRugPull(collection.id)}
                     variant="danger"
+                    disabled={(nftCountPerCollection[collection.id] ?? 0) === 0}
                     testID={`rug-btn-${collection.id}`}
                   >
-                    {'RUG PULL'}
+                    {(nftCountPerCollection[collection.id] ?? 0) === 0
+                      ? 'RUG (NO NFTS)'
+                      : `RUG (~${(rugEstimatePerCollection[collection.id] ?? 0).toFixed(3)})`}
                   </PixelButton>
                 </View>
               </>
             )}
 
-            {collection.isRugged && collection.rugPullValue > 0 && (
-              <TerminalText size="sm" color={COLORS.textSecondary}>
-                {`Drained: ${collection.rugPullValue.toFixed(2)} $TRUST`}
+            {collection.isRugged && (
+              <TerminalText size="sm" color={collection.rugPullValue > 0 ? COLORS.gold : COLORS.textDim}>
+                {collection.rugPullValue > 0
+                  ? `Drained: ${collection.rugPullValue.toFixed(4)} $TRUST`
+                  : 'Drained: nothing (no NFTs or hype was 0)'}
               </TerminalText>
             )}
           </View>

@@ -2,12 +2,13 @@
 // ABOUTME: Wraps BotAssignmentPanel and ManagerPanel in a scrollable container with collapsible sections
 
 import React, { useState } from 'react';
-import { ScrollView, Pressable, StyleSheet } from 'react-native';
+import { View, ScrollView, Pressable, StyleSheet } from 'react-native';
 import { BotAssignmentPanel } from './BotAssignmentPanel';
 import { ManagerPanel } from './ManagerPanel';
 import { PixelButton } from './PixelButton';
 import { CRTFrame } from './CRTFrame';
 import { TerminalText } from './TerminalText';
+import { HelpIcon } from './HelpIcon';
 import { COLORS, SPACING } from './theme';
 import type { GameResources } from '../game/types';
 import type { ScamState, ScamTier } from '../game/scams/types';
@@ -37,6 +38,9 @@ export interface OpsPanelProps {
   /** Called when a tier header is pressed to toggle collapse */
   onToggleTier: (tier: ScamTier) => void;
 
+  /** Called when player taps a help "?" icon */
+  onHelpPress?: (topicKey: string) => void;
+
   /** Test ID for testing */
   testID?: string;
 }
@@ -56,6 +60,7 @@ export function OpsPanel({
   prestigeCount = 0,
   collapsedTiers,
   onToggleTier,
+  onHelpPress,
   testID,
 }: OpsPanelProps): React.ReactElement {
   const [collapsedSections, setCollapsedSections] = useState<Set<OpsSection>>(new Set());
@@ -86,35 +91,43 @@ export function OpsPanel({
       {/* Bot Network Section (hidden until first prestige) */}
       {prestigeCount >= 1 && (
         <>
-          <Pressable
-            testID="ops-section-bots"
-            onPress={() => toggleSection('bots')}
-          >
-            <TerminalText
-              size="md"
-              color={COLORS.textPrimary}
-              style={styles.sectionHeader}
+          <View style={styles.sectionHeaderRow}>
+            <Pressable
+              testID="ops-section-bots"
+              onPress={() => toggleSection('bots')}
+              style={styles.sectionHeaderPressable}
             >
-              {`${botsCollapsed ? '▶' : '▼'} BOT NETWORK`}
-            </TerminalText>
-          </Pressable>
+              <TerminalText
+                size="md"
+                color={COLORS.textPrimary}
+                style={styles.sectionHeader}
+              >
+                {`${botsCollapsed ? '▶' : '▼'} BOT NETWORK`}
+              </TerminalText>
+            </Pressable>
+            {onHelpPress && <HelpIcon topicKey="bot-network" onPress={onHelpPress} />}
+          </View>
           {!botsCollapsed && <BotAssignmentPanel testID="bot-assignment-panel" />}
         </>
       )}
 
       {/* Managers Section */}
-      <Pressable
-        testID="ops-section-managers"
-        onPress={() => toggleSection('managers')}
-      >
-        <TerminalText
-          size="md"
-          color={COLORS.textPrimary}
-          style={styles.sectionHeader}
+      <View style={styles.sectionHeaderRow}>
+        <Pressable
+          testID="ops-section-managers"
+          onPress={() => toggleSection('managers')}
+          style={styles.sectionHeaderPressable}
         >
-          {`${managersCollapsed ? '▶' : '▼'} MANAGERS`}
-        </TerminalText>
-      </Pressable>
+          <TerminalText
+            size="md"
+            color={COLORS.textPrimary}
+            style={styles.sectionHeader}
+          >
+            {`${managersCollapsed ? '▶' : '▼'} MANAGERS`}
+          </TerminalText>
+        </Pressable>
+        {onHelpPress && <HelpIcon topicKey="managers" onPress={onHelpPress} />}
+      </View>
       {!managersCollapsed && (
         <ManagerPanel
           resources={resources}
@@ -130,9 +143,12 @@ export function OpsPanel({
       {/* Escape Plan (hidden until first prestige) */}
       {prestigeCount >= 1 && (
         <CRTFrame testID="prestige-section" accentColor={COLORS.gold}>
-          <TerminalText size="md" color={COLORS.textPrimary}>
-            {'ESCAPE PLAN'}
-          </TerminalText>
+          <View style={styles.sectionHeaderRow}>
+            <TerminalText size="md" color={COLORS.textPrimary}>
+              {'ESCAPE PLAN'}
+            </TerminalText>
+            {onHelpPress && <HelpIcon topicKey="escape-plan" onPress={onHelpPress} />}
+          </View>
           <TerminalText size="sm" color={COLORS.textSecondary}>
             {'Cash out your trust and start fresh.'}
           </TerminalText>
@@ -157,6 +173,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.md,
     paddingBottom: SPACING.xl,
     gap: 20,
+  },
+  sectionHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  sectionHeaderPressable: {
+    flex: 1,
   },
   sectionHeader: {
     marginTop: SPACING.sm,

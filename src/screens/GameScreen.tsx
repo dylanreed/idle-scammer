@@ -59,6 +59,7 @@ import { OriginSelectModal } from '../components/OriginSelectModal';
 import { triggerHaptic } from '../utils/haptics';
 import { formatNumber } from '../utils/formatters';
 import type { OriginId } from '../game/origin/types';
+import { HELP_CONTENT } from '../game/help/helpContent';
 
 /**
  * Tutorial modal content for each post-first-prestige introduction.
@@ -189,6 +190,9 @@ export function GameScreen(): React.ReactElement {
   // Floating reward numbers state
   const [floatingNumbers, setFloatingNumbers] = useState<{ id: number; value: string; color: string; scamId: string }[]>([]);
   const floatingIdRef = useRef(0);
+
+  // Help modal state (transient UI, not game state)
+  const [activeHelpTopic, setActiveHelpTopic] = useState<string | null>(null);
 
   // Shared collapse state for tier sections (scam list + manager panel)
   const [collapsedTiers, setCollapsedTiers] = useState<Set<ScamTier>>(new Set());
@@ -919,6 +923,20 @@ export function GameScreen(): React.ReactElement {
     setShowOriginSelect(false);
   }, []);
 
+  /**
+   * Handle help icon press - show help modal for the given topic
+   */
+  const handleHelpPress = useCallback((topicKey: string) => {
+    setActiveHelpTopic(topicKey);
+  }, []);
+
+  /**
+   * Handle dismissing the help modal
+   */
+  const handleHelpDismiss = useCallback(() => {
+    setActiveHelpTopic(null);
+  }, []);
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar style="light" />
@@ -937,6 +955,7 @@ export function GameScreen(): React.ReactElement {
         prestigeCount={prestigeCount}
         moneyPerSecond={moneyPerSecond}
         compact
+        onHelpPress={handleHelpPress}
         style={styles.hud}
         testID="resource-hud"
       />
@@ -960,6 +979,7 @@ export function GameScreen(): React.ReactElement {
             onFloatingComplete={(id) =>
               setFloatingNumbers((prev) => prev.filter((n) => n.id !== id))
             }
+            onHelpPress={handleHelpPress}
             testID="scam-list-panel"
           />
         }
@@ -973,13 +993,14 @@ export function GameScreen(): React.ReactElement {
               onUnlockAbility={handleUnlockAbility}
               onActivateAbility={handleActivateAbility}
               showPassives={prestigeCount >= 3}
+              onHelpPress={handleHelpPress}
               testID="skills-panel"
             />
           ) : undefined
         }
         cryptoContent={
           resources.trust >= 150 ? (
-            <CryptoPanel testID="crypto-panel" />
+            <CryptoPanel onHelpPress={handleHelpPress} testID="crypto-panel" />
           ) : undefined
         }
         opsContent={
@@ -992,6 +1013,7 @@ export function GameScreen(): React.ReactElement {
             prestigeCount={prestigeCount}
             collapsedTiers={collapsedTiers}
             onToggleTier={toggleTier}
+            onHelpPress={handleHelpPress}
             testID="ops-panel"
           />
         }
@@ -1026,6 +1048,17 @@ export function GameScreen(): React.ReactElement {
           body={TUTORIAL_CONTENT[TUTORIAL_IDS.CRYPTO_INTRO].body}
           onContinue={handleCryptoTutorialContinue}
           testID="crypto-tutorial-modal"
+        />
+      )}
+
+      {/* Help modal (context-sensitive "?" icons) */}
+      {activeHelpTopic && HELP_CONTENT[activeHelpTopic] && (
+        <TutorialModal
+          visible={true}
+          title={HELP_CONTENT[activeHelpTopic].title}
+          body={HELP_CONTENT[activeHelpTopic].body}
+          onContinue={handleHelpDismiss}
+          testID="help-modal"
         />
       )}
 

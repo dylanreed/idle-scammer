@@ -6,6 +6,7 @@ import { View, ScrollView, Pressable, StyleSheet } from 'react-native';
 import { CRTFrame } from './CRTFrame';
 import { TerminalText } from './TerminalText';
 import { PixelButton } from './PixelButton';
+import { HelpIcon } from './HelpIcon';
 import { COLORS, SPACING } from './theme';
 import {
   SKILLS_BY_CATEGORY,
@@ -43,11 +44,24 @@ export interface SkillsPanelProps {
   /** Whether to show passive skill categories (default: true). When false, only SP counter and abilities render. */
   showPassives?: boolean;
 
+  /** Called when player taps a help "?" icon */
+  onHelpPress?: (topicKey: string) => void;
+
   /** Test ID for testing */
   testID?: string;
 }
 
 const CATEGORIES: SkillCategory[] = ['tech', 'social', 'finance', 'stealth'];
+
+/**
+ * Maps skill categories to their help topic keys.
+ */
+const CATEGORY_HELP_KEYS: Record<SkillCategory, string> = {
+  tech: 'skills-tech',
+  social: 'skills-social',
+  finance: 'skills-finance',
+  stealth: 'skills-stealth',
+};
 
 /**
  * Skills panel with collapsible passive categories and active abilities.
@@ -60,6 +74,7 @@ export function SkillsPanel({
   onUnlockAbility,
   onActivateAbility,
   showPassives = true,
+  onHelpPress,
   testID,
 }: SkillsPanelProps): React.ReactElement {
   const [collapsedCategories, setCollapsedCategories] = useState<Set<SkillCategory>>(new Set());
@@ -87,9 +102,12 @@ export function SkillsPanel({
     >
       {/* SP Counter */}
       <CRTFrame style={styles.spCounter} testID="sp-counter" accentColor={COLORS.accent}>
-        <TerminalText size="sm" color={COLORS.gold}>
-          {'SKILL POINTS'}
-        </TerminalText>
+        <View style={styles.spHeaderRow}>
+          <TerminalText size="sm" color={COLORS.gold}>
+            {'SKILL POINTS'}
+          </TerminalText>
+          {onHelpPress && <HelpIcon topicKey="skill-points" onPress={onHelpPress} />}
+        </View>
         <TerminalText size="lg" color={COLORS.gold} testID="sp-value">
           {String(skillPoints)}
         </TerminalText>
@@ -102,18 +120,23 @@ export function SkillsPanel({
 
         return (
           <View key={category} style={styles.categorySection}>
-            <Pressable
-              onPress={() => toggleCategory(category)}
-              style={styles.categoryHeader}
-              testID={`category-${category}`}
-            >
-              <TerminalText size="md" color={COLORS.textPrimary}>
-                {`${isCollapsed ? '>' : 'v'} ${CATEGORY_NAMES[category]}`}
-              </TerminalText>
-              <TerminalText size="sm" color={COLORS.textDim}>
-                {CATEGORY_DESCRIPTIONS[category]}
-              </TerminalText>
-            </Pressable>
+            <View style={styles.categoryHeaderRow}>
+              <Pressable
+                onPress={() => toggleCategory(category)}
+                style={[styles.categoryHeader, styles.categoryHeaderPressable]}
+                testID={`category-${category}`}
+              >
+                <TerminalText size="md" color={COLORS.textPrimary}>
+                  {`${isCollapsed ? '>' : 'v'} ${CATEGORY_NAMES[category]}`}
+                </TerminalText>
+                <TerminalText size="sm" color={COLORS.textDim}>
+                  {CATEGORY_DESCRIPTIONS[category]}
+                </TerminalText>
+              </Pressable>
+              {onHelpPress && (
+                <HelpIcon topicKey={CATEGORY_HELP_KEYS[category]} onPress={onHelpPress} />
+              )}
+            </View>
 
             {!isCollapsed && (
               <View style={styles.skillList}>
@@ -134,18 +157,21 @@ export function SkillsPanel({
 
       {/* Active Abilities */}
       <View style={styles.categorySection}>
-        <Pressable
-          onPress={() => setAbilitiesCollapsed(!abilitiesCollapsed)}
-          style={styles.categoryHeader}
-          testID="category-abilities"
-        >
-          <TerminalText size="md" color={COLORS.hotPink}>
-            {`${abilitiesCollapsed ? '>' : 'v'} ABILITIES`}
-          </TerminalText>
-          <TerminalText size="sm" color={COLORS.textDim}>
-            {'Activated Powers'}
-          </TerminalText>
-        </Pressable>
+        <View style={styles.categoryHeaderRow}>
+          <Pressable
+            onPress={() => setAbilitiesCollapsed(!abilitiesCollapsed)}
+            style={[styles.categoryHeader, styles.categoryHeaderPressable]}
+            testID="category-abilities"
+          >
+            <TerminalText size="md" color={COLORS.hotPink}>
+              {`${abilitiesCollapsed ? '>' : 'v'} ABILITIES`}
+            </TerminalText>
+            <TerminalText size="sm" color={COLORS.textDim}>
+              {'Activated Powers'}
+            </TerminalText>
+          </Pressable>
+          {onHelpPress && <HelpIcon topicKey="abilities" onPress={onHelpPress} />}
+        </View>
 
         {!abilitiesCollapsed && (
           <View style={styles.skillList}>
@@ -347,8 +373,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: SPACING.sm,
   },
+  spHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.sm,
+  },
   categorySection: {
     gap: SPACING.xs,
+  },
+  categoryHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   categoryHeader: {
     flexDirection: 'row',
@@ -356,6 +391,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: SPACING.xs,
     paddingHorizontal: SPACING.sm,
+  },
+  categoryHeaderPressable: {
+    flex: 1,
   },
   skillList: {
     gap: SPACING.xs,

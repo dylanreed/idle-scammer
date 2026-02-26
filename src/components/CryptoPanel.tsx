@@ -1,10 +1,11 @@
 // ABOUTME: Top-level crypto tab container with market, exchange, projects, and NFT subsections
 // ABOUTME: Orchestrates all crypto UI components in a scrollable panel with CRT frame
 
-import React, { useRef, useCallback } from 'react';
+import React, { useRef, useCallback, useMemo } from 'react';
 import { View, ScrollView, StyleSheet } from 'react-native';
 import { CRTFrame } from './CRTFrame';
 import { TerminalText } from './TerminalText';
+import { HelpIcon } from './HelpIcon';
 import { MarketDisplay } from './MarketDisplay';
 import { ConversionPanel } from './ConversionPanel';
 import { ProjectList } from './ProjectList';
@@ -14,9 +15,11 @@ import { NFTMintPanel } from './NFTMintPanel';
 import { COLORS, SPACING } from './theme';
 import { useCryptoStore } from '../game/crypto/cryptoStore';
 import { useGameStore } from '../game/store';
-import { BASE_MINT_COST } from '../game/crypto/constants';
+import { BASE_MINT_COST, BASE_FLOOR_PRICE_PER_HYPE, NFT_RARITY_MULTIPLIERS, RUG_PULL_FRACTION } from '../game/crypto/constants';
 
 export interface CryptoPanelProps {
+  /** Called when player taps a help "?" icon */
+  onHelpPress?: (topicKey: string) => void;
   /** Test ID for testing */
   testID?: string;
 }
@@ -25,7 +28,7 @@ export interface CryptoPanelProps {
  * Top-level crypto panel containing market, exchange, projects, and NFTs.
  * Reads directly from crypto and game stores.
  */
-export function CryptoPanel({ testID }: CryptoPanelProps): React.ReactElement {
+export function CryptoPanel({ onHelpPress, testID }: CryptoPanelProps): React.ReactElement {
   const market = useCryptoStore((s) => s.market);
   const activeProjects = useCryptoStore((s) => s.activeProjects);
   const ownedNFTs = useCryptoStore((s) => s.ownedNFTs);
@@ -99,14 +102,40 @@ export function CryptoPanel({ testID }: CryptoPanelProps): React.ReactElement {
     useCryptoStore.getState().setShillers(collectionId, count);
   }, []);
 
+  // Compute NFT count and estimated rug pull value per collection
+  const nftCountPerCollection = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const nft of ownedNFTs) {
+      counts[nft.collectionId] = (counts[nft.collectionId] ?? 0) + 1;
+    }
+    return counts;
+  }, [ownedNFTs]);
+
+  const rugEstimatePerCollection = useMemo(() => {
+    const estimates: Record<string, number> = {};
+    for (const collection of collections) {
+      if (collection.isRugged) continue;
+      let totalValue = 0;
+      for (const nft of ownedNFTs) {
+        if (nft.collectionId !== collection.id) continue;
+        totalValue += collection.hype * BASE_FLOOR_PRICE_PER_HYPE * NFT_RARITY_MULTIPLIERS[nft.rarity];
+      }
+      estimates[collection.id] = totalValue * RUG_PULL_FRACTION;
+    }
+    return estimates;
+  }, [collections, ownedNFTs]);
+
   return (
     <CRTFrame testID={testID} style={styles.frame} accentColor={COLORS.secondary}>
       <ScrollView nestedScrollEnabled showsVerticalScrollIndicator={false}>
         <View style={styles.content}>
           {/* Header */}
-          <TerminalText size="lg" color={COLORS.textPrimary}>
-            {'TRUSTCOIN EXCHANGE'}
-          </TerminalText>
+          <View style={styles.sectionHeaderRow}>
+            <TerminalText size="lg" color={COLORS.textPrimary}>
+              {'TRUSTCOIN EXCHANGE'}
+            </TerminalText>
+            {onHelpPress && <HelpIcon topicKey="trustcoin-exchange" onPress={onHelpPress} />}
+          </View>
 
           {/* Market Display */}
           <MarketDisplay
@@ -118,6 +147,11 @@ export function CryptoPanel({ testID }: CryptoPanelProps): React.ReactElement {
 
           {/* Buy/Sell */}
           <CRTFrame showScanlines={false} style={styles.section}>
+            {onHelpPress && (
+              <View style={styles.sectionHelpRow}>
+                <HelpIcon topicKey="crypto-buysell" onPress={onHelpPress} />
+              </View>
+            )}
             <ConversionPanel
               money={resources.money}
               crypto={resources.crypto}
@@ -131,6 +165,11 @@ export function CryptoPanel({ testID }: CryptoPanelProps): React.ReactElement {
 
           {/* Investment Projects */}
           <CRTFrame showScanlines={false} style={styles.section}>
+            {onHelpPress && (
+              <View style={styles.sectionHelpRow}>
+                <HelpIcon topicKey="crypto-investments" onPress={onHelpPress} />
+              </View>
+            )}
             <ProjectList
               activeProjects={activeProjects}
               crypto={resources.crypto}
@@ -143,9 +182,12 @@ export function CryptoPanel({ testID }: CryptoPanelProps): React.ReactElement {
 
           {/* NFT Section */}
           <CRTFrame showScanlines={false} style={styles.section}>
-            <TerminalText size="md" color={COLORS.textPrimary}>
-              {'NFT MARKETPLACE'}
-            </TerminalText>
+            <View style={styles.sectionHeaderRow}>
+              <TerminalText size="md" color={COLORS.textPrimary}>
+                {'NFT MARKETPLACE'}
+              </TerminalText>
+              {onHelpPress && <HelpIcon topicKey="nft-marketplace" onPress={onHelpPress} />}
+            </View>
 
             <NFTMintPanel
               collectionCount={collections.length}
@@ -155,6 +197,8 @@ export function CryptoPanel({ testID }: CryptoPanelProps): React.ReactElement {
 
             <CollectionPanel
               collections={collections}
+              nftCountPerCollection={nftCountPerCollection}
+              rugEstimatePerCollection={rugEstimatePerCollection}
               onSetShillers={handleSetShillers}
               onRugPull={handleRugPull}
               onMint={handleMintNFT}
@@ -185,5 +229,14 @@ const styles = StyleSheet.create({
   section: {
     padding: SPACING.sm,
     gap: SPACING.sm,
+  },
+  sectionHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  sectionHelpRow: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
   },
 });

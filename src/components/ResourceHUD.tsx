@@ -5,6 +5,7 @@ import React from 'react';
 import { View, ScrollView, StyleSheet, ViewStyle, StyleProp } from 'react-native';
 import { CRTFrame } from './CRTFrame';
 import { ResourceIcon } from './ResourceIcon';
+import { HelpIcon } from './HelpIcon';
 import { SPACING } from './theme';
 import type { GameResources, ResourceKey } from '../game/types';
 
@@ -60,6 +61,9 @@ export interface ResourceHUDProps {
   /** Whether to show CRT scanline effect (default: true) */
   showScanlines?: boolean;
 
+  /** Called when player taps a help "?" icon */
+  onHelpPress?: (topicKey: string) => void;
+
   /** Additional styles for the container */
   style?: StyleProp<ViewStyle>;
 
@@ -79,6 +83,7 @@ export function ResourceHUD({
   moneyPerSecond,
   compact = true,
   showScanlines = true,
+  onHelpPress,
   style,
   testID,
 }: ResourceHUDProps): React.ReactElement {
@@ -118,6 +123,9 @@ export function ResourceHUD({
             style={styles.resourceItem}
           />
         ))}
+        {onHelpPress && (
+          <HelpIcon topicKey="resources" onPress={onHelpPress} />
+        )}
       </ScrollView>
     </CRTFrame>
   );

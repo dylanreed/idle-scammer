@@ -5,6 +5,7 @@ import React from 'react';
 import { View, ScrollView, Pressable, StyleSheet } from 'react-native';
 import { ScamCard } from './ScamCard';
 import { TerminalText } from './TerminalText';
+import { HelpIcon } from './HelpIcon';
 import { COLORS, SPACING } from './theme';
 import { TIER_1_SCAMS } from '../game/scams/definitions';
 import { TIER_2_SCAMS } from '../game/scams/tier2';
@@ -67,6 +68,9 @@ export interface ScamListPanelProps {
   /** Called when a floating number animation completes */
   onFloatingComplete?: (id: number) => void;
 
+  /** Called when player taps a help "?" icon */
+  onHelpPress?: (topicKey: string) => void;
+
   /** Test ID for testing */
   testID?: string;
 }
@@ -113,6 +117,7 @@ export function ScamListPanel({
   onToggleTier,
   floatingNumbers,
   onFloatingComplete,
+  onHelpPress,
   testID,
 }: ScamListPanelProps): React.ReactElement {
   const isManagerHired = useManagerStore((state) => state.isManagerHired);
@@ -142,6 +147,13 @@ export function ScamListPanel({
       showsVerticalScrollIndicator={false}
       testID={testID}
     >
+      {/* Help icons for scam mechanics */}
+      {onHelpPress && (
+        <View style={styles.helpRow}>
+          <HelpIcon topicKey="scam-tiers" onPress={onHelpPress} />
+          <HelpIcon topicKey="scam-cards" onPress={onHelpPress} />
+        </View>
+      )}
       {SCAMS_BY_TIER.map(({ tier, scams: tierScams }) => {
         const accessible = isTierAccessible(tier, resources.trust);
         if (!accessible) return null;
@@ -290,6 +302,13 @@ export function ScamListPanel({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  helpRow: {
+    flexDirection: 'row',
+    gap: SPACING.sm,
+    justifyContent: 'flex-end',
+    paddingHorizontal: SPACING.sm,
+    paddingTop: SPACING.xs,
   },
   tierHeaderRow: {
     flexDirection: 'row',

@@ -24,8 +24,10 @@ import {
   HYPE_SHILL_BOOST,
   MAX_HYPE,
   RUG_PULL_FRACTION,
+  RUG_PULL_TRUST_FRACTION,
   BASE_FLOOR_PRICE_PER_HYPE,
 } from './constants';
+import { useGameStore } from '../store';
 
 /**
  * Actions available on the crypto store.
@@ -69,6 +71,9 @@ export interface CryptoStoreActions {
 
   /** Rug pull a collection. Returns total crypto drained. */
   rugPullCollection: (collectionId: string) => number;
+
+  /** Get current rug pull count and trust-based max */
+  getRugPullLimit: () => { current: number; max: number };
 
   /** Set number of shillers for a collection */
   setShillers: (collectionId: string, count: number) => void;
@@ -295,6 +300,12 @@ export const useCryptoStore = create<CryptoStoreState>()((set, get) => ({
     const collection = state.collections.find((c) => c.id === collectionId);
     if (!collection || collection.isRugged) return 0;
 
+    // Trust-based rug pull limit: max rugs = floor(trust * RUG_PULL_TRUST_FRACTION)
+    const ruggedCount = state.collections.filter((c) => c.isRugged).length;
+    const trust = useGameStore.getState().resources.trust;
+    const maxRugs = Math.floor(trust * RUG_PULL_TRUST_FRACTION);
+    if (ruggedCount >= maxRugs) return 0;
+
     // Calculate total collection value from all NFTs in this collection
     const collectionNFTs = state.ownedNFTs.filter((n) => n.collectionId === collectionId);
     let totalValue = 0;
@@ -349,6 +360,13 @@ export const useCryptoStore = create<CryptoStoreState>()((set, get) => ({
     const collection = get().collections.find((c) => c.id === collectionId);
     if (!collection) return 0;
     return collection.hype * BASE_FLOOR_PRICE_PER_HYPE;
+  },
+
+  getRugPullLimit: () => {
+    const ruggedCount = get().collections.filter((c) => c.isRugged).length;
+    const trust = useGameStore.getState().resources.trust;
+    const max = Math.floor(trust * RUG_PULL_TRUST_FRACTION);
+    return { current: ruggedCount, max };
   },
 
   reset: () => {

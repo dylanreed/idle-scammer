@@ -15,6 +15,8 @@ beforeEach(() => {
   useCryptoStore.getState().reset();
   useGameStore.getState().setResource('crypto', 0);
   useGameStore.getState().setResource('money', 0);
+  // Set trust high enough that rug pull limit doesn't interfere with these tests
+  useGameStore.getState().setResource('trust', 100);
 });
 
 describe('NFT Rug Pull Flow (integration)', () => {

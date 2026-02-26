@@ -16,6 +16,10 @@ export interface CollectionPanelProps {
   nftCountPerCollection: Record<string, number>;
   /** Estimated rug pull value per collection (collectionId -> crypto amount) */
   rugEstimatePerCollection: Record<string, number>;
+  /** Number of collections already rug pulled */
+  rugPullCurrent: number;
+  /** Maximum rug pulls allowed (trust-based) */
+  rugPullMax: number;
   /** Called when player adjusts shillers on a collection */
   onSetShillers: (collectionId: string, count: number) => void;
   /** Called when player rug pulls a collection */
@@ -48,13 +52,20 @@ export function CollectionPanel({
   collections,
   nftCountPerCollection,
   rugEstimatePerCollection,
+  rugPullCurrent,
+  rugPullMax,
   onSetShillers,
   onRugPull,
   onMint,
   testID,
 }: CollectionPanelProps): React.ReactElement {
+  const atRugLimit = rugPullCurrent >= rugPullMax;
+
   return (
     <View style={styles.container} testID={testID}>
+      <TerminalText size="sm" color={atRugLimit ? COLORS.warningRed : COLORS.textSecondary}>
+        {`RUGS: ${rugPullCurrent}/${rugPullMax}`}
+      </TerminalText>
       {collections.length === 0 ? (
         <TerminalText size="sm" color={COLORS.textSecondary}>
           {'No collections yet. Create one to start minting!'}
@@ -115,12 +126,14 @@ export function CollectionPanel({
                   <PixelButton
                     onPress={() => onRugPull(collection.id)}
                     variant="danger"
-                    disabled={(nftCountPerCollection[collection.id] ?? 0) === 0}
+                    disabled={(nftCountPerCollection[collection.id] ?? 0) === 0 || atRugLimit}
                     testID={`rug-btn-${collection.id}`}
                   >
-                    {(nftCountPerCollection[collection.id] ?? 0) === 0
-                      ? 'RUG (NO NFTS)'
-                      : `RUG (~${(rugEstimatePerCollection[collection.id] ?? 0).toFixed(3)})`}
+                    {atRugLimit
+                      ? 'RUG (LIMIT)'
+                      : (nftCountPerCollection[collection.id] ?? 0) === 0
+                        ? 'RUG (NO NFTS)'
+                        : `RUG (~${(rugEstimatePerCollection[collection.id] ?? 0).toFixed(3)})`}
                   </PixelButton>
                 </View>
               </>

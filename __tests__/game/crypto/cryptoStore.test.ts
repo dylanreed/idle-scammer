@@ -2,6 +2,7 @@
 // ABOUTME: Validates market ticking, buy/sell quotes, project investment, NFT operations, persistence
 
 import { useCryptoStore } from '../../../src/game/crypto/cryptoStore';
+import { useGameStore } from '../../../src/game/store';
 import { DEFAULT_MARKET_STATE, DEFAULT_CRYPTO_SAVE_DATA } from '../../../src/game/crypto/types';
 import type { CryptoSaveData, MarketState } from '../../../src/game/crypto/types';
 import {
@@ -18,6 +19,8 @@ import {
 // Reset store before each test
 beforeEach(() => {
   useCryptoStore.getState().reset();
+  // Set trust high enough that rug pull limit doesn't interfere with these tests
+  useGameStore.getState().setResource('trust', 100);
 });
 
 describe('CryptoStore', () => {

@@ -15,7 +15,7 @@ import { NFTMintPanel } from './NFTMintPanel';
 import { COLORS, SPACING } from './theme';
 import { useCryptoStore } from '../game/crypto/cryptoStore';
 import { useGameStore } from '../game/store';
-import { BASE_MINT_COST, BASE_FLOOR_PRICE_PER_HYPE, NFT_RARITY_MULTIPLIERS, RUG_PULL_FRACTION } from '../game/crypto/constants';
+import { BASE_MINT_COST, BASE_FLOOR_PRICE_PER_HYPE, NFT_RARITY_MULTIPLIERS, RUG_PULL_FRACTION, RUG_PULL_TRUST_FRACTION } from '../game/crypto/constants';
 
 export interface CryptoPanelProps {
   /** Called when player taps a help "?" icon */
@@ -111,6 +111,15 @@ export function CryptoPanel({ onHelpPress, testID }: CryptoPanelProps): React.Re
     return counts;
   }, [ownedNFTs]);
 
+  const rugPullCurrent = useMemo(
+    () => collections.filter((c) => c.isRugged).length,
+    [collections],
+  );
+  const rugPullMax = useMemo(
+    () => Math.floor(resources.trust * RUG_PULL_TRUST_FRACTION),
+    [resources.trust],
+  );
+
   const rugEstimatePerCollection = useMemo(() => {
     const estimates: Record<string, number> = {};
     for (const collection of collections) {
@@ -199,6 +208,8 @@ export function CryptoPanel({ onHelpPress, testID }: CryptoPanelProps): React.Re
               collections={collections}
               nftCountPerCollection={nftCountPerCollection}
               rugEstimatePerCollection={rugEstimatePerCollection}
+              rugPullCurrent={rugPullCurrent}
+              rugPullMax={rugPullMax}
               onSetShillers={handleSetShillers}
               onRugPull={handleRugPull}
               onMint={handleMintNFT}

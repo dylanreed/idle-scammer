@@ -183,8 +183,8 @@ export const MAX_HYPE = 100;
 /** Fraction of total collection value returned on rug pull (70%) */
 export const RUG_PULL_FRACTION = 0.7;
 
-/** Fraction of trust that determines max rug pulls: floor(trust * 0.10) */
-export const RUG_PULL_TRUST_FRACTION = 0.10;
+/** Fraction of trust that determines max rug pulls: floor(trust * 0.01) */
+export const RUG_PULL_TRUST_FRACTION = 0.01;
 
 /** Base floor price per hype point in crypto */
 export const BASE_FLOOR_PRICE_PER_HYPE = 0.001;

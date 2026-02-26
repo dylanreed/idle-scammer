@@ -1,5 +1,5 @@
 // ABOUTME: Tests for the trust-based rug pull limit mechanic
-// ABOUTME: Validates that rug pulls are gated by floor(trust * 0.10)
+// ABOUTME: Validates that rug pulls are gated by floor(trust * 0.01)
 
 import { useCryptoStore } from '../../../src/game/crypto/cryptoStore';
 import { useGameStore } from '../../../src/game/store';
@@ -26,8 +26,8 @@ beforeEach(() => {
 describe('Rug pull trust limit', () => {
   describe('rugPullCollection guard', () => {
     it('should block rug pull when at limit (ruggedCount >= max)', () => {
-      // trust=1 → max = floor(1 * 0.10) = 0 → ALL rugs blocked
-      useGameStore.getState().setResource('trust', 1);
+      // trust=50 → max = floor(50 * 0.01) = 0 → ALL rugs blocked
+      useGameStore.getState().setResource('trust', 50);
       const colId = createRuggableCollection('BlockedRug');
 
       const result = useCryptoStore.getState().rugPullCollection(colId);
@@ -39,8 +39,8 @@ describe('Rug pull trust limit', () => {
     });
 
     it('should allow rug pull when under limit', () => {
-      // trust=10 → max = floor(10 * 0.10) = 1 → can rug 1
-      useGameStore.getState().setResource('trust', 10);
+      // trust=100 → max = floor(100 * 0.01) = 1 → can rug 1
+      useGameStore.getState().setResource('trust', 100);
       const colId = createRuggableCollection('AllowedRug');
 
       const result = useCryptoStore.getState().rugPullCollection(colId);
@@ -51,8 +51,8 @@ describe('Rug pull trust limit', () => {
     });
 
     it('should block second rug when limit is 1', () => {
-      // trust=10 → max=1. First rug succeeds, second is blocked.
-      useGameStore.getState().setResource('trust', 10);
+      // trust=100 → max=1. First rug succeeds, second is blocked.
+      useGameStore.getState().setResource('trust', 100);
       const col1 = createRuggableCollection('First');
       const col2 = createRuggableCollection('Second');
 
@@ -67,16 +67,16 @@ describe('Rug pull trust limit', () => {
       expect(secondCol?.isRugged).toBe(false);
     });
 
-    it('should scale limit with trust (trust=25 → max 2, trust=10 → max 1, trust=5 → max 0)', () => {
-      // trust=25 → floor(25*0.10) = 2
-      expect(Math.floor(25 * RUG_PULL_TRUST_FRACTION)).toBe(2);
-      // trust=10 → floor(10*0.10) = 1
-      expect(Math.floor(10 * RUG_PULL_TRUST_FRACTION)).toBe(1);
-      // trust=5 → floor(5*0.10) = 0
-      expect(Math.floor(5 * RUG_PULL_TRUST_FRACTION)).toBe(0);
+    it('should scale limit with trust (trust=250 → max 2, trust=100 → max 1, trust=50 → max 0)', () => {
+      // trust=250 → floor(250*0.01) = 2
+      expect(Math.floor(250 * RUG_PULL_TRUST_FRACTION)).toBe(2);
+      // trust=100 → floor(100*0.01) = 1
+      expect(Math.floor(100 * RUG_PULL_TRUST_FRACTION)).toBe(1);
+      // trust=50 → floor(50*0.01) = 0
+      expect(Math.floor(50 * RUG_PULL_TRUST_FRACTION)).toBe(0);
 
-      // Functional test: trust=25 allows 2 rugs
-      useGameStore.getState().setResource('trust', 25);
+      // Functional test: trust=250 allows 2 rugs
+      useGameStore.getState().setResource('trust', 250);
       const a = createRuggableCollection('A');
       const b = createRuggableCollection('B');
       const c = createRuggableCollection('C');
@@ -100,21 +100,21 @@ describe('Rug pull trust limit', () => {
 
   describe('getRugPullLimit', () => {
     it('should return correct current and max', () => {
-      useGameStore.getState().setResource('trust', 20);
-      // max = floor(20 * 0.10) = 2, current = 0
+      useGameStore.getState().setResource('trust', 200);
+      // max = floor(200 * 0.01) = 2, current = 0
       const limit = useCryptoStore.getState().getRugPullLimit();
       expect(limit).toEqual({ current: 0, max: 2 });
     });
 
     it('should update current after a rug pull', () => {
-      useGameStore.getState().setResource('trust', 30);
+      useGameStore.getState().setResource('trust', 300);
       const colId = createRuggableCollection('TrackRug');
 
       useCryptoStore.getState().rugPullCollection(colId);
 
       const limit = useCryptoStore.getState().getRugPullLimit();
       expect(limit.current).toBe(1);
-      expect(limit.max).toBe(3); // floor(30*0.10)
+      expect(limit.max).toBe(3); // floor(300*0.01)
     });
 
     it('should return max 0 when trust is 0', () => {
@@ -124,7 +124,7 @@ describe('Rug pull trust limit', () => {
     });
 
     it('should count only rugged collections in current', () => {
-      useGameStore.getState().setResource('trust', 50);
+      useGameStore.getState().setResource('trust', 500);
       createRuggableCollection('Unrugged1');
       createRuggableCollection('Unrugged2');
       const rugMe = createRuggableCollection('RugMe');
@@ -133,7 +133,7 @@ describe('Rug pull trust limit', () => {
 
       const limit = useCryptoStore.getState().getRugPullLimit();
       expect(limit.current).toBe(1);
-      expect(limit.max).toBe(5); // floor(50*0.10)
+      expect(limit.max).toBe(5); // floor(500*0.01)
     });
   });
 });
